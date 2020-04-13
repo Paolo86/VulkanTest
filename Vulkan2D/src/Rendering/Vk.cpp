@@ -60,14 +60,18 @@ void Vk::Init()
 {
 	CreateInstance();
 	SetUpDebugMessenger(); // Needs vkInstance so call after creating it
+	PickPhysicalDevice();
+	CreateLogicalDevice();
+	CreateLogicalDevice();
 }
 
 void Vk::Destroy()
 {
 	if (m_validationLayersEnabled)
 	{
-		//DestroyDebugUtilsMessengerEXT(m_vkInstance, m_debugMessenger, nullptr);
+		DestroyDebugUtilsMessengerEXT(m_vkInstance, m_debugMessenger, nullptr);
 	}
+	vkDestroyDevice(m_device, nullptr);
 	vkDestroyInstance(m_vkInstance, nullptr);
 }
 
@@ -199,3 +203,110 @@ void Vk::CreateInstance()
 	//for (const auto& extension : m_supportedExtensions)
 	//	Logger::Log(extension.extensionName);
 }
+
+bool Vk::IsDeviceSuitable(VkPhysicalDevice device)
+{
+	VkPhysicalDeviceProperties deviceProperties;
+	VkPhysicalDeviceFeatures deviceFeatures;
+	vkGetPhysicalDeviceProperties(device, &deviceProperties);
+	vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+	bool result =  deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
+		deviceFeatures.geometryShader;
+
+	QueueFamilyIndices indices = FindQueueFamilies(device);
+
+	result == result && indices.IsComplete();
+	if (result)
+		Logger::LogInfo("Selected GPU:", deviceProperties.deviceName);
+
+	return result;
+}
+
+
+void Vk::PickPhysicalDevice()
+{
+	uint32_t deviceCount = 0;
+	vkEnumeratePhysicalDevices(m_vkInstance, &deviceCount, nullptr);
+
+	std::vector<VkPhysicalDevice> availableDevices(deviceCount);
+	vkEnumeratePhysicalDevices(m_vkInstance, &deviceCount, availableDevices.data());
+
+	for (VkPhysicalDevice device : availableDevices)
+	{
+		if (IsDeviceSuitable(device))
+		{
+			m_physicalDevice = device;			
+			break; //Select first one suitable
+		}
+	}
+
+	if (m_physicalDevice == VK_NULL_HANDLE)
+	{
+		Logger::LogError("Failed to select GPU!");
+		throw std::runtime_error("Failed to select GPU");
+	}
+
+	FindQueueFamilies(m_physicalDevice);
+}
+
+QueueFamilyIndices Vk::FindQueueFamilies(VkPhysicalDevice device)
+{
+	QueueFamilyIndices indices;
+
+	uint32_t count = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &count, nullptr);
+	std::vector<VkQueueFamilyProperties> queueFamilies(count);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &count, queueFamilies.data());
+
+	int i = 0;
+	for (const auto& queueFamily : queueFamilies) {
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+			indices.graphicsFamily = i; //Grab the array index of that queue
+		}
+
+		i++;
+	}
+
+	return indices;
+}
+
+void Vk::CreateLogicalDevice()
+{
+	QueueFamilyIndices indices = FindQueueFamilies(m_physicalDevice);
+
+	// Create actual queue
+	VkDeviceQueueCreateInfo queueCreateInfo = {};
+	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+	queueCreateInfo.queueCount = 1;
+	float priority = 1.0f;
+	queueCreateInfo.pQueuePriorities = &priority; //influences command buffer scheduling
+
+	VkPhysicalDeviceFeatures deviceFeatures = {}; // Will complete
+
+	VkDeviceCreateInfo createInfo = {};
+	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	createInfo.pQueueCreateInfos = &queueCreateInfo;
+	createInfo.queueCreateInfoCount = 1;
+	createInfo.pEnabledFeatures = &deviceFeatures;
+
+	// This is unnecessary as they have been set globally in the instance
+	// But for older Vulkan version, this was required as validation layers were separated between instance and device
+	createInfo.enabledExtensionCount = 0;
+	if (m_validationLayersEnabled) {
+		createInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());
+		createInfo.ppEnabledLayerNames = m_validationLayers.data();
+	}
+	else {
+		createInfo.enabledLayerCount = 0;
+	}
+
+	if (vkCreateDevice(m_physicalDevice, &createInfo, nullptr, &m_device) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create logical device!");
+	}
+
+	vkGetDeviceQueue(m_device, indices.graphicsFamily.value(),0,&m_graphicsQ);
+}
+
+
