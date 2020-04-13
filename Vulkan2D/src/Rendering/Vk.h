@@ -5,7 +5,9 @@ class Vk
 {
 	public:
 		static Vk& Instance();
+		~Vk();
 		void Init();
+		void Destroy();
 
 
 	private:
@@ -13,4 +15,5 @@ class Vk
 
 		/*Vk specific*/
 		VkInstance m_vkInstance;
+		std::vector<VkExtensionProperties> m_supportedExtensions;
 };

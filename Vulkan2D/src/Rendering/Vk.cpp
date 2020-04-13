@@ -12,6 +12,11 @@ Vk& Vk::Instance()
 	return *m_instance;
 }
 
+Vk::~Vk()
+{
+	Destroy();
+}
+
 
 void Vk::Init()
 {
@@ -43,4 +48,17 @@ void Vk::Init()
 	if (vkCreateInstance(&createInfo, nullptr, &m_vkInstance) != VK_SUCCESS)
 		Logger::LogError(__FUNCTION__, "Failed to create instance");
 
+	// Populate supported extensions
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionsCount, nullptr);
+	m_supportedExtensions.resize(extensionsCount);
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionsCount, m_supportedExtensions.data());
+
+	//Uncomment to view the list of supported extensions
+	for (const auto& extension : m_supportedExtensions)
+		Logger::Log(extension.extensionName);
+}
+
+void Vk::Destroy()
+{
+	vkDestroyInstance(m_vkInstance, nullptr);
 }
