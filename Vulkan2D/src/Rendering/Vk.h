@@ -39,6 +39,7 @@ class Vk
 		VkPhysicalDevice m_physicalDevice; //Destroyed automatically when instance is gone
 		VkDevice m_device;
 		VkQueue m_graphicsQ;
+		VkQueue m_presentationQ;
 
 		VkSurfaceKHR m_surface;
 		

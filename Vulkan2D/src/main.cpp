@@ -16,8 +16,9 @@ int main() {
 	Vk::Instance().Init();
 
 	Window::Instance().Update();
+	
+	//std::cin.get();
 	Window::Instance().Destroy();
-
-	std::cin.get();
+	Vk::Instance().Destroy();
 	return 0;
 }

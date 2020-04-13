@@ -1,6 +1,7 @@
 #include "Vk.h"
 #include "Window.h"
 #include "../Utils/Logger.h"
+#include <set>
 
 std::unique_ptr<Vk> Vk::m_instance;
 
@@ -12,7 +13,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 	void* pUserData) {
 
 	//std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-	Logger::LogError("VK_VL:", pCallbackData->pMessage);
+	Logger::LogError("VK_VL:\n\t", pCallbackData->pMessage);
 
 	return VK_FALSE;
 }
@@ -52,7 +53,7 @@ Vk::Vk()
 
 Vk::~Vk()
 {
-	Destroy();
+
 }
 
 
@@ -62,7 +63,6 @@ void Vk::Init()
 	SetUpDebugMessenger(); // Needs vkInstance so call after creating it
 	CreateSurface();
 	PickPhysicalDevice();
-	CreateLogicalDevice();
 	CreateLogicalDevice();
 }
 
@@ -267,6 +267,16 @@ QueueFamilyIndices Vk::FindQueueFamilies(VkPhysicalDevice device)
 			indices.graphicsFamily = i; //Grab the array index of that queue
 		}
 
+		//Presentation queue: find a queue (in any family) that can do presentation
+		VkBool32 presentationSupported = false;
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_surface, &presentationSupported);
+
+		if (presentationSupported)
+			indices.presentFamily = i;
+
+		if (indices.IsComplete())
+			break;
+
 		i++;
 	}
 
@@ -277,20 +287,26 @@ void Vk::CreateLogicalDevice()
 {
 	QueueFamilyIndices indices = FindQueueFamilies(m_physicalDevice);
 
-	// Create actual queue
-	VkDeviceQueueCreateInfo queueCreateInfo = {};
-	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-	queueCreateInfo.queueCount = 1;
-	float priority = 1.0f;
-	queueCreateInfo.pQueuePriorities = &priority; //influences command buffer scheduling
+	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+
+	float queuePriority = 1.0f;
+	for (uint32_t queueFamily : uniqueQueueFamilies) {
+		VkDeviceQueueCreateInfo queueCreateInfo = {};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = queueFamily;
+		queueCreateInfo.queueCount = 1;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+		queueCreateInfos.push_back(queueCreateInfo);
+	}
+
 
 	VkPhysicalDeviceFeatures deviceFeatures = {}; // Will complete
 
 	VkDeviceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-	createInfo.pQueueCreateInfos = &queueCreateInfo;
-	createInfo.queueCreateInfoCount = 1;
+	createInfo.pQueueCreateInfos = queueCreateInfos.data();
+	createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 	createInfo.pEnabledFeatures = &deviceFeatures;
 
 	// This is unnecessary as they have been set globally in the instance
@@ -308,7 +324,9 @@ void Vk::CreateLogicalDevice()
 		throw std::runtime_error("failed to create logical device!");
 	}
 
+	// Get the queue handle out
 	vkGetDeviceQueue(m_device, indices.graphicsFamily.value(),0,&m_graphicsQ);
+	vkGetDeviceQueue(m_device, indices.presentFamily.value(),0,&m_presentationQ);
 }
 
 void Vk::CreateSurface()
