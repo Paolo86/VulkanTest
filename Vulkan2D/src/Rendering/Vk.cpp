@@ -60,6 +60,7 @@ void Vk::Init()
 {
 	CreateInstance();
 	SetUpDebugMessenger(); // Needs vkInstance so call after creating it
+	CreateSurface();
 	PickPhysicalDevice();
 	CreateLogicalDevice();
 	CreateLogicalDevice();
@@ -72,6 +73,7 @@ void Vk::Destroy()
 		DestroyDebugUtilsMessengerEXT(m_vkInstance, m_debugMessenger, nullptr);
 	}
 	vkDestroyDevice(m_device, nullptr);
+	vkDestroySurfaceKHR(m_vkInstance, m_surface, nullptr);
 	vkDestroyInstance(m_vkInstance, nullptr);
 }
 
@@ -308,5 +310,17 @@ void Vk::CreateLogicalDevice()
 
 	vkGetDeviceQueue(m_device, indices.graphicsFamily.value(),0,&m_graphicsQ);
 }
+
+void Vk::CreateSurface()
+{
+	if (Window::Instance().CreateVKSurface(m_vkInstance, m_surface) != VK_SUCCESS)
+	{
+		Logger::LogError("Failed to create surface (GLFW)");
+		throw std::runtime_error("Failed to create surface (GLFW)");
+	}
+	else
+		Logger::LogInfo("Successfully created surface");
+}
+
 
 

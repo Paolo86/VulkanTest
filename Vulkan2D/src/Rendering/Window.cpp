@@ -62,3 +62,9 @@ const char** Window::GetGLFWExtensions(uint32_t& count)
 	return glfwGetRequiredInstanceExtensions(&count);	
 }
 
+VkResult Window::CreateVKSurface(VkInstance& vkInstance, VkSurfaceKHR& surface)
+{
+	return glfwCreateWindowSurface(vkInstance, m_glfwWindow, nullptr, &surface);
+}
+
+

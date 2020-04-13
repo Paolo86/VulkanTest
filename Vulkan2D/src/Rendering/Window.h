@@ -1,6 +1,8 @@
 #pragma once
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <iostream>
+
 class Window
 {
 public:
@@ -12,6 +14,7 @@ public:
 	int GetHeight();
 	std::string GetTitle();
 	const char** GetGLFWExtensions(uint32_t& count);
+	VkResult CreateVKSurface(VkInstance& vkInstance, VkSurfaceKHR& surface);
 
 private:
 	static std::unique_ptr<Window> m_instance;

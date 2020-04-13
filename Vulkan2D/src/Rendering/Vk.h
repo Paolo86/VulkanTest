@@ -6,10 +6,11 @@
 struct QueueFamilyIndices
 {
 	std::optional<uint32_t> graphicsFamily;
+	std::optional<uint32_t> presentFamily;
 
 	bool IsComplete()
 	{
-		return graphicsFamily.has_value(); //If queues have been assigned
+		return graphicsFamily.has_value() && presentFamily.has_value(); //If queues have been assigned
 	}
 };
 
@@ -38,6 +39,8 @@ class Vk
 		VkPhysicalDevice m_physicalDevice; //Destroyed automatically when instance is gone
 		VkDevice m_device;
 		VkQueue m_graphicsQ;
+
+		VkSurfaceKHR m_surface;
 		
 
 		bool m_validationLayersEnabled;
@@ -54,6 +57,8 @@ class Vk
 		void SetUpDebugMessenger();
 		// Needed to apply debug messaging to create/destroy VkInstance
 		void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+
+		void CreateSurface();
 
 		void PickPhysicalDevice();
 		void CreateLogicalDevice();
