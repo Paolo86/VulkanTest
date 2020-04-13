@@ -4,6 +4,36 @@
 
 std::unique_ptr<Vk> Vk::m_instance;
 
+// Callback for validation layer debugging messages
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	VkDebugUtilsMessageTypeFlagsEXT messageType,
+	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	void* pUserData) {
+
+	//std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+	Logger::LogError("VK_VL:", pCallbackData->pMessage);
+
+	return VK_FALSE;
+}
+// Used to create the debug messenger.
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+	if (func != nullptr) {
+		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+	}
+	else {
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
+}
+
+void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
+	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+	if (func != nullptr) {
+		func(instance, debugMessenger, pAllocator);
+	}
+}
+
 Vk& Vk::Instance()
 {
 	if (m_instance == nullptr)
@@ -16,7 +46,7 @@ Vk::Vk()
 {
 	//Initialize validation layers
 	m_validationLayers = {"VK_LAYER_KHRONOS_validation"};
-	m_validationLayersEnabled = true;
+	m_validationLayersEnabled = 1;
 }
 
 
@@ -28,63 +58,16 @@ Vk::~Vk()
 
 void Vk::Init()
 {
-	if (m_validationLayersEnabled && !AreValidationLayersSupported())
-	{
-		Logger::LogError("A validation layer was not found");
-		throw std::runtime_error("Validation layer not found");
-	}
-
-	// Optional struct
-	VkApplicationInfo appInfo = {};
-	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-	appInfo.pApplicationName = Window::Instance().GetTitle().c_str();
-	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-	appInfo.pEngineName = "Vulkan 2D";
-	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-	appInfo.apiVersion = VK_API_VERSION_1_0;
-
-
-	//Not optional
-	VkInstanceCreateInfo createInfo = {};
-	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-	createInfo.pApplicationInfo = &appInfo;
-
-	uint32_t extensionsCount = 0;
-
-	const char** extensions = Window::Instance().GetGLFWExtensions(extensionsCount);
-
-
-	createInfo.enabledExtensionCount = extensionsCount;
-	createInfo.ppEnabledExtensionNames = extensions;
-
-	//Validation layer
-	if (m_validationLayersEnabled)
-	{
-		createInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());
-		createInfo.ppEnabledLayerNames = m_validationLayers.data();
-
-	}
-	else
-	{
-		createInfo.enabledLayerCount = 0;
-
-	}
-
-	if (vkCreateInstance(&createInfo, nullptr, &m_vkInstance) != VK_SUCCESS)
-		Logger::LogError(__FUNCTION__, "Failed to create instance");
-
-	// Populate supported extensions
-	vkEnumerateInstanceExtensionProperties(nullptr, &extensionsCount, nullptr);
-	m_supportedExtensions.resize(extensionsCount);
-	vkEnumerateInstanceExtensionProperties(nullptr, &extensionsCount, m_supportedExtensions.data());
-
-	//Uncomment to view the list of supported extensions
-	for (const auto& extension : m_supportedExtensions)
-		Logger::Log(extension.extensionName);
+	CreateInstance();
+	SetUpDebugMessenger(); // Needs vkInstance so call after creating it
 }
 
 void Vk::Destroy()
 {
+	if (m_validationLayersEnabled)
+	{
+		//DestroyDebugUtilsMessengerEXT(m_vkInstance, m_debugMessenger, nullptr);
+	}
 	vkDestroyInstance(m_vkInstance, nullptr);
 }
 
@@ -119,4 +102,100 @@ bool Vk::AreValidationLayersSupported()
 
 	return true;
 
+}
+
+std::vector<const char*> Vk::GetRequiredExtensions() 
+{
+	uint32_t glfwExtensionCount = 0;
+	const char** glfwExtensions;
+	glfwExtensions = Window::Instance().GetGLFWExtensions(glfwExtensionCount);
+
+	std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+	if (m_validationLayersEnabled) {
+		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+	}
+
+	return extensions;
+}
+
+void Vk::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
+{	
+	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+	createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+	createInfo.pfnUserCallback = debugCallback;
+	createInfo.pUserData = nullptr; // Optional
+}
+
+
+void Vk::SetUpDebugMessenger()
+{
+	if (m_validationLayersEnabled)
+	{
+		VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
+		PopulateDebugMessengerCreateInfo(createInfo);
+
+		if (CreateDebugUtilsMessengerEXT(m_vkInstance, &createInfo, nullptr, &m_debugMessenger) != VK_SUCCESS) {
+			throw std::runtime_error("failed to set up debug messenger!");
+		}
+	}
+}
+
+
+void Vk::CreateInstance()
+{
+	if (m_validationLayersEnabled && !AreValidationLayersSupported())
+	{
+		Logger::LogError("A validation layer was not found");
+		throw std::runtime_error("Validation layer not found");
+	}
+
+	// Optional struct
+	VkApplicationInfo appInfo = {};
+	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+	appInfo.pApplicationName = Window::Instance().GetTitle().c_str();
+	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+	appInfo.pEngineName = "Vulkan 2D";
+	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+	appInfo.apiVersion = VK_API_VERSION_1_0;
+
+
+	//Not optional
+	VkInstanceCreateInfo createInfo = {};
+	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+	createInfo.pApplicationInfo = &appInfo;
+
+	auto extensions = GetRequiredExtensions();
+
+	createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+	createInfo.ppEnabledExtensionNames = extensions.data();
+
+	//Validation layer
+	if (m_validationLayersEnabled)
+	{
+		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
+		createInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());
+		createInfo.ppEnabledLayerNames = m_validationLayers.data();
+		PopulateDebugMessengerCreateInfo(debugCreateInfo);
+		createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
+	}
+	else
+	{
+		createInfo.enabledLayerCount = 0;
+
+	}
+
+	if (vkCreateInstance(&createInfo, nullptr, &m_vkInstance) != VK_SUCCESS)
+		Logger::LogError(__FUNCTION__, "Failed to create instance");
+
+	// Populate supported extensions
+	uint32_t extensionsCount = 0;
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionsCount, nullptr);
+	m_supportedExtensions.resize(extensionsCount);
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionsCount, m_supportedExtensions.data());
+
+	//Uncomment to view the list of supported extensions
+	//for (const auto& extension : m_supportedExtensions)
+	//	Logger::Log(extension.extensionName);
 }
