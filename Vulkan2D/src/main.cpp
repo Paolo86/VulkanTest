@@ -5,11 +5,16 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
-#include "Logger.h"
-#include <iostream>
+#include "Utils/Logger.h"
+#include "Rendering/Window.h"
 
 int main() {
-	glfwInit();
+
+	Window::Instance().Create();
+
+	Window::Instance().Update();
+	Window::Instance().Destroy();
+	/*glfwInit();
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	GLFWwindow* window = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
@@ -29,7 +34,7 @@ int main() {
 
 	glfwDestroyWindow(window);
 
-	glfwTerminate();
+	glfwTerminate();*/
 
 	return 0;
 }

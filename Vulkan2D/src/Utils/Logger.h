@@ -15,7 +15,7 @@
 /**
 	* @brief Check if it's the first variable in the pack
 	*/
-static bool first;
+static bool first = true;
 /**
 * @class Logger
 * @brief Helper class used to log information to the console
@@ -30,14 +30,6 @@ static bool first;
 class Logger
 {
 public:
-	/**
-	* @brief Initialize logger
-	*
-	* @pre The logger is not ready to log to the console
-	* @post The logger is ready to log to the console
-	*/
-	static void Initialize();
-
 	/**
 	* @brief Log information to the console (green color)
 	*
