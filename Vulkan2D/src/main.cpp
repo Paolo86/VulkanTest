@@ -7,10 +7,13 @@
 #include <glm/mat4x4.hpp>
 #include "Utils/Logger.h"
 #include "Rendering/Window.h"
+#include "Rendering/Vk.h"
 
 int main() {
 
 	Window::Instance().Create();
+
+	Vk::Instance().Init();
 
 	Window::Instance().Update();
 	Window::Instance().Destroy();

@@ -23,6 +23,7 @@ void Window::Create(int width, int height, const char* title)
 
 		m_width = width;
 		m_height = height;
+		m_title = title;
 		initialized = true;
 	}
 	else
@@ -41,3 +42,23 @@ void Window::Update()
 		glfwPollEvents();
 	}
 }
+
+int Window::GetWidth()
+{
+	return m_width;
+}
+int Window::GetHeight()
+{
+	return m_height;
+}
+
+std::string Window::GetTitle()
+{
+	return m_title;
+}
+
+const char** Window::GetGLFWExtensions(uint32_t& count)
+{
+	return glfwGetRequiredInstanceExtensions(&count);	
+}
+
