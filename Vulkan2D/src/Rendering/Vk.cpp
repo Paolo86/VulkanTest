@@ -12,6 +12,14 @@ Vk& Vk::Instance()
 	return *m_instance;
 }
 
+Vk::Vk()
+{
+	//Initialize validation layers
+	m_validationLayers = {"VK_LAYER_KHRONOS_validation"};
+	m_validationLayersEnabled = true;
+}
+
+
 Vk::~Vk()
 {
 	Destroy();
@@ -20,6 +28,12 @@ Vk::~Vk()
 
 void Vk::Init()
 {
+	if (m_validationLayersEnabled && !AreValidationLayersSupported())
+	{
+		Logger::LogError("A validation layer was not found");
+		throw std::runtime_error("Validation layer not found");
+	}
+
 	// Optional struct
 	VkApplicationInfo appInfo = {};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -39,11 +53,22 @@ void Vk::Init()
 
 	const char** extensions = Window::Instance().GetGLFWExtensions(extensionsCount);
 
+
 	createInfo.enabledExtensionCount = extensionsCount;
 	createInfo.ppEnabledExtensionNames = extensions;
 
 	//Validation layer
-	createInfo.enabledLayerCount = 0;
+	if (m_validationLayersEnabled)
+	{
+		createInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());
+		createInfo.ppEnabledLayerNames = m_validationLayers.data();
+
+	}
+	else
+	{
+		createInfo.enabledLayerCount = 0;
+
+	}
 
 	if (vkCreateInstance(&createInfo, nullptr, &m_vkInstance) != VK_SUCCESS)
 		Logger::LogError(__FUNCTION__, "Failed to create instance");
@@ -61,4 +86,37 @@ void Vk::Init()
 void Vk::Destroy()
 {
 	vkDestroyInstance(m_vkInstance, nullptr);
+}
+
+
+bool Vk::AreValidationLayersSupported()
+{
+	// Get instance layers
+	uint32_t layersCount = 0;
+	vkEnumerateInstanceLayerProperties(&layersCount, nullptr);
+	std::vector<VkLayerProperties> instanceLayers(layersCount);
+	vkEnumerateInstanceLayerProperties(&layersCount, instanceLayers.data());
+
+	//Check against the ones we defined
+	for (auto layerName : m_validationLayers)
+	{
+		bool found = false;
+
+		for (auto instanceLayer : instanceLayers)
+		{
+			if (strcmp(layerName, instanceLayer.layerName) == 0)
+			{
+				found = true;
+				break;
+			}
+
+		}
+
+		//If one layer was not found, return false
+		if (!found)
+			return false;
+	}
+
+	return true;
+
 }
