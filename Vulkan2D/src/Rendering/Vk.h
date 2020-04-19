@@ -51,10 +51,19 @@ class Vk
 		VkQueue m_presentationQ;
 		VkSwapchainKHR m_swapchain;
 		VkSurfaceKHR m_surface;
-		
+		std::vector<VkImage> m_swapChainImages;
+		std::vector<VkImageView> m_swapChainImageViews;
+		std::vector<VkFramebuffer> m_swapChainFramebuffers;
+		VkFormat m_swapChainImageFormat;
+		VkExtent2D m_swapChainExtent;
 
 		bool m_validationLayersEnabled;
 		std::vector<const char*> m_validationLayers;
+
+		VkRenderPass m_renderPass;
+		VkPipelineLayout m_pipelineLayout; //Used to pass data to shaders (like mat4)
+		VkPipeline m_graphicsPipeline;
+
 
 		/*Methods*/
 		bool AreValidationLayersSupported();
@@ -73,6 +82,11 @@ class Vk
 		void PickPhysicalDevice();
 		void CreateLogicalDevice();
 		void CreateSwapChain();
+		void CreateImageViews();
+		void CreateRenderPass();
+		void CreateGraphicsPipeline();
+		void CreateFramebuffers();
+		VkShaderModule CreateShadeModule(const std::vector<char>& code);
 
 		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
