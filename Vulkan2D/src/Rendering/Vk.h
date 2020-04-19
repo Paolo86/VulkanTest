@@ -14,6 +14,14 @@ struct QueueFamilyIndices
 	}
 };
 
+// Collect info about swapchain
+struct SwapChainSupportDetails
+{
+	VkSurfaceCapabilitiesKHR capabilities; //Resolution of images in swapchain
+	std::vector<VkSurfaceFormatKHR> formats; //Color depth
+	std::vector<VkPresentModeKHR> presentModes; //Condition for swapping images
+};
+
 class Vk
 {
 	public:
@@ -34,13 +42,14 @@ class Vk
 		VkDebugUtilsMessengerEXT m_debugMessenger;
 
 		VkInstance m_vkInstance;
-		std::vector<VkExtensionProperties> m_supportedExtensions;
+		std::vector<VkExtensionProperties> m_supportedInstanceExtensions;
+
 
 		VkPhysicalDevice m_physicalDevice; //Destroyed automatically when instance is gone
 		VkDevice m_device;
 		VkQueue m_graphicsQ;
 		VkQueue m_presentationQ;
-
+		VkSwapchainKHR m_swapchain;
 		VkSurfaceKHR m_surface;
 		
 
@@ -63,6 +72,12 @@ class Vk
 
 		void PickPhysicalDevice();
 		void CreateLogicalDevice();
+		void CreateSwapChain();
 
+		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
+		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
+		VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availabeFormat);
+		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& ccapabilities);
 
 };
