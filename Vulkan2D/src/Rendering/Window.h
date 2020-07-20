@@ -15,7 +15,7 @@ public:
 	std::string GetTitle();
 	const char** GetGLFWExtensions(uint32_t& count);
 	VkResult CreateVKSurface(VkInstance& vkInstance, VkSurfaceKHR& surface);
-
+	GLFWwindow* GetWindow() { return m_glfwWindow; }
 private:
 	static std::unique_ptr<Window> m_instance;
 	GLFWwindow* m_glfwWindow = nullptr;

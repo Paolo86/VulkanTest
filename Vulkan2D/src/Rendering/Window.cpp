@@ -38,9 +38,7 @@ void Window::Destroy()
 
 void Window::Update()
 {
-	while (!glfwWindowShouldClose(m_glfwWindow)) {
-		glfwPollEvents();
-	}
+	
 }
 
 int Window::GetWidth()

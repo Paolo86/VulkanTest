@@ -15,7 +15,10 @@ int main() {
 
 	Vk::Instance().Init();
 
-	Window::Instance().Update();
+	while (!glfwWindowShouldClose(Window::Instance().GetWindow())) {
+		glfwPollEvents();
+		Vk::Instance().Draw();
+	}
 	
 	//std::cin.get();
 	Window::Instance().Destroy();

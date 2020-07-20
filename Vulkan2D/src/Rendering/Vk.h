@@ -1,7 +1,9 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 #include <vector>
+#include <glm/glm.hpp>
 #include <optional>
+#include "Mesh.h"
 
 struct QueueFamilyIndices
 {
@@ -22,6 +24,8 @@ struct SwapChainSupportDetails
 	std::vector<VkPresentModeKHR> presentModes; //Condition for swapping images
 };
 
+
+
 class Vk
 {
 	public:
@@ -31,12 +35,21 @@ class Vk
 		void Init();
 		void Destroy();
 
+		void Draw();
 
 
 	private:
-		static std::unique_ptr<Vk> m_instance;
 
+		Mesh firstMesh;
+
+		static std::unique_ptr<Vk> m_instance;
+		int currentFrame = 0;
 		/*Vk specific*/
+		std::vector<VkSemaphore> imageAvailable;	// Image ready to be drawn to
+		std::vector<VkSemaphore> renderFinished; // Image ready for screen presentation
+		std::vector<VkFence> drawFences;
+
+
 
 		/*Params*/
 		VkDebugUtilsMessengerEXT m_debugMessenger;
@@ -56,6 +69,9 @@ class Vk
 		std::vector<VkFramebuffer> m_swapChainFramebuffers;
 		VkFormat m_swapChainImageFormat;
 		VkExtent2D m_swapChainExtent;
+
+		std::vector<VkCommandBuffer> m_commandBuffers;
+		VkCommandPool m_commandPool;
 
 		bool m_validationLayersEnabled;
 		std::vector<const char*> m_validationLayers;
@@ -86,6 +102,12 @@ class Vk
 		void CreateRenderPass();
 		void CreateGraphicsPipeline();
 		void CreateFramebuffers();
+		void CreateCommandPool();
+		void CreatecommandBuffers();
+		void RecordCommands();
+
+		void CreateSynch();
+
 		VkShaderModule CreateShadeModule(const std::vector<char>& code);
 
 		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);

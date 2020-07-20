@@ -133,10 +133,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Rendering\Mesh.cpp" />
     <ClCompile Include="src\Rendering\Vk.cpp" />
     <ClCompile Include="src\Rendering\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Rendering\Mesh.h" />
+    <ClInclude Include="src\Rendering\Vertex.h" />
     <ClInclude Include="src\Rendering\Vk.h" />
     <ClInclude Include="src\Rendering\Window.h" />
     <ClInclude Include="src\Utils\FileUtils.h" />
