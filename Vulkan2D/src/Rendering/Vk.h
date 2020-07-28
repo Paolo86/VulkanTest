@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <optional>
 #include "Mesh.h"
+#include "stb_image.h"
 
 #include <vk_mem_alloc.h>
 
@@ -45,11 +46,25 @@ class Vk
 
 		void Draw();
 		uint32_t FindMemoryTypeIndex(uint32_t allowedTypes, VkMemoryPropertyFlags flags);
+
+		VkCommandBuffer BeginCmdBuffer(VkCommandPool pool);
+		void EndCmdBuffer(VkCommandPool pool, VkQueue sumitTo, VkCommandBuffer cmdBuffer);
 		void CopyBuffer(VkQueue transferQueue, VkCommandPool transferPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize);
+
+		void CopyImageBuffer(VkQueue transferQueue, VkCommandPool transferPool, VkBuffer srcBuffer, VkImage image, uint32_t width, uint32_t height);
 
 		void CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags bufferProperties, VkBuffer* buffer, VkDeviceMemory* bufferMemory);
 		VkImage CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags useFlags,
 			VkMemoryPropertyFlags propFlags, VkDeviceMemory* outImageMemory);
+		VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+
+		stbi_uc* LoadTexture(std::string fileName, int* width, int* height, VkDeviceSize* imageSize);
+		int CreateTextureImage(std::string fileName);
+		int CreateTexture(std::string fileName);
+
+		//Change image layout
+		// Not done automatically if it's not an attachment
+		void TransitionImageLayout(VkQueue queue, VkCommandPool pool, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 private:
 
 		Mesh firstMesh;
@@ -57,6 +72,7 @@ private:
 		std::vector<Mesh> m_meshes;
 		static std::unique_ptr<Vk> m_instance;
 		int currentFrame = 0;
+		int TextId;
 		/*Vk specific*/
 		std::vector<VkSemaphore> imageAvailable;	// Image ready to be drawn to
 		std::vector<VkSemaphore> renderFinished; // Image ready for screen presentation
@@ -100,12 +116,23 @@ private:
 		std::vector<VkCommandBuffer> m_commandBuffers;
 		VkCommandPool m_commandPool;
 
+		VkSampler m_textureSampler;
 
 		//Descriptor set
 		VkDescriptorSetLayout m_descriptorLayout;
 		VkDescriptorPool m_descriptorPool;
 		std::vector<VkDescriptorSet> m_descriptorSets;
+
+		VkDescriptorPool m_samplerDescriptorPool;
+		VkDescriptorSetLayout m_samplerDescriptorLayout;
+		std::vector<VkDescriptorSet> m_samplerDescriptorSets;
+
+
 		VkPushConstantRange m_pushContantRange;
+
+		std::vector<VkImage> m_textureImages;
+		std::vector<VkDeviceMemory> m_textureImagesMemory;
+		std::vector<VkImageView> m_textureImagesViews;
 
 		bool m_validationLayersEnabled;
 		std::vector<const char*> m_validationLayers;
@@ -154,6 +181,8 @@ private:
 		void CreateSynch();
 		void AllocateDynamicBufferTransferSpace();
 		void UpdateUBO(uint32_t imageIndex);
+		void CreateTextureSampler();
+		int CreateTextureDescriptor(VkImageView textureImage);
 
 		VkShaderModule CreateShadeModule(const std::vector<char>& code);
 

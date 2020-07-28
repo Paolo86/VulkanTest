@@ -13,7 +13,7 @@ class Mesh
 {
 public:
 	Mesh(VkPhysicalDevice physicalDevice, VkDevice device, VkQueue transferQ, VkCommandPool transferPool, std::vector<Vertex>& vertices, 
-		std::vector<uint32_t>& indices);
+		std::vector<uint32_t>& indices, int texId);
 	Mesh(VmaAllocator& allocator, std::vector<Vertex>& vertices);
 
 	Mesh() {};
@@ -24,6 +24,7 @@ public:
 	uint32_t GetIndexCount() { return m_indexCount; }
 
 	UboModel uboModel;
+	int texID;
 
 	void DestroyVertexBuffer();
 private:
