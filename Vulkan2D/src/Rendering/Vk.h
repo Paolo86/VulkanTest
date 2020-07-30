@@ -32,7 +32,13 @@ struct SwapChainSupportDetails
 };
 
 
+struct _ViewProjection {
 
+	glm::mat4 projection;
+	glm::mat4 view;
+	glm::mat4 model;
+
+};
 
 
 class Vk
@@ -59,12 +65,25 @@ class Vk
 		VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 
 		stbi_uc* LoadTexture(std::string fileName, int* width, int* height, VkDeviceSize* imageSize);
-		int CreateTextureImage(std::string fileName);
-		int CreateTexture(std::string fileName);
 
 		//Change image layout
 		// Not done automatically if it's not an attachment
 		void TransitionImageLayout(VkQueue queue, VkCommandPool pool, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
+		VkShaderModule CreateShadeModule(const std::vector<char>& code);
+		VkFormat m_swapChainImageFormat;
+		void CreatePushConstantRange();
+		VkExtent2D m_swapChainExtent;
+		VkDevice m_device;
+		VkRenderPass m_renderPass;
+		std::vector<VkImage> m_swapChainImages;
+		std::vector<VkBuffer> m_VPuniformBuffer;
+		VkQueue m_graphicsQ;
+		VkCommandPool m_commandPool;
+		VkSampler m_textureSampler;
+		VkDescriptorPool m_descriptorPool;
+		VkDescriptorPool m_samplerDescriptorPool;
+		VkPushConstantRange m_pushContantRange;
+
 private:
 
 		Mesh firstMesh;
@@ -80,13 +99,7 @@ private:
 
 		VmaAllocator allocator;
 
-		struct _ViewProjection {
-
-			glm::mat4 projection;
-			glm::mat4 view;
-			glm::mat4 model;
-
-		} ViewProjection;
+		
 
 		UboModel* m_modelTransferSpace;
 		/*Params*/
@@ -97,12 +110,9 @@ private:
 
 
 		VkPhysicalDevice m_physicalDevice; //Destroyed automatically when instance is gone
-		VkDevice m_device;
-		VkQueue m_graphicsQ;
 		VkQueue m_presentationQ;
 		VkSwapchainKHR m_swapchain;
 		VkSurfaceKHR m_surface;
-		std::vector<VkImage> m_swapChainImages;
 		std::vector<VkImageView> m_swapChainImageViews;
 		std::vector<VkFramebuffer> m_swapChainFramebuffers;
 
@@ -110,25 +120,17 @@ private:
 		VkDeviceMemory m_depthBufferMemory;
 		VkImageView m_depthBufferImageView;
 
-		VkFormat m_swapChainImageFormat;
-		VkExtent2D m_swapChainExtent;
+;
 
 		std::vector<VkCommandBuffer> m_commandBuffers;
-		VkCommandPool m_commandPool;
 
-		VkSampler m_textureSampler;
 
 		//Descriptor set
 		VkDescriptorSetLayout m_descriptorLayout;
-		VkDescriptorPool m_descriptorPool;
 		std::vector<VkDescriptorSet> m_descriptorSets;
 
-		VkDescriptorPool m_samplerDescriptorPool;
 		VkDescriptorSetLayout m_samplerDescriptorLayout;
 		std::vector<VkDescriptorSet> m_samplerDescriptorSets;
-
-
-		VkPushConstantRange m_pushContantRange;
 
 		std::vector<VkImage> m_textureImages;
 		std::vector<VkDeviceMemory> m_textureImagesMemory;
@@ -136,12 +138,10 @@ private:
 
 		bool m_validationLayersEnabled;
 		std::vector<const char*> m_validationLayers;
-
-		VkRenderPass m_renderPass;
+		_ViewProjection ViewProjection;
 		VkPipelineLayout m_pipelineLayout; //Used to pass data to shaders (like mat4)
 		VkPipeline m_graphicsPipeline;
 
-		std::vector<VkBuffer> m_VPuniformBuffer;
 		std::vector<VkDeviceMemory> m_VPuniformBufferMemory;
 
 		std::vector<VkBuffer> m_modelDynamicPuniformBuffer;
@@ -167,24 +167,18 @@ private:
 		void CreateSwapChain();
 		void CreateImageViews();
 		void CreateRenderPass();
-		void CreateGraphicsPipeline();
 		void CreateDepthBufferImage();
 		void CreateFramebuffers();
 		void CreateCommandPool();
 		void CreatecommandBuffers();
 		void RecordCommands(uint32_t currentImage);
-		void CreateDescriptorSetLayout();
-		void CreatePushConstantRange();
 		void CreateDescriptorPool();
 		void CreateUniformBuffers();
-		void CreateDescriptorSets();
 		void CreateSynch();
 		void AllocateDynamicBufferTransferSpace();
 		void UpdateUBO(uint32_t imageIndex);
 		void CreateTextureSampler();
-		int CreateTextureDescriptor(VkImageView textureImage);
 
-		VkShaderModule CreateShadeModule(const std::vector<char>& code);
 
 		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
