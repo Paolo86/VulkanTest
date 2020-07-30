@@ -135,7 +135,9 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Rendering\Material.cpp" />
     <ClCompile Include="src\Rendering\Mesh.cpp" />
+    <ClCompile Include="src\Rendering\Vertex.cpp" />
     <ClCompile Include="src\Rendering\Vk.cpp" />
+    <ClCompile Include="src\Rendering\VkUtils.cpp" />
     <ClCompile Include="src\Rendering\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -143,6 +145,7 @@
     <ClInclude Include="src\Rendering\Mesh.h" />
     <ClInclude Include="src\Rendering\Vertex.h" />
     <ClInclude Include="src\Rendering\Vk.h" />
+    <ClInclude Include="src\Rendering\VkUtils.h" />
     <ClInclude Include="src\Rendering\Window.h" />
     <ClInclude Include="src\Utils\FileUtils.h" />
     <ClInclude Include="src\Utils\Logger.h" />
