@@ -62,7 +62,7 @@ Vk::Vk()
 {
 	//Initialize validation layers
 	m_validationLayers = {"VK_LAYER_KHRONOS_validation"};
-	m_validationLayersEnabled = 0;
+	m_validationLayersEnabled = 1;
 }
 
 
@@ -93,12 +93,20 @@ void Vk::Init()
 	CreateCommandPool();	
 	CreatecommandBuffers();
 	//AllocateDynamicBufferTransferSpace(); //Not used, using push constant
-	CreateTextureSampler();
+	m_textureSampler.Create(
+		m_device,
+		VK_FILTER_LINEAR,
+		VK_FILTER_LINEAR,
+		VK_BORDER_COLOR_INT_OPAQUE_BLACK,
+		VK_SAMPLER_ADDRESS_MODE_REPEAT,
+		VK_SAMPLER_ADDRESS_MODE_REPEAT,
+		VK_SAMPLER_ADDRESS_MODE_REPEAT,
+		VK_SAMPLER_MIPMAP_MODE_LINEAR,
+		0.0, 0.0, false, 16);
 	CreateUniformBuffers();
 	CreateDescriptorPool();
 
 	CreateSynch();
-	testMaterial.Create();
 	ViewProjection.projection = glm::perspective(glm::radians(60.0f), (float)m_swapChainExtent.width / m_swapChainExtent.height, 0.01f, 1000.0f);
 	ViewProjection.view = glm::lookAt(glm::vec3(0, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	ViewProjection.projection[1][1] *= -1;  //Vulkan inverts the Y axis...
@@ -135,7 +143,8 @@ void Vk::Init()
 
 	m_meshes.push_back(firstMesh);
 	//m_meshes.push_back(secondMesh);
-	
+	testMaterial.Create();
+
 
 }
 
@@ -145,7 +154,7 @@ void Vk::Destroy()
 	//secondMesh.DestroyVertexBuffer();
 	vkDeviceWaitIdle(m_device); //Wait for device to be idle before cleaning up (so won't clean commands currently on queue)
 
-	vkDestroySampler(m_device, m_textureSampler, nullptr);
+	m_textureSampler.Destroy(m_device);
 	vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
 	vkDestroyDescriptorPool(m_device, m_samplerDescriptorPool, nullptr);
 
@@ -175,9 +184,7 @@ void Vk::Destroy()
 	}
 	for (size_t i = 0; i < m_swapChainImages.size(); i++)
 	{
-		vkDestroyBuffer(m_device, m_VPuniformBuffer[i], nullptr);
-		vkFreeMemory(m_device, m_VPuniformBufferMemory[i], nullptr);
-
+		m_VPUniformBuffers[i].Destroy(m_device);
 		//vkDestroyBuffer(m_device, m_modelDynamicPuniformBuffer[i], nullptr);
 		//vkFreeMemory(m_device, m_modelDynamicuniformBufferMemory[i], nullptr);
 	}
@@ -674,38 +681,11 @@ void Vk::CreateImageViews()
 	}
 }
 
-VkShaderModule Vk::CreateShadeModule(const std::vector<char>& code)
-{
-	VkShaderModuleCreateInfo createInfo = {};
-	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	createInfo.codeSize = code.size();
-	createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data()); //The byte code pointer is of type uint32_t....weird
-
-	VkShaderModule shaderModule;
-	if (vkCreateShaderModule(m_device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
-		Logger::LogError("Failed to create shader");
-		//throw std::runtime_error("failed to create shader module!");
-	}
-
-	return shaderModule;
-}
-
-
-
-void Vk::CreatePushConstantRange()
-{
-	m_pushContantRange.offset = 0;
-	m_pushContantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	m_pushContantRange.size = sizeof(UboModel);
-}
-
-
-
 void Vk::CreateDescriptorPool()
 {
 	//Create uniform descriptor pool
 	VkDescriptorPoolSize VPpoolSize = {};
-	VPpoolSize.descriptorCount = static_cast<uint32_t>(m_VPuniformBuffer.size());
+	VPpoolSize.descriptorCount = static_cast<uint32_t>(m_swapChainImages.size());
 	VPpoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 
 	/*VkDescriptorPoolSize modelPoolSize = {};
@@ -749,17 +729,15 @@ void Vk::CreateUniformBuffers()
 
 	//VkDeviceSize modelBufferSize = m_modelUniformAlignment * MAX_OBJECTS;
 
-	m_VPuniformBuffer.resize(m_swapChainImages.size());
-	m_VPuniformBufferMemory.resize(m_swapChainImages.size());
+	m_VPUniformBuffers.resize(m_swapChainImages.size());
 
 	//m_modelDynamicPuniformBuffer.resize(m_swapChainImages.size());
 	//m_modelDynamicuniformBufferMemory.resize(m_swapChainImages.size());
 
 	for (size_t i = 0; i < m_swapChainImages.size(); i++)
 	{
-		Vk::Instance().CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &m_VPuniformBuffer[i], &m_VPuniformBufferMemory[i]);
 		//Vk::Instance().CreateBuffer(modelBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &m_modelDynamicPuniformBuffer[i], &m_modelDynamicuniformBufferMemory[i]);
-
+		m_VPUniformBuffers[i] =  UniformBuffer<_ViewProjection>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	}
 }
 
@@ -1049,10 +1027,12 @@ void Vk::CreateSynch()
 void Vk::UpdateUBO(uint32_t imageIndex)
 {
 
-	void* data;
+	/*void* data;
 	vkMapMemory(m_device, m_VPuniformBufferMemory[imageIndex], 0, sizeof(_ViewProjection), 0, &data);
 	memcpy(data, &ViewProjection, sizeof(_ViewProjection));
-	vkUnmapMemory(m_device, m_VPuniformBufferMemory[imageIndex]);
+	vkUnmapMemory(m_device, m_VPuniformBufferMemory[imageIndex]);*/
+
+	m_VPUniformBuffers[imageIndex].Update(m_device, &ViewProjection);
 
 
 	//Not used, using push constant instead
@@ -1211,23 +1191,7 @@ void Vk::CopyImageBuffer(VkQueue transferQueue, VkCommandPool transferPool, VkBu
 
 void Vk::CreateTextureSampler()
 {
-	VkSamplerCreateInfo samplerInfo = {};
-	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	samplerInfo.magFilter = VK_FILTER_LINEAR;
-	samplerInfo.minFilter = VK_FILTER_LINEAR;
-	samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.unnormalizedCoordinates = VK_FALSE;
-	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-	samplerInfo.minLod = 0.0;
-	samplerInfo.maxLod = 0.0;
-	samplerInfo.anisotropyEnable = VK_FALSE;
-	samplerInfo.maxAnisotropy = 16;
 
-	if (vkCreateSampler(m_device, &samplerInfo, nullptr, &m_textureSampler) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create sampler");
 }
 
 void Vk::TransitionImageLayout(VkQueue queue, VkCommandPool pool, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)

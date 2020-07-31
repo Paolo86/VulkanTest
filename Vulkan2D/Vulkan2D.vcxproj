@@ -133,6 +133,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Rendering\GraphicsPipeline.cpp" />
     <ClCompile Include="src\Rendering\Material.cpp" />
     <ClCompile Include="src\Rendering\Mesh.cpp" />
     <ClCompile Include="src\Rendering\Vertex.cpp" />
@@ -141,8 +142,13 @@
     <ClCompile Include="src\Rendering\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Rendering\CommonStructs.h" />
+    <ClInclude Include="src\Rendering\GraphicsPipeline.h" />
     <ClInclude Include="src\Rendering\Material.h" />
     <ClInclude Include="src\Rendering\Mesh.h" />
+    <ClInclude Include="src\Rendering\PushConstant.h" />
+    <ClInclude Include="src\Rendering\TextureSampler.h" />
+    <ClInclude Include="src\Rendering\UniformBuffer.h" />
     <ClInclude Include="src\Rendering\Vertex.h" />
     <ClInclude Include="src\Rendering\Vk.h" />
     <ClInclude Include="src\Rendering\VkUtils.h" />

@@ -8,7 +8,8 @@
 #include <optional>
 #include "Mesh.h"
 #include "stb_image.h"
-
+#include "UniformBuffer.h"
+#include "TextureSampler.h"
 #include <vk_mem_alloc.h>
 
 
@@ -32,13 +33,7 @@ struct SwapChainSupportDetails
 };
 
 
-struct _ViewProjection {
 
-	glm::mat4 projection;
-	glm::mat4 view;
-	glm::mat4 model;
-
-};
 
 
 class Vk
@@ -69,20 +64,18 @@ class Vk
 		//Change image layout
 		// Not done automatically if it's not an attachment
 		void TransitionImageLayout(VkQueue queue, VkCommandPool pool, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
-		VkShaderModule CreateShadeModule(const std::vector<char>& code);
 		VkFormat m_swapChainImageFormat;
 		void CreatePushConstantRange();
 		VkExtent2D m_swapChainExtent;
 		VkDevice m_device;
 		VkRenderPass m_renderPass;
 		std::vector<VkImage> m_swapChainImages;
-		std::vector<VkBuffer> m_VPuniformBuffer;
+		std::vector<UniformBuffer<_ViewProjection>> m_VPUniformBuffers;
 		VkQueue m_graphicsQ;
 		VkCommandPool m_commandPool;
-		VkSampler m_textureSampler;
+		TextureSampler m_textureSampler;
 		VkDescriptorPool m_descriptorPool;
 		VkDescriptorPool m_samplerDescriptorPool;
-		VkPushConstantRange m_pushContantRange;
 
 private:
 
@@ -142,7 +135,6 @@ private:
 		VkPipelineLayout m_pipelineLayout; //Used to pass data to shaders (like mat4)
 		VkPipeline m_graphicsPipeline;
 
-		std::vector<VkDeviceMemory> m_VPuniformBufferMemory;
 
 		std::vector<VkBuffer> m_modelDynamicPuniformBuffer;
 		std::vector<VkDeviceMemory> m_modelDynamicuniformBufferMemory;

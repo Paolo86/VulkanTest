@@ -11,9 +11,7 @@ layout(set = 0, binding = 0) uniform UboViewProjection {
  mat4 view;	
 } uboViewProjection;
 
-layout(set = 0, binding = 1) uniform UboModel {
- mat4 model;	
-} uboModel;
+
 
 layout(push_constant) uniform PushModel {
 

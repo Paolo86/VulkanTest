@@ -34,5 +34,7 @@ class VkUtils
 			VkCompareOp compareOperation = VK_COMPARE_OP_LESS);
 
 		static VkPipelineInputAssemblyStateCreateInfo GetPipelineInputAssemblyState(VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
-			
+		static VkShaderModule CreateShadeModule(VkDevice device, const std::vector<char>& code);
+		static VkPipelineLayoutCreateInfo GetPipelineLayout(std::vector<VkDescriptorSetLayout>& descriptorLayouts,
+			std::vector<VkPushConstantRange>& pushConstants);
 };

@@ -4,6 +4,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
+#include "CommonStructs.h"
+
+#include "GraphicsPipeline.h"
+#include "PushConstant.h"
+#include "TextureSampler.h"
+
 
 class Material
 {
@@ -17,7 +23,9 @@ public:
 	VkPipelineLayout m_pipelineLayout; //Used to pass data to shaders (like mat4)
 	VkSampler m_textureSampler;
 	VkPipeline m_graphicsPipeline;
+	PushConstant m_pushConstant;
 
+	std::vector<VkDescriptorSetLayout> m_orderedDescriptorLayouts;
 	//For UBO
 	VkDescriptorSetLayout m_descriptorLayout;
 	std::vector<VkDescriptorSet> m_descriptorSets;

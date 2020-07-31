@@ -3,11 +3,10 @@
 #include "Vertex.h"
 #include <vector>
 #include <vk_mem_alloc.h>
+#include "CommonStructs.h"
 
 
-struct UboModel {
-	glm::mat4 model;
-};
+
 
 class Mesh
 {

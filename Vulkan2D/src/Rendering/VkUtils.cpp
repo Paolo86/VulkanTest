@@ -145,7 +145,34 @@ VkPipelineInputAssemblyStateCreateInfo VkUtils::GetPipelineInputAssemblyState(Vk
 }
 
 
+VkShaderModule VkUtils::CreateShadeModule(VkDevice device, const std::vector<char>& code)
+{
+	VkShaderModuleCreateInfo createInfo = {};
+	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	createInfo.codeSize = code.size();
+	createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data()); //The byte code pointer is of type uint32_t....weird
 
+	VkShaderModule shaderModule;
+	if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create shader module!");
+	}
+
+	return shaderModule;
+}
+
+VkPipelineLayoutCreateInfo VkUtils::GetPipelineLayout(
+	std::vector<VkDescriptorSetLayout>& descriptorLayouts,
+	std::vector<VkPushConstantRange>& pushConstants
+	)
+{
+	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
+	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descriptorLayouts.size());
+	pipelineLayoutCreateInfo.pSetLayouts = descriptorLayouts.data();
+	pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstants.size());
+	pipelineLayoutCreateInfo.pPushConstantRanges = pushConstants.data();
+	return pipelineLayoutCreateInfo;
+}
 
 
 
