@@ -22,6 +22,18 @@ VkPipelineShaderStageCreateInfo VkUtils::PipelineUtils::GetPipelineFragmentShade
 	return fragShaderStageInfo;
 }
 
+VkPipelineLayoutCreateInfo VkUtils::PipelineUtils::GetPipelineLayoutInfo(std::vector<VkDescriptorSetLayout>& layouts, VkPushConstantRange* pushConstant)
+{
+	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
+	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+	pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
+	pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+	pipelineLayoutCreateInfo.pPushConstantRanges = pushConstant;
+	return pipelineLayoutCreateInfo;
+}
+
+
 VkViewport VkUtils::PipelineUtils::GetViewport(uint32_t extentWidth, uint32_t extentHeight)
 {
 	VkViewport viewport = {};
@@ -159,21 +171,6 @@ VkShaderModule VkUtils::PipelineUtils::CreateShadeModule(VkDevice device, const 
 
 	return shaderModule;
 }
-
-VkPipelineLayoutCreateInfo VkUtils::PipelineUtils::GetPipelineLayout(
-	std::vector<VkDescriptorSetLayout>& descriptorLayouts,
-	std::vector<VkPushConstantRange>& pushConstants
-	)
-{
-	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
-	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descriptorLayouts.size());
-	pipelineLayoutCreateInfo.pSetLayouts = descriptorLayouts.data();
-	pipelineLayoutCreateInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstants.size());
-	pipelineLayoutCreateInfo.pPushConstantRanges = pushConstants.data();
-	return pipelineLayoutCreateInfo;
-}
-
 
 VkDescriptorSetLayoutBinding VkUtils::PipelineUtils::GetDescriptorLayout(uint32_t binding, 
 	VkDescriptorType descriptorType, 

@@ -32,6 +32,8 @@ class VkUtils
 
 			static VkPipelineColorBlendStateCreateInfo GetPipelineColorBlendingState(VkPipelineColorBlendAttachmentState* attachmentBlending);
 
+			static VkPipelineLayoutCreateInfo GetPipelineLayoutInfo(std::vector<VkDescriptorSetLayout>& layouts, VkPushConstantRange* pushConstant);
+
 			static VkPipelineDepthStencilStateCreateInfo GetPipelineDepthStencilAttachmentState(
 				bool depthTestEnable = true,
 				bool writeTestEnable = true,
@@ -40,8 +42,6 @@ class VkUtils
 
 			static VkPipelineInputAssemblyStateCreateInfo GetPipelineInputAssemblyState(VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 			static VkShaderModule CreateShadeModule(VkDevice device, const std::vector<char>& code);
-			static VkPipelineLayoutCreateInfo GetPipelineLayout(std::vector<VkDescriptorSetLayout>& descriptorLayouts,
-				std::vector<VkPushConstantRange>& pushConstants);
 
 			static VkDescriptorSetLayoutBinding GetDescriptorLayout(uint32_t binding,
 				VkDescriptorType descriptorType,

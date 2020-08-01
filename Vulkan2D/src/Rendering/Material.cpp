@@ -11,10 +11,26 @@ Material::Material(std::string shaderName)
 
 void Material::Create()
 {
-	CreateDescriptorSetLayout();
-	CreateTexture("wood.jpg");
+	CreateUBODescriptorSet();
+	AddTextures({ "wood.jpg","texture.jpg" });
 	CreateGraphicsPipeline();
 }
+
+void Material::AddTextures(std::vector<std::string> fileNames)
+{
+	for (std::string name : fileNames)
+	{
+		int w, h;
+		stbi_uc* imageData = Vk::Instance().LoadTexture(name, &w, &h);
+
+		Texture2D t(w, h, 4, VK_FORMAT_R8G8B8A8_UNORM, imageData);
+		stbi_image_free(imageData);
+		m_textures.push_back(t);
+	}
+
+	CreateSamplerDescriptorSet();
+}
+
 
 void Material::Destroy()
 {
@@ -72,19 +88,8 @@ void Material::CreateGraphicsPipeline()
 
 	m_pushConstant.Create<UboModel>(VK_SHADER_STAGE_VERTEX_BIT);
 
-	//m_orderedDescriptorLayouts.push_back(m_descriptorLayout);
-	//m_orderedDescriptorLayouts.push_back(m_samplerDescriptorLayout);
 
-	std::vector<VkPushConstantRange> ranges;
-	ranges.push_back(m_pushConstant.m_vkPushConstant);
-	//VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = VkUtils::PipelineUtils::GetPipelineLayout(m_orderedDescriptorLayouts, ranges);
-	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
-	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(m_orderedDescriptorLayouts.size());
-	pipelineLayoutCreateInfo.pSetLayouts = m_orderedDescriptorLayouts.data();
-	pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-	pipelineLayoutCreateInfo.pPushConstantRanges = &m_pushContantRange;
-
+	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = VkUtils::PipelineUtils::GetPipelineLayoutInfo(m_orderedDescriptorLayouts, &m_pushConstant.m_vkPushConstant);
 
 	// Create Pipeline Layout
 	VkResult result = vkCreatePipelineLayout(Vk::Instance().m_device, &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
@@ -115,9 +120,7 @@ void Material::CreateGraphicsPipeline()
 }
 
 
-
-
-void Material::CreateDescriptorSetLayout()
+void Material::CreateUBODescriptorSet()
 {
 	//Uniform 
 	//Binding info
@@ -144,25 +147,12 @@ void Material::CreateDescriptorSetLayout()
 }
 
 
-
-
-int Material::CreateTexture(std::string fileName)
+void Material::CreateSamplerDescriptorSet()
 {
-	int w, h;
-	stbi_uc* imageData = Vk::Instance().LoadTexture(fileName, &w, &h);
-
-	Texture2D t(w,h,4,imageData);
-	stbi_image_free(imageData);
-	m_textures.push_back(t);
-
-	imageData = Vk::Instance().LoadTexture("texture.jpg", &w, &h);
-
-	Texture2D t2(w, h, 4, imageData);
-	stbi_image_free(imageData);
-	m_textures.push_back(t2);
 
 	//Texture sampler descriptor set layout
-	VkDescriptorSetLayoutBinding imagesLayoutBinding = VkUtils::PipelineUtils::GetDescriptorLayout(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,2, VK_SHADER_STAGE_FRAGMENT_BIT);
+	VkDescriptorSetLayoutBinding imagesLayoutBinding = VkUtils::PipelineUtils::GetDescriptorLayout(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+		,m_textures.size(), VK_SHADER_STAGE_FRAGMENT_BIT);
 
 	DescriptorSetLayout samplerLayout;
 	samplerLayout.AddBinding({ imagesLayoutBinding }).Create(Vk::Instance().m_device);
@@ -172,6 +162,6 @@ int Material::CreateTexture(std::string fileName)
 	m_samplerDescriptorSets[0].CreateDescriptorSet(Vk::Instance().m_device, { samplerLayout }, Vk::Instance().m_samplerDescriptorPool);
 
 	m_samplerDescriptorSets[0].AssociateTextureSamplerCombo(Vk::Instance().m_device, m_textures , 0, Vk::Instance().m_textureSampler.m_sampler);
-	return 0;
+
 }
 
