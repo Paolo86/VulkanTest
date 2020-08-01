@@ -2,7 +2,7 @@
 #include "Vk.h"
 
 Mesh::Mesh(VkPhysicalDevice physicalDevice, VkDevice device, VkQueue transferQ, VkCommandPool transferPool, 
-	std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, int texId)
+	std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, Material* material)
 {
 	m_physicalDevice = physicalDevice;
 	m_device = device;
@@ -12,7 +12,7 @@ Mesh::Mesh(VkPhysicalDevice physicalDevice, VkDevice device, VkQueue transferQ, 
 	CreateVertexBuffer(transferQ, transferPool, indices);
 
 	uboModel.model = glm::mat4(1);
-	texID = texId;
+	this->material = material;
 }
 
 Mesh::Mesh(VmaAllocator& allocator, std::vector<Vertex>& vertices)

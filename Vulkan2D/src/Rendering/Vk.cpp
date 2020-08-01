@@ -12,7 +12,8 @@
 #include "VkUtils.h"
 std::unique_ptr<Vk> Vk::m_instance;
 
-Material testMaterial("basic");
+Material woodMaterial("basic");
+Material wallMaterial("basic");
 namespace 
 {
 	const std::vector<const char*> supportedDeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
@@ -63,7 +64,7 @@ Vk::Vk()
 {
 	//Initialize validation layers
 	m_validationLayers = {"VK_LAYER_KHRONOS_validation"};
-	m_validationLayersEnabled = 0;
+	m_validationLayersEnabled = 1;
 }
 
 
@@ -109,7 +110,7 @@ void Vk::Init()
 
 	CreateSynch();
 	ViewProjection.projection = glm::perspective(glm::radians(60.0f), (float)m_swapChainExtent.width / m_swapChainExtent.height, 0.01f, 1000.0f);
-	ViewProjection.view = glm::lookAt(glm::vec3(0, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	ViewProjection.view = glm::lookAt(glm::vec3(0, 0, 2), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	ViewProjection.projection[1][1] *= -1;  //Vulkan inverts the Y axis...
 
 	Vertex v1;
@@ -135,16 +136,17 @@ void Vk::Init()
 	std::vector<Vertex> vertices = { v1,v2,v3, v4 };
 	std::vector<uint32_t> indices = { 0,1,2,2,3,0 };
 
-	testMaterial.Create();
-	firstMesh = Mesh(m_physicalDevice, m_device, m_graphicsQ, m_commandPool, vertices, indices, 0);
+	woodMaterial.Create({"wood.jpg"});
+	wallMaterial.Create({"wall.jpg"});
+	firstMesh = Mesh(m_physicalDevice, m_device, m_graphicsQ, m_commandPool, vertices, indices, &woodMaterial);
 	firstMesh.uboModel.model = glm::translate(firstMesh.uboModel.model, glm::vec3(0.2, 0, -0.1));
 
-	/*secondMesh = Mesh(m_physicalDevice, m_device, m_graphicsQ, m_commandPool, vertices, indices, CreateTexture("texture.jpg"));
+	secondMesh = Mesh(m_physicalDevice, m_device, m_graphicsQ, m_commandPool, vertices, indices, &wallMaterial);
 	secondMesh.uboModel.model = glm::translate(secondMesh.uboModel.model, glm::vec3(-0.2, 0, -0.1));
-	secondMesh.uboModel.model = glm::rotate(secondMesh.uboModel.model, glm::radians(45.0f), glm::vec3(0, 0, 1));*/
+	secondMesh.uboModel.model = glm::rotate(secondMesh.uboModel.model, glm::radians(45.0f), glm::vec3(0, 0, 1));
 
 	m_meshes.push_back(firstMesh);
-	//m_meshes.push_back(secondMesh);
+	m_meshes.push_back(secondMesh);
 
 
 }
@@ -162,7 +164,7 @@ void Vk::Destroy()
 	vkDestroyImageView(m_device, m_depthBufferImageView, nullptr);
 	vkDestroyImage(m_device, m_depthBufferImage, nullptr);
 	vkFreeMemory(m_device, m_depthBufferMemory, nullptr);
-	testMaterial.Destroy();
+	woodMaterial.Destroy();
 	/*for (size_t i = 0; i < m_textureImages.size(); i++)
 	{
 		vkDestroyImageView(m_device, m_textureImagesViews[i], nullptr);
@@ -697,7 +699,7 @@ void Vk::CreateDescriptorPool()
 
 	VkDescriptorPoolCreateInfo poolCreateInfo = {};
 	poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolCreateInfo.maxSets = static_cast<uint32_t>(m_swapChainImages.size());
+	poolCreateInfo.maxSets = static_cast<uint32_t>(m_swapChainImages.size() * 2);
 	poolCreateInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 	poolCreateInfo.pPoolSizes = poolSizes.data();
 
@@ -965,21 +967,22 @@ void Vk::RenderCmds(uint32_t imageIndex)
 	vkCmdBeginRenderPass(m_commandBuffers[imageIndex], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE); //All render commands are primary
 
 	//Bind pipeline to be used
-	vkCmdBindPipeline(m_commandBuffers[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, testMaterial.m_graphicsPipeline.m_graphicsPipeline);
 
 	for (size_t j = 0; j < m_meshes.size(); j++)
 	{
 		VkBuffer vertexBuffer[] = { m_meshes[j].GetVertexBuffer() };
 		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindPipeline(m_commandBuffers[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, m_meshes[j].material->m_graphicsPipeline.m_graphicsPipeline);
+
 		vkCmdBindVertexBuffers(m_commandBuffers[imageIndex], 0, 1, vertexBuffer, offsets);
 		vkCmdBindIndexBuffer(m_commandBuffers[imageIndex], m_meshes[j].GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
 		//uint32_t dynamicOffset = static_cast<uint32_t>(m_modelUniformAlignment * j);
-		vkCmdPushConstants(m_commandBuffers[imageIndex], testMaterial.m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &m_meshes[j].uboModel.model);
+		vkCmdPushConstants(m_commandBuffers[imageIndex], m_meshes[j].material->m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &m_meshes[j].uboModel.model);
 		
-		std::array<VkDescriptorSet, 2> dsets = { testMaterial.m_UBOdescriptorSets[imageIndex].m_descriptorSet , testMaterial.m_samplerDescriptorSets[0].m_descriptorSet };
+		std::array<VkDescriptorSet, 2> dsets = { m_meshes[j].material->m_UBOdescriptorSets[imageIndex].m_descriptorSet , m_meshes[j].material->m_samplerDescriptorSets[0].m_descriptorSet };
 		
-		vkCmdBindDescriptorSets(m_commandBuffers[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, testMaterial.m_pipelineLayout, 0,
+		vkCmdBindDescriptorSets(m_commandBuffers[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, m_meshes[j].material->m_pipelineLayout, 0,
 			static_cast<uint32_t>(dsets.size()),
 			dsets.data(), 0,nullptr);
 

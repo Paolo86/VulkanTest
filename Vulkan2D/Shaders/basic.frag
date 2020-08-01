@@ -10,5 +10,5 @@ layout(set=1, binding=0) uniform sampler2D textureSampler[2];
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    outColor = mix(texture(textureSampler[0], fragTex),texture(textureSampler[1], fragTex),0.5);
+    outColor = texture(textureSampler[0], fragTex);
 }

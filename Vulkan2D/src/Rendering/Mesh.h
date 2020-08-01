@@ -4,6 +4,7 @@
 #include <vector>
 #include <vk_mem_alloc.h>
 #include "CommonStructs.h"
+#include "Material.h"
 
 
 
@@ -12,7 +13,7 @@ class Mesh
 {
 public:
 	Mesh(VkPhysicalDevice physicalDevice, VkDevice device, VkQueue transferQ, VkCommandPool transferPool, std::vector<Vertex>& vertices, 
-		std::vector<uint32_t>& indices, int texId);
+		std::vector<uint32_t>& indices, Material* material);
 	Mesh(VmaAllocator& allocator, std::vector<Vertex>& vertices);
 
 	Mesh() {};
@@ -26,6 +27,7 @@ public:
 	int texID;
 
 	void DestroyVertexBuffer();
+	Material* material;
 private:
 	int m_vertexCount;
 	VkPhysicalDevice m_physicalDevice;

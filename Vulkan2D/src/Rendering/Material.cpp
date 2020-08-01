@@ -9,10 +9,10 @@ Material::Material(std::string shaderName)
 }
 
 
-void Material::Create()
+void Material::Create(std::vector<std::string> textureNames)
 {
 	CreateUBODescriptorSet();
-	AddTextures({ "wood.jpg","texture.jpg" });
+	AddTextures(textureNames);
 	CreateGraphicsPipeline();
 }
 
@@ -152,7 +152,7 @@ void Material::CreateSamplerDescriptorSet()
 
 	//Texture sampler descriptor set layout
 	VkDescriptorSetLayoutBinding imagesLayoutBinding = VkUtils::PipelineUtils::GetDescriptorLayout(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
-		,m_textures.size(), VK_SHADER_STAGE_FRAGMENT_BIT);
+		, m_textures.size(), VK_SHADER_STAGE_FRAGMENT_BIT);
 
 	DescriptorSetLayout samplerLayout;
 	samplerLayout.AddBinding({ imagesLayoutBinding }).Create(Vk::Instance().m_device);
@@ -161,7 +161,7 @@ void Material::CreateSamplerDescriptorSet()
 	m_samplerDescriptorSets.resize(1);
 	m_samplerDescriptorSets[0].CreateDescriptorSet(Vk::Instance().m_device, { samplerLayout }, Vk::Instance().m_samplerDescriptorPool);
 
-	m_samplerDescriptorSets[0].AssociateTextureSamplerCombo(Vk::Instance().m_device, m_textures , 0, Vk::Instance().m_textureSampler.m_sampler);
+	m_samplerDescriptorSets[0].AssociateTextureSamplerCombo(Vk::Instance().m_device, m_textures, 0, Vk::Instance().m_textureSampler.m_sampler);
 
 }
 
