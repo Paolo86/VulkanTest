@@ -131,8 +131,7 @@ void Material::CreateDescriptorSetLayout()
 	vpLayoutBinding.pImmutableSamplers = nullptr;
 
 	DescriptorSetLayout uboLayout;
-	uboLayout.AddBinding(vpLayoutBinding);
-	uboLayout.Create(Vk::Instance().m_device);
+	uboLayout.AddBinding({ vpLayoutBinding }).Create(Vk::Instance().m_device);
 
 	m_orderedDescriptorLayouts.push_back(uboLayout.m_descriptorLayout);
 	m_UBOdescriptorSets.resize(Vk::Instance().m_swapChainImages.size());
@@ -143,8 +142,6 @@ void Material::CreateDescriptorSetLayout()
 		std::vector<UniformBuffer<_ViewProjection>> bufs = { Vk::Instance().m_VPUniformBuffers[i] };
 		m_UBOdescriptorSets[i].AssociateUniformBuffers<_ViewProjection>(Vk::Instance().m_device, bufs, 0, 0);
 	}
-
-
 
 }
 
@@ -162,22 +159,17 @@ int Material::CreateTexture(std::string fileName)
 	m_textureImagesViews.push_back(imageView);
 
 	//Texture sampler descriptor set layout
-	VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
-	samplerLayoutBinding.binding = 0; //Binding number, check in vert shader
-	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	samplerLayoutBinding.descriptorCount = 2;
-	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-	samplerLayoutBinding.pImmutableSamplers = nullptr;
+	VkDescriptorSetLayoutBinding samplerLayoutBinding = VkUtils::GetDescriptorLayout(0, VK_DESCRIPTOR_TYPE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+	VkDescriptorSetLayoutBinding imagesLayoutBinding = VkUtils::GetDescriptorLayout(1, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 2, VK_SHADER_STAGE_FRAGMENT_BIT, &Vk::Instance().m_textureSampler.m_sampler);
 
 	DescriptorSetLayout samplerLayout;
-	samplerLayout.AddBinding(samplerLayoutBinding);
-	samplerLayout.Create(Vk::Instance().m_device);
+	samplerLayout.AddBinding({ samplerLayoutBinding,imagesLayoutBinding }).Create(Vk::Instance().m_device);
 	m_orderedDescriptorLayouts.push_back(samplerLayout.m_descriptorLayout);
 
 	m_samplerDescriptorSets.resize(1);
 	m_samplerDescriptorSets[0].CreateDescriptorSet(Vk::Instance().m_device, { samplerLayout }, Vk::Instance().m_samplerDescriptorPool);
 
-	m_samplerDescriptorSets[0].AssociateTexture(Vk::Instance().m_device, m_textureImagesViews , 0, Vk::Instance().m_textureSampler.m_sampler);
+	m_samplerDescriptorSets[0].AssociateTextureSamplerCombo(Vk::Instance().m_device, m_textureImagesViews , 0, Vk::Instance().m_textureSampler.m_sampler);
 	//int descriptorLoc = CreateTextureDescriptor(imageView);
 	return 0;
 }

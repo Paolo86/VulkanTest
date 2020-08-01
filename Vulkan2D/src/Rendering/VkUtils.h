@@ -37,4 +37,10 @@ class VkUtils
 		static VkShaderModule CreateShadeModule(VkDevice device, const std::vector<char>& code);
 		static VkPipelineLayoutCreateInfo GetPipelineLayout(std::vector<VkDescriptorSetLayout>& descriptorLayouts,
 			std::vector<VkPushConstantRange>& pushConstants);
+
+		static VkDescriptorSetLayoutBinding GetDescriptorLayout(uint32_t binding,
+			VkDescriptorType descriptorType,
+			uint32_t descriptorCount,
+			VkShaderStageFlags shaderStage,
+			const VkSampler* sampler = nullptr);
 };

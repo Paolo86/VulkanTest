@@ -163,7 +163,7 @@ private:
 		void CreateFramebuffers();
 		void CreateCommandPool();
 		void CreatecommandBuffers();
-		void RecordCommands(uint32_t currentImage);
+		void RenderCmds(uint32_t currentImage);
 		void CreateDescriptorPool();
 		void CreateUniformBuffers();
 		void CreateSynch();

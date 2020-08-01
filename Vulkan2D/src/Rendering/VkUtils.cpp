@@ -175,4 +175,17 @@ VkPipelineLayoutCreateInfo VkUtils::GetPipelineLayout(
 }
 
 
-
+VkDescriptorSetLayoutBinding VkUtils::GetDescriptorLayout(uint32_t binding, 
+	VkDescriptorType descriptorType, 
+	uint32_t descriptorCount, 
+	VkShaderStageFlags shaderStage, 
+	const VkSampler* sampler)
+{
+	VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
+	samplerLayoutBinding.binding = binding; //Binding number, check in vert shader
+	samplerLayoutBinding.descriptorType = descriptorType;
+	samplerLayoutBinding.descriptorCount = descriptorCount;
+	samplerLayoutBinding.stageFlags = shaderStage;
+	samplerLayoutBinding.pImmutableSamplers = sampler;
+	return samplerLayoutBinding;
+}

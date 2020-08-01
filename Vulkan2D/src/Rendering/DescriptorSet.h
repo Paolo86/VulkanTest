@@ -8,9 +8,12 @@
 
 struct DescriptorSetLayout
 {
-	void AddBinding(VkDescriptorSetLayoutBinding binding)
+	DescriptorSetLayout& AddBinding(std::vector<VkDescriptorSetLayoutBinding> bindings)
 	{
-		m_bindings.push_back(binding);
+		for(VkDescriptorSetLayoutBinding binding: bindings)
+			m_bindings.push_back(binding);
+
+		return *this;
 	}
 
 	void Create(VkDevice device)
@@ -84,7 +87,7 @@ public:
 		vkUpdateDescriptorSets(device, setWrites.size(), setWrites.data(), 0, nullptr);
 	}
 
-	void AssociateTexture(VkDevice device, std::vector<VkImageView>& images, uint32_t binding, VkSampler sampler)
+	void AssociateTextureSamplerCombo(VkDevice device, std::vector<VkImageView>& images, uint32_t binding, VkSampler sampler)
 	{
 		std::vector<VkDescriptorImageInfo> infos;
 		for (int i = 0; i < images.size(); i++)
@@ -103,6 +106,34 @@ public:
 		descriptorWrite.dstBinding = binding;
 		descriptorWrite.dstArrayElement = 0;
 		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorWrite.descriptorCount = static_cast<uint32_t>(infos.size());
+		descriptorWrite.pImageInfo = infos.data();
+
+
+		//Image-sampler Descriptor
+		std::vector< VkWriteDescriptorSet> setWrites = { descriptorWrite };
+		vkUpdateDescriptorSets(device, setWrites.size(), setWrites.data(), 0, nullptr);
+	}
+
+	void AssociateTexture(VkDevice device, std::vector<VkImageView>& images, uint32_t binding)
+	{
+		std::vector<VkDescriptorImageInfo> infos;
+		for (int i = 0; i < images.size(); i++)
+		{
+			VkDescriptorImageInfo imageInfo = {};
+			imageInfo.imageView = images[i];
+			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			imageInfo.sampler = nullptr;
+			infos.push_back(imageInfo);
+		}
+
+
+		VkWriteDescriptorSet descriptorWrite = {};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = m_descriptorSet;
+		descriptorWrite.dstBinding = binding;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		descriptorWrite.descriptorCount = static_cast<uint32_t>(infos.size());
 		descriptorWrite.pImageInfo = infos.data();
 

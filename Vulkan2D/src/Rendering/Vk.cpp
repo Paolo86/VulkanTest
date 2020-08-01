@@ -932,7 +932,7 @@ void Vk::CreatecommandBuffers()
 	}
 }
 
-void Vk::RecordCommands(uint32_t imageIndex)
+void Vk::RenderCmds(uint32_t imageIndex)
 {
 	VkCommandBufferBeginInfo bufferBeginInfo = {};
 	bufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -980,7 +980,7 @@ void Vk::RecordCommands(uint32_t imageIndex)
 		
 		vkCmdBindDescriptorSets(m_commandBuffers[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, testMaterial.m_pipelineLayout, 0,
 			static_cast<uint32_t>(dsets.size()),
-			dsets.data(), 0, nullptr);
+			dsets.data(), 0,nullptr);
 
 
 		vkCmdDrawIndexed(m_commandBuffers[imageIndex], m_meshes[j].GetIndexCount(), 1, 0, 0, 0);
@@ -1059,7 +1059,7 @@ void Vk::Draw()
 
 	vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, imageAvailable[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-	RecordCommands(imageIndex);
+	RenderCmds(imageIndex);
 	UpdateUBO(imageIndex);
 
 
