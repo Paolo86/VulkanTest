@@ -8,6 +8,11 @@ Material::Material(std::string shaderName)
 	m_shaderName = shaderName;
 }
 
+Material::Material(GraphicsPipeline pipeilne)
+{
+	m_graphicsPipeline = pipeilne;
+}
+
 
 void Material::Create(std::vector<std::string> textureNames)
 {

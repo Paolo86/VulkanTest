@@ -17,6 +17,7 @@ class Material
 {
 public:
 	Material(std::string shaderName);
+	Material(GraphicsPipeline pipeline);
 	~Material();
 	void Create(std::vector<std::string> textureNames);
 	void Destroy();

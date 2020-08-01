@@ -154,7 +154,7 @@ void Vk::Init()
 void Vk::Destroy()
 {
 	firstMesh.DestroyVertexBuffer();
-	//secondMesh.DestroyVertexBuffer();
+	secondMesh.DestroyVertexBuffer();
 	vkDeviceWaitIdle(m_device); //Wait for device to be idle before cleaning up (so won't clean commands currently on queue)
 
 	m_textureSampler.Destroy(m_device);
@@ -165,13 +165,7 @@ void Vk::Destroy()
 	vkDestroyImage(m_device, m_depthBufferImage, nullptr);
 	vkFreeMemory(m_device, m_depthBufferMemory, nullptr);
 	woodMaterial.Destroy();
-	/*for (size_t i = 0; i < m_textureImages.size(); i++)
-	{
-		vkDestroyImageView(m_device, m_textureImagesViews[i], nullptr);
-		vkDestroyImage(m_device, m_textureImages[i], nullptr);
-		vkFreeMemory(m_device, m_textureImagesMemory[i], nullptr);
-	}*/
-
+	wallMaterial.Destroy();
 
 	for (size_t i = 0; i < MAX_FRAME_DRAWS; i++)
 	{

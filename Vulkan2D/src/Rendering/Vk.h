@@ -34,8 +34,6 @@ struct SwapChainSupportDetails
 
 
 
-
-
 class Vk
 {
 	public:
