@@ -10,6 +10,7 @@
 #include "PushConstant.h"
 #include "DescriptorSet.h"
 #include "TextureSampler.h"
+#include "Texture2D.h"
 
 
 class Material
@@ -31,17 +32,13 @@ public:
 	std::vector<DescriptorSet> m_UBOdescriptorSets;
 
 	std::vector<DescriptorSet> m_samplerDescriptorSets;
-	std::vector<VkImage> m_textureImages;
-	std::vector<VkDeviceMemory> m_textureImagesMemory;
-	std::vector<VkImageView> m_textureImagesViews;
+	std::vector<Texture2D> m_textures;
 	VkPushConstantRange m_pushContantRange;
 
 
 	void CreateGraphicsPipeline();
 	void CreateDescriptorSetLayout();
 	int CreateTexture(std::string fileName);
-	int CreateTextureImage(std::string fileName);
-	int CreateTextureDescriptor(VkImageView textureImage);
 
 	std::string m_shaderName;
 

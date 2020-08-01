@@ -71,7 +71,8 @@ void Mesh::CreateVertexBuffer(VkQueue transferQ, VkCommandPool transferPool, std
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
 
-	Vk::Instance().CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferMemory);
+	VkUtils::MemoryUtils::CreateBuffer(Vk::Instance().m_device, Vk::Instance().m_physicalDevice, size, 
+		VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferMemory);
 
 	//Map memory to vertex buffer
 	void* data;
@@ -79,9 +80,10 @@ void Mesh::CreateVertexBuffer(VkQueue transferQ, VkCommandPool transferPool, std
 	memcpy(data, vertices.data(), (size_t)size);
 	vkUnmapMemory(m_device, stagingBufferMemory);
 
-	Vk::Instance().CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_vertexBuffer, &m_bufferMemory);
+	VkUtils::MemoryUtils::CreateBuffer(Vk::Instance().m_device, Vk::Instance().m_physicalDevice, 
+		size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_vertexBuffer, &m_bufferMemory);
 
-	Vk::Instance().CopyBuffer(transferQ, transferPool, stagingBuffer, m_vertexBuffer, size);
+	VkUtils::MemoryUtils::CopyBuffer(Vk::Instance().m_device, transferQ, transferPool, stagingBuffer, m_vertexBuffer, size);
 
 	vkDestroyBuffer(m_device, stagingBuffer, nullptr);
 	vkFreeMemory(m_device, stagingBufferMemory, nullptr);
@@ -95,7 +97,8 @@ void Mesh::CreateVertexBuffer(VkQueue transferQ, VkCommandPool transferPool, std
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
 
-	Vk::Instance().CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferMemory);
+	VkUtils::MemoryUtils::CreateBuffer(Vk::Instance().m_device, Vk::Instance().m_physicalDevice, 
+		size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferMemory);
 
 	//Map memory to vertex buffer
 	void* data;
@@ -103,9 +106,10 @@ void Mesh::CreateVertexBuffer(VkQueue transferQ, VkCommandPool transferPool, std
 	memcpy(data, indices.data(), (size_t)size);
 	vkUnmapMemory(m_device, stagingBufferMemory);
 
-	Vk::Instance().CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_indexBuffer, &m_indexBufferMemory);
+	VkUtils::MemoryUtils::CreateBuffer(Vk::Instance().m_device, Vk::Instance().m_physicalDevice, 
+		size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_indexBuffer, &m_indexBufferMemory);
 
-	Vk::Instance().CopyBuffer(transferQ, transferPool, stagingBuffer, m_indexBuffer, size);
+	VkUtils::MemoryUtils::CopyBuffer(Vk::Instance().m_device, transferQ, transferPool, stagingBuffer, m_indexBuffer, size);
 
 	vkDestroyBuffer(m_device, stagingBuffer, nullptr);
 	vkFreeMemory(m_device, stagingBufferMemory, nullptr);

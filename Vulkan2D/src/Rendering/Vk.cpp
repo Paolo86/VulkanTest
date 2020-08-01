@@ -738,7 +738,7 @@ void Vk::CreateUniformBuffers()
 	for (size_t i = 0; i < m_swapChainImages.size(); i++)
 	{
 		//Vk::Instance().CreateBuffer(modelBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &m_modelDynamicPuniformBuffer[i], &m_modelDynamicuniformBufferMemory[i]);
-		m_VPUniformBuffers[i] =  UniformBuffer<_ViewProjection>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		m_VPUniformBuffers[i] =  UniformBuffer<_ViewProjection>(m_physicalDevice, m_device, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 	}
 }
 
@@ -1025,28 +1025,6 @@ void Vk::CreateSynch()
 	}
 }
 
-void Vk::UpdateUBO(uint32_t imageIndex)
-{
-
-	/*void* data;
-	vkMapMemory(m_device, m_VPuniformBufferMemory[imageIndex], 0, sizeof(_ViewProjection), 0, &data);
-	memcpy(data, &ViewProjection, sizeof(_ViewProjection));
-	vkUnmapMemory(m_device, m_VPuniformBufferMemory[imageIndex]);*/
-
-	m_VPUniformBuffers[imageIndex].Update(m_device, &ViewProjection);
-
-
-	//Not used, using push constant instead
-	/*for (size_t i = 0; i < m_meshes.size(); i++)
-	{
-		UboModel* model = (UboModel*)((uint64_t)m_modelTransferSpace + (i * m_modelUniformAlignment));
-		*model = m_meshes[i].uboModel;
-	}
-
-	vkMapMemory(m_device, m_modelDynamicuniformBufferMemory[imageIndex], 0, m_modelUniformAlignment * m_meshes.size(), 0, &data);
-	memcpy(data, m_modelTransferSpace, m_modelUniformAlignment * m_meshes.size());
-	vkUnmapMemory(m_device, m_modelDynamicuniformBufferMemory[imageIndex]);*/
-}
 
 void Vk::Draw()
 {
@@ -1061,7 +1039,7 @@ void Vk::Draw()
 	vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, imageAvailable[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
 	RenderCmds(imageIndex);
-	UpdateUBO(imageIndex);
+	m_VPUniformBuffers[imageIndex].Update(m_device, &ViewProjection);
 
 
 	// 2. Submit command buffer to ququ for execution, make sure to wait for image to be signalled as available before drawing and signal back
@@ -1100,7 +1078,6 @@ void Vk::Draw()
 	currentFrame = (currentFrame + 1) % MAX_FRAME_DRAWS;
 }
 
-
 void Vk::AllocateDynamicBufferTransferSpace()
 {
 
@@ -1111,168 +1088,9 @@ void Vk::AllocateDynamicBufferTransferSpace()
 }
 
 
-void Vk::CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags bufferProperties, VkBuffer* buffer, VkDeviceMemory* bufferMemory)
-{
-	VkBufferCreateInfo bufferInfo = {};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = bufferSize;
-	bufferInfo.usage = usage;
 
 
-	VkResult res = vkCreateBuffer(m_device, &bufferInfo, nullptr, buffer);
-	if (res != VK_SUCCESS)
-	{
-		throw std::runtime_error("Failed to create vertex buffer");
-	}
-
-	VkMemoryRequirements memRequirement = {};
-	vkGetBufferMemoryRequirements(m_device, *buffer, &memRequirement);
-
-	//Allocate memory
-	VkMemoryAllocateInfo memoryAllocInfo = {};
-	memoryAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	memoryAllocInfo.allocationSize = memRequirement.size;
-	memoryAllocInfo.memoryTypeIndex = VkUtils::MemoryUtils::FindMemoryTypeIndex(m_physicalDevice,memRequirement.memoryTypeBits, bufferProperties);//VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT: CPU can interact with memory
-																					//VK_MEMORY_PROPERTY_HOST_COHERENT_BIT: Place data straight into buffer after mapping
-
-
-	//Allocate memory to vk device memory
-	res = vkAllocateMemory(m_device, &memoryAllocInfo, nullptr, bufferMemory);
-	vkBindBufferMemory(m_device, *buffer, *bufferMemory, 0);
-}
-
-void Vk::CopyBuffer(VkQueue transferQueue, VkCommandPool transferPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize)
-{
-	VkCommandBuffer cmdBuffer = BeginCmdBuffer(transferPool);
-
-	VkBufferCopy bufferCopyRegion = {};
-	bufferCopyRegion.srcOffset = 0;
-	bufferCopyRegion.dstOffset = 0;
-	bufferCopyRegion.size = bufferSize;
-
-	vkCmdCopyBuffer(cmdBuffer, srcBuffer, dstBuffer, 1, &bufferCopyRegion);
-	EndCmdBuffer(transferPool, transferQueue, cmdBuffer);
-}
-
-void Vk::CopyImageBuffer(VkQueue transferQueue, VkCommandPool transferPool, VkBuffer srcBuffer, VkImage image, uint32_t width, uint32_t height)
-{
-	VkCommandBuffer cmdBuffer = BeginCmdBuffer(transferPool);
-
-	VkBufferImageCopy imageCopyRegion = {};
-	imageCopyRegion.bufferOffset = 0;
-	imageCopyRegion.bufferRowLength = 0;		//Calculate data spacing
-	imageCopyRegion.bufferImageHeight = 0;
-	imageCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	imageCopyRegion.imageSubresource.baseArrayLayer = 0;
-	imageCopyRegion.imageSubresource.layerCount = 1;
-	imageCopyRegion.imageSubresource.mipLevel = 0;
-	imageCopyRegion.imageOffset = { 0,0,0 };
-	imageCopyRegion.imageExtent = { width, height, 1 };
-
-	vkCmdCopyBufferToImage(cmdBuffer, srcBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imageCopyRegion);
-
-	EndCmdBuffer(transferPool, transferQueue, cmdBuffer);
-}
-
-void Vk::CreateTextureSampler()
-{
-
-}
-
-void Vk::TransitionImageLayout(VkQueue queue, VkCommandPool pool, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
-{
-	VkCommandBuffer cmdBuffer = BeginCmdBuffer(pool);
-
-	VkImageMemoryBarrier memoryBarrier = {};
-	memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	memoryBarrier.oldLayout = oldLayout;
-	memoryBarrier.newLayout = newLayout;
-	memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED; // Keep on same queue. Can be transit to a different queue if desired
-	memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED; //
-	memoryBarrier.image = image;
-	memoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	memoryBarrier.subresourceRange.baseArrayLayer = 0;
-	memoryBarrier.subresourceRange.baseMipLevel = 0;
-	memoryBarrier.subresourceRange.layerCount = 1;
-	memoryBarrier.subresourceRange.levelCount = 1;
-
-	VkPipelineStageFlags srcStage;
-	VkPipelineStageFlags dstStage;
-
-	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-	{
-		memoryBarrier.srcAccessMask = 0;								//From any point, transfer from oldLayout to 
-		memoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;		//newLayout before transfer stage in pipeline
-
-		srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-		dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-	}
-	else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-	{
-		memoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;	//After the transfer... 
-		memoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;		//...before shader read
-
-		srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-		dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-	}
-
-	vkCmdPipelineBarrier(cmdBuffer,
-		srcStage, dstStage,					//Pipeline stages
-		0,						//Dependency flags
-		0, nullptr,				//Global memory barrier count + data
-		0, nullptr,				//Buffer memory barrier count + data
-		1, &memoryBarrier);
-
-	
-	EndCmdBuffer(pool, queue, cmdBuffer);
-}
-
-
-
-
-VkCommandBuffer Vk::BeginCmdBuffer(VkCommandPool pool)
-{
-	VkCommandBuffer cmdBuffer;
-
-	VkCommandBufferAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.commandPool = pool;
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandBufferCount = 1;
-
-	if (vkAllocateCommandBuffers(m_device, &allocInfo, &cmdBuffer) != VK_SUCCESS) {
-		throw std::runtime_error("failed to allocate command buffers!");
-	}
-
-	VkCommandBufferBeginInfo beginInfo = {};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT; //Use cmd buffer once
-
-	vkBeginCommandBuffer(cmdBuffer, &beginInfo);
-	return cmdBuffer;
-}
-
-
-
-void Vk::EndCmdBuffer(VkCommandPool pool, VkQueue sumitTo, VkCommandBuffer cmdBuffer)
-{
-	vkEndCommandBuffer(cmdBuffer);
-
-	VkSubmitInfo submitInfo = {};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &cmdBuffer;
-
-	vkQueueSubmit(sumitTo, 1, &submitInfo, VK_NULL_HANDLE);
-	vkQueueWaitIdle(sumitTo); // Wait for queue to be done, this avoids queue being overloaded if many copies are made
-
-	vkFreeCommandBuffers(m_device, pool, 1, &cmdBuffer);
-}
-
-
-
-
-stbi_uc* Vk::LoadTexture(std::string fileName, int* width, int* height, VkDeviceSize* imageSize)
+stbi_uc* Vk::LoadTexture(std::string fileName, int* width, int* height)
 {
 	int channels;
 	std::string fileLoc = "Textures/" + fileName;
@@ -1281,15 +1099,5 @@ stbi_uc* Vk::LoadTexture(std::string fileName, int* width, int* height, VkDevice
 	if (!image)
 		throw std::runtime_error("Failed to load texture " + fileName);
 
-	*imageSize = *width * *height * 4;
-
 	return image;
 }
-
-
-
-
-
-
-
-

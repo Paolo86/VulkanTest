@@ -57,12 +57,30 @@ class VkUtils
 				VkMemoryPropertyFlags propFlags, VkDeviceMemory* outImageMemory);
 
 			static VkImageView CreateImageView(VkDevice m_device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+
+			static void CopyImageBuffer(VkDevice device, VkQueue transferQueue,
+				VkCommandPool transferPool, VkBuffer srcBuffer, VkImage image, uint32_t width, uint32_t height);
+
+			static void TransitionImageLayout(VkDevice m_device, VkQueue queue, 
+				VkCommandPool pool, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
+				
 		};
 
 		class MemoryUtils
 		{
 		public:
 			static uint32_t FindMemoryTypeIndex(VkPhysicalDevice m_physicalDevice, uint32_t allowedTypes, VkMemoryPropertyFlags properties);
+			static void CreateBuffer(VkDevice m_device, VkPhysicalDevice m_physicalDevice, VkDeviceSize bufferSize, VkBufferUsageFlags usage,
+				VkMemoryPropertyFlags bufferProperties, VkBuffer* buffer, VkDeviceMemory* bufferMemory);
+
+			static void CopyBuffer(VkDevice device, VkQueue transferQueue, 
+				VkCommandPool transferPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize);
 		};
 
+		class CmdUtils
+		{
+		public:
+			static VkCommandBuffer BeginCmdBufferSingleUsage(VkDevice m_device, VkCommandPool pool);
+			static void EndCmdBuffer(VkDevice m_device, VkCommandPool pool, VkQueue sumitTo, VkCommandBuffer cmdBuffer);
+		};
 };

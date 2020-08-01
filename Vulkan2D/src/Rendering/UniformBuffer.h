@@ -1,11 +1,12 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
+#include "VkUtils.h"
 
 template <class T>
 class UniformBuffer
 {
 public:
-	UniformBuffer(VkBufferUsageFlagBits usageFlag, VkMemoryPropertyFlags memProps);
+	UniformBuffer(VkPhysicalDevice physical, VkDevice device, VkBufferUsageFlagBits usageFlag, VkMemoryPropertyFlags memProps);
 	UniformBuffer() {}
 
 	void Update(VkDevice device, T* data)
@@ -29,10 +30,10 @@ public:
 };
 
 template <class T>
-UniformBuffer<T>::UniformBuffer(VkBufferUsageFlagBits usageFlag, VkMemoryPropertyFlags memProps)
+UniformBuffer<T>::UniformBuffer(VkPhysicalDevice physical, VkDevice device, VkBufferUsageFlagBits usageFlag, VkMemoryPropertyFlags memProps)
 {
 	bufferSize = sizeof(T);
-	Vk::Instance().CreateBuffer(bufferSize, usageFlag, memProps, &buffer, &bufferMemory);
+	VkUtils::MemoryUtils::CreateBuffer(device, physical, bufferSize, usageFlag, memProps, &buffer, &bufferMemory);
 }
 
 

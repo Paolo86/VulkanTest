@@ -47,21 +47,10 @@ class Vk
 
 		void Draw();
 
-
-		VkCommandBuffer BeginCmdBuffer(VkCommandPool pool);
-		void EndCmdBuffer(VkCommandPool pool, VkQueue sumitTo, VkCommandBuffer cmdBuffer);
-		void CopyBuffer(VkQueue transferQueue, VkCommandPool transferPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize);
-
-		void CopyImageBuffer(VkQueue transferQueue, VkCommandPool transferPool, VkBuffer srcBuffer, VkImage image, uint32_t width, uint32_t height);
-
-		void CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags bufferProperties, VkBuffer* buffer, VkDeviceMemory* bufferMemory);
-
-
-		stbi_uc* LoadTexture(std::string fileName, int* width, int* height, VkDeviceSize* imageSize);
+		stbi_uc* LoadTexture(std::string fileName, int* width, int* height);
 
 		//Change image layout
-		// Not done automatically if it's not an attachment
-		void TransitionImageLayout(VkQueue queue, VkCommandPool pool, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
+
 		VkFormat m_swapChainImageFormat;
 		VkExtent2D m_swapChainExtent;
 		VkDevice m_device;
@@ -165,8 +154,6 @@ private:
 		void CreateUniformBuffers();
 		void CreateSynch();
 		void AllocateDynamicBufferTransferSpace();
-		void UpdateUBO(uint32_t imageIndex);
-		void CreateTextureSampler();
 
 
 		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);

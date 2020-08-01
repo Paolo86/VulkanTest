@@ -18,11 +18,9 @@ void Material::Create()
 
 void Material::Destroy()
 {
-	for (size_t i = 0; i < m_textureImages.size(); i++)
+	for (size_t i = 0; i < m_textures.size(); i++)
 	{
-		vkDestroyImageView(Vk::Instance().m_device, m_textureImagesViews[i], nullptr);
-		vkDestroyImage(Vk::Instance().m_device, m_textureImages[i], nullptr);
-		vkFreeMemory(Vk::Instance().m_device, m_textureImagesMemory[i], nullptr);
+		m_textures[i].Destroy();
 	}
 
 	for (VkDescriptorSetLayout layout : m_orderedDescriptorLayouts)
@@ -150,100 +148,30 @@ void Material::CreateDescriptorSetLayout()
 
 int Material::CreateTexture(std::string fileName)
 {
-	int textureImgaLoc = CreateTextureImage(fileName);
-	VkImageView imageView = VkUtils::ImageUtils::CreateImageView(Vk::Instance().m_device, m_textureImages[textureImgaLoc], VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-	m_textureImagesViews.push_back(imageView);
+	int w, h;
+	stbi_uc* imageData = Vk::Instance().LoadTexture(fileName, &w, &h);
 
-	textureImgaLoc = CreateTextureImage("texture.jpg");
-	imageView = VkUtils::ImageUtils::CreateImageView(Vk::Instance().m_device, m_textureImages[textureImgaLoc], VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
-	m_textureImagesViews.push_back(imageView);
+	Texture2D t(w,h,4,imageData);
+	stbi_image_free(imageData);
+	m_textures.push_back(t);
+
+	imageData = Vk::Instance().LoadTexture("texture.jpg", &w, &h);
+
+	Texture2D t2(w, h, 4, imageData);
+	stbi_image_free(imageData);
+	m_textures.push_back(t2);
 
 	//Texture sampler descriptor set layout
-	VkDescriptorSetLayoutBinding samplerLayoutBinding = VkUtils::PipelineUtils::GetDescriptorLayout(0, VK_DESCRIPTOR_TYPE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
-	VkDescriptorSetLayoutBinding imagesLayoutBinding = VkUtils::PipelineUtils::GetDescriptorLayout(1, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 2, VK_SHADER_STAGE_FRAGMENT_BIT, &Vk::Instance().m_textureSampler.m_sampler);
+	VkDescriptorSetLayoutBinding imagesLayoutBinding = VkUtils::PipelineUtils::GetDescriptorLayout(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,2, VK_SHADER_STAGE_FRAGMENT_BIT);
 
 	DescriptorSetLayout samplerLayout;
-	samplerLayout.AddBinding({ samplerLayoutBinding,imagesLayoutBinding }).Create(Vk::Instance().m_device);
+	samplerLayout.AddBinding({ imagesLayoutBinding }).Create(Vk::Instance().m_device);
 	m_orderedDescriptorLayouts.push_back(samplerLayout.m_descriptorLayout);
 
 	m_samplerDescriptorSets.resize(1);
 	m_samplerDescriptorSets[0].CreateDescriptorSet(Vk::Instance().m_device, { samplerLayout }, Vk::Instance().m_samplerDescriptorPool);
 
-	m_samplerDescriptorSets[0].AssociateTextureSamplerCombo(Vk::Instance().m_device, m_textureImagesViews , 0, Vk::Instance().m_textureSampler.m_sampler);
-	//int descriptorLoc = CreateTextureDescriptor(imageView);
+	m_samplerDescriptorSets[0].AssociateTextureSamplerCombo(Vk::Instance().m_device, m_textures , 0, Vk::Instance().m_textureSampler.m_sampler);
 	return 0;
 }
 
-int Material::CreateTextureImage(std::string fileName)
-{
-	int w, h;
-	VkDeviceSize size;
-	stbi_uc* imageData = Vk::Instance().LoadTexture(fileName, &w, &h, &size);
-	VkBuffer staging;
-	VkDeviceMemory stagingMemory;
-	Vk::Instance().CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &staging, &stagingMemory);
-
-	void* data;
-	vkMapMemory(Vk::Instance().m_device, stagingMemory, 0, size, 0, &data);
-	memcpy(data, imageData, static_cast<size_t>(size));
-	vkUnmapMemory(Vk::Instance().m_device, stagingMemory);
-
-	stbi_image_free(imageData);
-
-	VkImage texImage;
-	VkDeviceMemory texImageMemory;
-	texImage = VkUtils::ImageUtils::CreateImage(Vk::Instance().m_physicalDevice, Vk::Instance().m_device, w, h, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &texImageMemory);
-	//Before copy, transition layout to optimal transfer
-	Vk::Instance().TransitionImageLayout(Vk::Instance().m_graphicsQ, Vk::Instance().m_commandPool, texImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-
-	Vk::Instance().CopyImageBuffer(Vk::Instance().m_graphicsQ, Vk::Instance().m_commandPool, staging, texImage, w, h);
-
-	//After copy, transfer layout to shader readable
-	Vk::Instance().TransitionImageLayout(Vk::Instance().m_graphicsQ, Vk::Instance().m_commandPool, texImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-	m_textureImages.push_back(texImage);
-	m_textureImagesMemory.push_back(texImageMemory);
-
-	vkDestroyBuffer(Vk::Instance().m_device, staging, nullptr);
-	vkFreeMemory(Vk::Instance().m_device, stagingMemory, nullptr);
-	return m_textureImages.size() - 1;
-}
-
-int Material::CreateTextureDescriptor(VkImageView textureImage)
-{
-	/*VkDescriptorSet descriptorSet;
-
-	VkDescriptorSetAllocateInfo setAllocateInfo = {};
-	setAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	setAllocateInfo.descriptorPool = Vk::Instance().m_samplerDescriptorPool;
-	setAllocateInfo.descriptorSetCount = 1;
-	setAllocateInfo.pSetLayouts = &m_orderedDescriptorLayouts[1];
-
-	if (vkAllocateDescriptorSets(Vk::Instance().m_device, &setAllocateInfo, &descriptorSet) != VK_SUCCESS)
-	{
-		throw std::runtime_error("Failed to create descriptor sets");
-	}
-
-	VkDescriptorImageInfo imageInfo = {};
-	imageInfo.imageView = textureImage;
-	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	imageInfo.sampler = Vk::Instance().m_textureSampler.m_sampler;
-
-	VkWriteDescriptorSet descriptorWrite = {};
-	descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	descriptorWrite.dstSet = descriptorSet;
-	descriptorWrite.dstBinding = 0;
-	descriptorWrite.dstArrayElement = 0;
-	descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	descriptorWrite.descriptorCount = 1;
-	descriptorWrite.pImageInfo = &imageInfo;
-
-
-	//Image-sampler Descriptor
-	std::vector< VkWriteDescriptorSet> setWrites = { descriptorWrite };
-	vkUpdateDescriptorSets(Vk::Instance().m_device, setWrites.size(), setWrites.data(), 0, nullptr);
-
-	m_samplerDescriptorSets.push_back(descriptorSet);
-	return m_samplerDescriptorSets.size() - 1;*/
-	return 0;
-}

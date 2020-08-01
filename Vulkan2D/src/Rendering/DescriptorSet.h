@@ -4,6 +4,7 @@
 #include <vector>
 #include <array>
 #include "UniformBuffer.h"
+#include "Texture2D.h"
 
 
 struct DescriptorSetLayout
@@ -86,6 +87,16 @@ public:
 
 		std::vector< VkWriteDescriptorSet> setWrites = { mvpSetWrite };
 		vkUpdateDescriptorSets(device, setWrites.size(), setWrites.data(), 0, nullptr);
+	}
+
+	void AssociateTextureSamplerCombo(VkDevice device, std::vector<Texture2D>& images, uint32_t binding, VkSampler sampler)
+	{
+		std::vector<VkImageView> views;
+		for (Texture2D t : images)
+			views.push_back(t.m_imageView);
+
+		AssociateTextureSamplerCombo(device, views, binding, sampler);
+
 	}
 
 	void AssociateTextureSamplerCombo(VkDevice device, std::vector<VkImageView>& images, uint32_t binding, VkSampler sampler)
