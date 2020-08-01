@@ -47,30 +47,30 @@ void Material::CreateGraphicsPipeline()
 	auto vertexShaderCode = FileUtils::ReadFile("Shaders/" + vertexShaderName);
 	auto fragmentShaderCode = FileUtils::ReadFile("Shaders/" + fragmentShaderName);
 
-	VkShaderModule vertShaderModule = VkUtils::CreateShadeModule(Vk::Instance().m_device, vertexShaderCode);
-	VkShaderModule fragShaderModule = VkUtils::CreateShadeModule(Vk::Instance().m_device, fragmentShaderCode);
+	VkShaderModule vertShaderModule = VkUtils::PipelineUtils::CreateShadeModule(Vk::Instance().m_device, vertexShaderCode);
+	VkShaderModule fragShaderModule = VkUtils::PipelineUtils::CreateShadeModule(Vk::Instance().m_device, fragmentShaderCode);
 
-	VkPipelineShaderStageCreateInfo vertShaderStageInfo = VkUtils::GetPipelineVertexShaderStage(vertShaderModule);
-	VkPipelineShaderStageCreateInfo fragShaderStageInfo = VkUtils::GetPipelineFragmentShaderStage(fragShaderModule);
+	VkPipelineShaderStageCreateInfo vertShaderStageInfo = VkUtils::PipelineUtils::GetPipelineVertexShaderStage(vertShaderModule);
+	VkPipelineShaderStageCreateInfo fragShaderStageInfo = VkUtils::PipelineUtils::GetPipelineFragmentShaderStage(fragShaderModule);
 	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 	VkVertexInputBindingDescription bindigDescription = {};
 	std::array<VkVertexInputAttributeDescription, 3> attributeDescription;
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 
 	Vertex::GetVertexAttributeDescription(&bindigDescription, &vertexInputInfo, attributeDescription);	
-	VkPipelineInputAssemblyStateCreateInfo inputAssembly = VkUtils::GetPipelineInputAssemblyState();
-	VkViewport viewport = VkUtils::GetViewport(Vk::Instance().m_swapChainExtent.width, Vk::Instance().m_swapChainExtent.height);
-	VkRect2D scissor = VkUtils::GetScissor(Vk::Instance().m_swapChainExtent.width, Vk::Instance().m_swapChainExtent.height);
-	VkPipelineViewportStateCreateInfo viewportState = VkUtils::GetPipelineViewportState(&viewport, &scissor);
-	VkPipelineRasterizationStateCreateInfo rasterizerCreateInfo = VkUtils::GetPipelineRasterizer();
+	VkPipelineInputAssemblyStateCreateInfo inputAssembly = VkUtils::PipelineUtils::GetPipelineInputAssemblyState();
+	VkViewport viewport = VkUtils::PipelineUtils::GetViewport(Vk::Instance().m_swapChainExtent.width, Vk::Instance().m_swapChainExtent.height);
+	VkRect2D scissor = VkUtils::PipelineUtils::GetScissor(Vk::Instance().m_swapChainExtent.width, Vk::Instance().m_swapChainExtent.height);
+	VkPipelineViewportStateCreateInfo viewportState = VkUtils::PipelineUtils::GetPipelineViewportState(&viewport, &scissor);
+	VkPipelineRasterizationStateCreateInfo rasterizerCreateInfo = VkUtils::PipelineUtils::GetPipelineRasterizer();
 
 	//For some AA, requires GPU feature to be enabled
-	VkPipelineMultisampleStateCreateInfo multisampling = VkUtils::GetPipelineMultisampling();
+	VkPipelineMultisampleStateCreateInfo multisampling = VkUtils::PipelineUtils::GetPipelineMultisampling();
 
 	//Blending stuff, disabled for now
-	VkPipelineColorBlendAttachmentState colorBlendAttachment = VkUtils::GetPipelineBlendAttachmentState();
+	VkPipelineColorBlendAttachmentState colorBlendAttachment = VkUtils::PipelineUtils::GetPipelineBlendAttachmentState();
 
-	VkPipelineColorBlendStateCreateInfo colorBlending = VkUtils::GetPipelineColorBlendingState(&colorBlendAttachment);
+	VkPipelineColorBlendStateCreateInfo colorBlending = VkUtils::PipelineUtils::GetPipelineColorBlendingState(&colorBlendAttachment);
 
 	m_pushConstant.Create<UboModel>(VK_SHADER_STAGE_VERTEX_BIT);
 
@@ -79,7 +79,7 @@ void Material::CreateGraphicsPipeline()
 
 	std::vector<VkPushConstantRange> ranges;
 	ranges.push_back(m_pushConstant.m_vkPushConstant);
-	//VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = VkUtils::GetPipelineLayout(m_orderedDescriptorLayouts, ranges);
+	//VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = VkUtils::PipelineUtils::GetPipelineLayout(m_orderedDescriptorLayouts, ranges);
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
 	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(m_orderedDescriptorLayouts.size());
@@ -95,7 +95,7 @@ void Material::CreateGraphicsPipeline()
 		throw std::runtime_error("Failed to create Pipeline Layout!");
 	}
 
-	VkPipelineDepthStencilStateCreateInfo depthStencilCreateInfo = VkUtils::GetPipelineDepthStencilAttachmentState();
+	VkPipelineDepthStencilStateCreateInfo depthStencilCreateInfo = VkUtils::PipelineUtils::GetPipelineDepthStencilAttachmentState();
 
 	m_graphicsPipeline.Create(
 		Vk::Instance().m_device,
@@ -159,8 +159,8 @@ int Material::CreateTexture(std::string fileName)
 	m_textureImagesViews.push_back(imageView);
 
 	//Texture sampler descriptor set layout
-	VkDescriptorSetLayoutBinding samplerLayoutBinding = VkUtils::GetDescriptorLayout(0, VK_DESCRIPTOR_TYPE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
-	VkDescriptorSetLayoutBinding imagesLayoutBinding = VkUtils::GetDescriptorLayout(1, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 2, VK_SHADER_STAGE_FRAGMENT_BIT, &Vk::Instance().m_textureSampler.m_sampler);
+	VkDescriptorSetLayoutBinding samplerLayoutBinding = VkUtils::PipelineUtils::GetDescriptorLayout(0, VK_DESCRIPTOR_TYPE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+	VkDescriptorSetLayoutBinding imagesLayoutBinding = VkUtils::PipelineUtils::GetDescriptorLayout(1, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 2, VK_SHADER_STAGE_FRAGMENT_BIT, &Vk::Instance().m_textureSampler.m_sampler);
 
 	DescriptorSetLayout samplerLayout;
 	samplerLayout.AddBinding({ samplerLayoutBinding,imagesLayoutBinding }).Create(Vk::Instance().m_device);
@@ -192,8 +192,7 @@ int Material::CreateTextureImage(std::string fileName)
 
 	VkImage texImage;
 	VkDeviceMemory texImageMemory;
-	texImage = Vk::Instance().CreateImage(w, h, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &texImageMemory);
-
+	texImage = VkUtils::ImageUtils::CreateImage(Vk::Instance().m_physicalDevice, Vk::Instance().m_device, w, h, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &texImageMemory);
 	//Before copy, transition layout to optimal transfer
 	Vk::Instance().TransitionImageLayout(Vk::Instance().m_graphicsQ, Vk::Instance().m_commandPool, texImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 

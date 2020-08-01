@@ -26,9 +26,10 @@ struct DescriptorSetLayout
 		if (vkCreateDescriptorSetLayout(device, &layoutCreateInfo, nullptr, &m_descriptorLayout) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create descriptor set layout");
 	}
-	std::vector< VkDescriptorSetLayoutBinding> m_bindings;
 	VkDescriptorSetLayout m_descriptorLayout;
 
+private:
+	std::vector< VkDescriptorSetLayoutBinding> m_bindings;
 
 };
 
@@ -144,5 +145,4 @@ public:
 	}
 
 	VkDescriptorSet m_descriptorSet;
-	uint32_t m_descriptorCount;
 };

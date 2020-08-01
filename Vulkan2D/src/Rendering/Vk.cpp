@@ -9,6 +9,7 @@
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 #include "Material.h"
+#include "VkUtils.h"
 std::unique_ptr<Vk> Vk::m_instance;
 
 Material testMaterial("basic");
@@ -865,7 +866,7 @@ void Vk::CreateDepthBufferImage()
 		VK_IMAGE_TILING_OPTIMAL,
 		VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
-	m_depthBufferImage = CreateImage(m_swapChainExtent.width, m_swapChainExtent.height, depthFormat,
+	m_depthBufferImage = VkUtils::ImageUtils::CreateImage(m_physicalDevice,m_device,m_swapChainExtent.width, m_swapChainExtent.height, depthFormat,
 		VK_IMAGE_TILING_OPTIMAL,
 		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_depthBufferMemory);
@@ -1099,22 +1100,6 @@ void Vk::Draw()
 	currentFrame = (currentFrame + 1) % MAX_FRAME_DRAWS;
 }
 
-uint32_t Vk::FindMemoryTypeIndex(uint32_t allowedTypes, VkMemoryPropertyFlags properties)
-{
-	// Get properties of physical device memory
-	VkPhysicalDeviceMemoryProperties memoryProperties;
-	vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &memoryProperties);
-
-	for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
-	{
-		if ((allowedTypes & (1 << i))														// Index of memory type must match corresponding bit in allowedTypes
-			&& (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)	// Desired property bit flags are part of memory type's property flags
-		{
-			// This memory type is valid, so return its index
-			return i;
-		}
-	}
-}
 
 void Vk::AllocateDynamicBufferTransferSpace()
 {
@@ -1147,7 +1132,7 @@ void Vk::CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags usage, VkMemor
 	VkMemoryAllocateInfo memoryAllocInfo = {};
 	memoryAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	memoryAllocInfo.allocationSize = memRequirement.size;
-	memoryAllocInfo.memoryTypeIndex = FindMemoryTypeIndex(memRequirement.memoryTypeBits, bufferProperties);//VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT: CPU can interact with memory
+	memoryAllocInfo.memoryTypeIndex = VkUtils::MemoryUtils::FindMemoryTypeIndex(m_physicalDevice,memRequirement.memoryTypeBits, bufferProperties);//VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT: CPU can interact with memory
 																					//VK_MEMORY_PROPERTY_HOST_COHERENT_BIT: Place data straight into buffer after mapping
 
 
@@ -1273,57 +1258,6 @@ VkImageView Vk::CreateImageView(VkImage image, VkFormat format, VkImageAspectFla
 	return imageView;
 }
 
-VkImage Vk::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags useFlags,
-	VkMemoryPropertyFlags propFlags, VkDeviceMemory* outImageMemory)
-{
-	// CREATE IMAGE
-	// Image Creation Info
-	VkImageCreateInfo imageCreateInfo = {};
-	imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;						// Type of image (1D, 2D, or 3D)
-	imageCreateInfo.extent.width = width;								// Width of image extent
-	imageCreateInfo.extent.height = height;								// Height of image extent
-	imageCreateInfo.extent.depth = 1;									// Depth of image (just 1, no 3D aspect)
-	imageCreateInfo.mipLevels = 1;										// Number of mipmap levels
-	imageCreateInfo.arrayLayers = 1;									// Number of levels in image array
-	imageCreateInfo.format = format;									// Format type of image
-	imageCreateInfo.tiling = tiling;									// How image data should be "tiled" (arranged for optimal reading)
-	imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;			// Layout of image data on creation
-	imageCreateInfo.usage = useFlags;									// Bit flags defining what image will be used for
-	imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;					// Number of samples for multi-sampling
-	imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;			// Whether image can be shared between queues
-
-	// Create image
-	VkImage image;
-	VkResult result = vkCreateImage(m_device, &imageCreateInfo, nullptr, &image);
-	if (result != VK_SUCCESS)
-	{
-		throw std::runtime_error("Failed to create an Image!");
-	}
-
-	// CREATE MEMORY FOR IMAGE
-
-	// Get memory requirements for a type of image
-	VkMemoryRequirements memoryRequirements;
-	vkGetImageMemoryRequirements(m_device, image, &memoryRequirements);
-
-	// Allocate memory using image requirements and user defined properties
-	VkMemoryAllocateInfo memoryAllocInfo = {};
-	memoryAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	memoryAllocInfo.allocationSize = memoryRequirements.size;
-	memoryAllocInfo.memoryTypeIndex = FindMemoryTypeIndex(memoryRequirements.memoryTypeBits, propFlags);
-
-	result = vkAllocateMemory(m_device, &memoryAllocInfo, nullptr, outImageMemory);
-	if (result != VK_SUCCESS)
-	{
-		throw std::runtime_error("Failed to allocate memory for image!");
-	}
-
-	// Connect memory to image
-	vkBindImageMemory(m_device, image, *outImageMemory, 0);
-
-	return image;
-}
 
 VkCommandBuffer Vk::BeginCmdBuffer(VkCommandPool pool)
 {

@@ -1,7 +1,7 @@
 #include "VkUtils.h"
 #include "Vk.h"
 
-VkPipelineShaderStageCreateInfo VkUtils::GetPipelineVertexShaderStage(VkShaderModule vertShaderModule)
+VkPipelineShaderStageCreateInfo VkUtils::PipelineUtils::PipelineUtils::GetPipelineVertexShaderStage(VkShaderModule vertShaderModule)
 {
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
 	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -12,7 +12,7 @@ VkPipelineShaderStageCreateInfo VkUtils::GetPipelineVertexShaderStage(VkShaderMo
 
 }
 
-VkPipelineShaderStageCreateInfo VkUtils::GetPipelineFragmentShaderStage(VkShaderModule fragShaderModule)
+VkPipelineShaderStageCreateInfo VkUtils::PipelineUtils::GetPipelineFragmentShaderStage(VkShaderModule fragShaderModule)
 {
 	VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
 	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -22,7 +22,7 @@ VkPipelineShaderStageCreateInfo VkUtils::GetPipelineFragmentShaderStage(VkShader
 	return fragShaderStageInfo;
 }
 
-VkViewport VkUtils::GetViewport(uint32_t extentWidth, uint32_t extentHeight)
+VkViewport VkUtils::PipelineUtils::GetViewport(uint32_t extentWidth, uint32_t extentHeight)
 {
 	VkViewport viewport = {};
 	viewport.x = 0.0f;
@@ -34,7 +34,7 @@ VkViewport VkUtils::GetViewport(uint32_t extentWidth, uint32_t extentHeight)
 	return viewport;
 }
 
-VkRect2D VkUtils::GetScissor(uint32_t extentWidth, uint32_t extentHeight)
+VkRect2D VkUtils::PipelineUtils::GetScissor(uint32_t extentWidth, uint32_t extentHeight)
 {
 	VkRect2D scissor = {};
 	scissor.offset = { 0, 0 };
@@ -43,7 +43,7 @@ VkRect2D VkUtils::GetScissor(uint32_t extentWidth, uint32_t extentHeight)
 	return scissor;
 }
 
-VkPipelineViewportStateCreateInfo VkUtils::GetPipelineViewportState(VkViewport* viewport, VkRect2D* scissor)
+VkPipelineViewportStateCreateInfo VkUtils::PipelineUtils::GetPipelineViewportState(VkViewport* viewport, VkRect2D* scissor)
 {
 	VkPipelineViewportStateCreateInfo viewportState = {};
 	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -54,7 +54,7 @@ VkPipelineViewportStateCreateInfo VkUtils::GetPipelineViewportState(VkViewport* 
 	return viewportState;
 }
 
-VkPipelineRasterizationStateCreateInfo VkUtils::GetPipelineRasterizer(float lineWidth,VkPolygonMode polygonMode,VkCullModeFlags cullMode,
+VkPipelineRasterizationStateCreateInfo VkUtils::PipelineUtils::GetPipelineRasterizer(float lineWidth,VkPolygonMode polygonMode,VkCullModeFlags cullMode,
 	VkFrontFace frontFace)
 {
 	VkPipelineRasterizationStateCreateInfo rasterizerCreateInfo = {};
@@ -69,7 +69,7 @@ VkPipelineRasterizationStateCreateInfo VkUtils::GetPipelineRasterizer(float line
 	return rasterizerCreateInfo;
 }
 
-VkPipelineMultisampleStateCreateInfo VkUtils::GetPipelineMultisampling()
+VkPipelineMultisampleStateCreateInfo VkUtils::PipelineUtils::GetPipelineMultisampling()
 {
 	//For some AA, requires GPU feature to be enabled
 	VkPipelineMultisampleStateCreateInfo multisampling = {};
@@ -83,7 +83,7 @@ VkPipelineMultisampleStateCreateInfo VkUtils::GetPipelineMultisampling()
 	return multisampling;
 }
 
-VkPipelineColorBlendAttachmentState VkUtils::GetPipelineBlendAttachmentState(
+VkPipelineColorBlendAttachmentState VkUtils::PipelineUtils::GetPipelineBlendAttachmentState(
 	bool blendEnable,
 	VkBlendFactor srcColorBlendFactor,
 	VkBlendFactor dstColorBlendFactor,
@@ -104,7 +104,7 @@ VkPipelineColorBlendAttachmentState VkUtils::GetPipelineBlendAttachmentState(
 	return colorBlendAttachment;
 }
 
-VkPipelineColorBlendStateCreateInfo VkUtils::GetPipelineColorBlendingState(VkPipelineColorBlendAttachmentState* attachmentBlending)
+VkPipelineColorBlendStateCreateInfo VkUtils::PipelineUtils::GetPipelineColorBlendingState(VkPipelineColorBlendAttachmentState* attachmentBlending)
 {
 	VkPipelineColorBlendStateCreateInfo colorBlending = {};
 	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -119,7 +119,7 @@ VkPipelineColorBlendStateCreateInfo VkUtils::GetPipelineColorBlendingState(VkPip
 	return colorBlending;
 }
 
-VkPipelineDepthStencilStateCreateInfo VkUtils::GetPipelineDepthStencilAttachmentState(
+VkPipelineDepthStencilStateCreateInfo VkUtils::PipelineUtils::GetPipelineDepthStencilAttachmentState(
 	bool depthTestEnable,
 	bool writeTestEnable,
 	bool stencilTestEnable,
@@ -135,7 +135,7 @@ VkPipelineDepthStencilStateCreateInfo VkUtils::GetPipelineDepthStencilAttachment
 	return depthStencilCreateInfo;
 }
 
-VkPipelineInputAssemblyStateCreateInfo VkUtils::GetPipelineInputAssemblyState(VkPrimitiveTopology topology)
+VkPipelineInputAssemblyStateCreateInfo VkUtils::PipelineUtils::GetPipelineInputAssemblyState(VkPrimitiveTopology topology)
 {
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -145,7 +145,7 @@ VkPipelineInputAssemblyStateCreateInfo VkUtils::GetPipelineInputAssemblyState(Vk
 }
 
 
-VkShaderModule VkUtils::CreateShadeModule(VkDevice device, const std::vector<char>& code)
+VkShaderModule VkUtils::PipelineUtils::CreateShadeModule(VkDevice device, const std::vector<char>& code)
 {
 	VkShaderModuleCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -160,7 +160,7 @@ VkShaderModule VkUtils::CreateShadeModule(VkDevice device, const std::vector<cha
 	return shaderModule;
 }
 
-VkPipelineLayoutCreateInfo VkUtils::GetPipelineLayout(
+VkPipelineLayoutCreateInfo VkUtils::PipelineUtils::GetPipelineLayout(
 	std::vector<VkDescriptorSetLayout>& descriptorLayouts,
 	std::vector<VkPushConstantRange>& pushConstants
 	)
@@ -175,7 +175,7 @@ VkPipelineLayoutCreateInfo VkUtils::GetPipelineLayout(
 }
 
 
-VkDescriptorSetLayoutBinding VkUtils::GetDescriptorLayout(uint32_t binding, 
+VkDescriptorSetLayoutBinding VkUtils::PipelineUtils::GetDescriptorLayout(uint32_t binding, 
 	VkDescriptorType descriptorType, 
 	uint32_t descriptorCount, 
 	VkShaderStageFlags shaderStage, 
@@ -188,4 +188,73 @@ VkDescriptorSetLayoutBinding VkUtils::GetDescriptorLayout(uint32_t binding,
 	samplerLayoutBinding.stageFlags = shaderStage;
 	samplerLayoutBinding.pImmutableSamplers = sampler;
 	return samplerLayoutBinding;
+}
+
+uint32_t VkUtils::MemoryUtils::FindMemoryTypeIndex(VkPhysicalDevice m_physicalDevice, uint32_t allowedTypes, VkMemoryPropertyFlags properties)
+{
+	// Get properties of physical device memory
+	VkPhysicalDeviceMemoryProperties memoryProperties;
+	vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &memoryProperties);
+
+	for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++)
+	{
+		if ((allowedTypes & (1 << i))														// Index of memory type must match corresponding bit in allowedTypes
+			&& (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)	// Desired property bit flags are part of memory type's property flags
+		{
+			// This memory type is valid, so return its index
+			return i;
+		}
+	}
+}
+
+
+VkImage VkUtils::ImageUtils::CreateImage(VkPhysicalDevice m_physicalDevice, VkDevice m_device, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags useFlags,
+	VkMemoryPropertyFlags propFlags, VkDeviceMemory* outImageMemory)
+{
+	// CREATE IMAGE
+	// Image Creation Info
+	VkImageCreateInfo imageCreateInfo = {};
+	imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;						// Type of image (1D, 2D, or 3D)
+	imageCreateInfo.extent.width = width;								// Width of image extent
+	imageCreateInfo.extent.height = height;								// Height of image extent
+	imageCreateInfo.extent.depth = 1;									// Depth of image (just 1, no 3D aspect)
+	imageCreateInfo.mipLevels = 1;										// Number of mipmap levels
+	imageCreateInfo.arrayLayers = 1;									// Number of levels in image array
+	imageCreateInfo.format = format;									// Format type of image
+	imageCreateInfo.tiling = tiling;									// How image data should be "tiled" (arranged for optimal reading)
+	imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;			// Layout of image data on creation
+	imageCreateInfo.usage = useFlags;									// Bit flags defining what image will be used for
+	imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;					// Number of samples for multi-sampling
+	imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;			// Whether image can be shared between queues
+
+	// Create image
+	VkImage image;
+	VkResult result = vkCreateImage(m_device, &imageCreateInfo, nullptr, &image);
+	if (result != VK_SUCCESS)
+	{
+		throw std::runtime_error("Failed to create an Image!");
+	}
+
+	// CREATE MEMORY FOR IMAGE
+	// Get memory requirements for a type of image
+	VkMemoryRequirements memoryRequirements;
+	vkGetImageMemoryRequirements(m_device, image, &memoryRequirements);
+
+	// Allocate memory using image requirements and user defined properties
+	VkMemoryAllocateInfo memoryAllocInfo = {};
+	memoryAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	memoryAllocInfo.allocationSize = memoryRequirements.size;
+	memoryAllocInfo.memoryTypeIndex = VkUtils::MemoryUtils::FindMemoryTypeIndex(m_physicalDevice,memoryRequirements.memoryTypeBits, propFlags);
+
+	result = vkAllocateMemory(m_device, &memoryAllocInfo, nullptr, outImageMemory);
+	if (result != VK_SUCCESS)
+	{
+		throw std::runtime_error("Failed to allocate memory for image!");
+	}
+
+	// Connect memory to image
+	vkBindImageMemory(m_device, image, *outImageMemory, 0);
+
+	return image;
 }

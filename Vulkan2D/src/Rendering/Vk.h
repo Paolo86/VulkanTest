@@ -46,7 +46,7 @@ class Vk
 		void Destroy();
 
 		void Draw();
-		uint32_t FindMemoryTypeIndex(uint32_t allowedTypes, VkMemoryPropertyFlags flags);
+
 
 		VkCommandBuffer BeginCmdBuffer(VkCommandPool pool);
 		void EndCmdBuffer(VkCommandPool pool, VkQueue sumitTo, VkCommandBuffer cmdBuffer);
@@ -55,8 +55,7 @@ class Vk
 		void CopyImageBuffer(VkQueue transferQueue, VkCommandPool transferPool, VkBuffer srcBuffer, VkImage image, uint32_t width, uint32_t height);
 
 		void CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags bufferProperties, VkBuffer* buffer, VkDeviceMemory* bufferMemory);
-		VkImage CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags useFlags,
-			VkMemoryPropertyFlags propFlags, VkDeviceMemory* outImageMemory);
+
 		VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 
 		stbi_uc* LoadTexture(std::string fileName, int* width, int* height, VkDeviceSize* imageSize);
@@ -76,6 +75,7 @@ class Vk
 		TextureSampler m_textureSampler;
 		VkDescriptorPool m_descriptorPool;
 		VkDescriptorPool m_samplerDescriptorPool;
+		VkPhysicalDevice m_physicalDevice; //Destroyed automatically when instance is gone
 
 private:
 
@@ -102,7 +102,6 @@ private:
 		std::vector<VkExtensionProperties> m_supportedInstanceExtensions;
 
 
-		VkPhysicalDevice m_physicalDevice; //Destroyed automatically when instance is gone
 		VkQueue m_presentationQ;
 		VkSwapchainKHR m_swapchain;
 		VkSurfaceKHR m_surface;
