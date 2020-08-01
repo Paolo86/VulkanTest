@@ -976,7 +976,7 @@ void Vk::RecordCommands(uint32_t imageIndex)
 		//uint32_t dynamicOffset = static_cast<uint32_t>(m_modelUniformAlignment * j);
 		vkCmdPushConstants(m_commandBuffers[imageIndex], testMaterial.m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &m_meshes[j].uboModel.model);
 		
-		std::array<VkDescriptorSet, 2> dsets = { testMaterial.m_descriptorSets[imageIndex] , testMaterial.m_samplerDescriptorSets[m_meshes[j].texID] };
+		std::array<VkDescriptorSet, 2> dsets = { testMaterial.m_UBOdescriptorSets[imageIndex].m_descriptorSet , testMaterial.m_samplerDescriptorSets[0].m_descriptorSet };
 		
 		vkCmdBindDescriptorSets(m_commandBuffers[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, testMaterial.m_pipelineLayout, 0,
 			static_cast<uint32_t>(dsets.size()),

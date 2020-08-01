@@ -8,6 +8,7 @@
 
 #include "GraphicsPipeline.h"
 #include "PushConstant.h"
+#include "DescriptorSet.h"
 #include "TextureSampler.h"
 
 
@@ -26,11 +27,10 @@ public:
 
 	std::vector<VkDescriptorSetLayout> m_orderedDescriptorLayouts;
 	//For UBO
-	VkDescriptorSetLayout m_descriptorLayout;
-	std::vector<VkDescriptorSet> m_descriptorSets;
+	//VkDescriptorSetLayout m_descriptorLayout;
+	std::vector<DescriptorSet> m_UBOdescriptorSets;
 
-	VkDescriptorSetLayout m_samplerDescriptorLayout;
-	std::vector<VkDescriptorSet> m_samplerDescriptorSets;
+	std::vector<DescriptorSet> m_samplerDescriptorSets;
 	std::vector<VkImage> m_textureImages;
 	std::vector<VkDeviceMemory> m_textureImagesMemory;
 	std::vector<VkImageView> m_textureImagesViews;
@@ -39,7 +39,6 @@ public:
 
 	void CreateGraphicsPipeline();
 	void CreateDescriptorSetLayout();
-	void CreateDescriptorSets();
 	int CreateTexture(std::string fileName);
 	int CreateTextureImage(std::string fileName);
 	int CreateTextureDescriptor(VkImageView textureImage);

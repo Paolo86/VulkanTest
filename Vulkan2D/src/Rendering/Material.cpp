@@ -12,9 +12,8 @@ Material::Material(std::string shaderName)
 void Material::Create()
 {
 	CreateDescriptorSetLayout();
-	CreateDescriptorSets();
-	CreateGraphicsPipeline();
 	CreateTexture("wood.jpg");
+	CreateGraphicsPipeline();
 }
 
 void Material::Destroy()
@@ -75,8 +74,8 @@ void Material::CreateGraphicsPipeline()
 
 	m_pushConstant.Create<UboModel>(VK_SHADER_STAGE_VERTEX_BIT);
 
-	m_orderedDescriptorLayouts.push_back(m_descriptorLayout);
-	m_orderedDescriptorLayouts.push_back(m_samplerDescriptorLayout);
+	//m_orderedDescriptorLayouts.push_back(m_descriptorLayout);
+	//m_orderedDescriptorLayouts.push_back(m_samplerDescriptorLayout);
 
 	std::vector<VkPushConstantRange> ranges;
 	ranges.push_back(m_pushConstant.m_vkPushConstant);
@@ -112,9 +111,12 @@ void Material::CreateGraphicsPipeline()
 		Vk::Instance().m_renderPass,
 		0);
 
+
 	vkDestroyShaderModule(Vk::Instance().m_device, fragShaderModule, nullptr);
 	vkDestroyShaderModule(Vk::Instance().m_device, vertShaderModule, nullptr);
 }
+
+
 
 
 void Material::CreateDescriptorSetLayout()
@@ -128,100 +130,26 @@ void Material::CreateDescriptorSetLayout()
 	vpLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 	vpLayoutBinding.pImmutableSamplers = nullptr;
 
-	/*VkDescriptorSetLayoutBinding modelLayoutBinding = {};
-	modelLayoutBinding.binding = 1; //Binding number, check in vert shader
-	modelLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-	modelLayoutBinding.descriptorCount = 1;
-	modelLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	modelLayoutBinding.pImmutableSamplers = nullptr;*/
+	DescriptorSetLayout uboLayout;
+	uboLayout.AddBinding(vpLayoutBinding);
+	uboLayout.Create(Vk::Instance().m_device);
 
-	std::vector< VkDescriptorSetLayoutBinding> bindings = { vpLayoutBinding }; //modelLayoutBinding no longer used, using push constant
-	VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {};
-	layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutCreateInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-	layoutCreateInfo.pBindings = bindings.data();
-
-	if (vkCreateDescriptorSetLayout(Vk::Instance().m_device, &layoutCreateInfo, nullptr, &m_descriptorLayout) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create descriptor set layout");
-
-	//Texture sampler descriptor set layout
-	VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
-	samplerLayoutBinding.binding = 0; //Binding number, check in vert shader
-	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	samplerLayoutBinding.descriptorCount = 1;
-	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-	samplerLayoutBinding.pImmutableSamplers = nullptr;
-
-	VkDescriptorSetLayoutCreateInfo samplerCreateInfo = {};
-	samplerCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	samplerCreateInfo.bindingCount = 1;
-	samplerCreateInfo.pBindings = &samplerLayoutBinding;
-
-	if (vkCreateDescriptorSetLayout(Vk::Instance().m_device, &samplerCreateInfo, nullptr, &m_samplerDescriptorLayout) != VK_SUCCESS)
-		throw std::runtime_error("Failed to create descriptor set layout");
-
-}
-
-
-
-void Material::CreateDescriptorSets()
-{
-	m_descriptorSets.resize(Vk::Instance().m_swapChainImages.size());
-
-	std::vector<VkDescriptorSetLayout> setLayouts(Vk::Instance().m_swapChainImages.size(), m_descriptorLayout);
-
-	VkDescriptorSetAllocateInfo setAllocateInfo = {};
-	setAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	setAllocateInfo.descriptorPool = Vk::Instance().m_descriptorPool;
-	setAllocateInfo.descriptorSetCount = static_cast<uint32_t>(Vk::Instance().m_swapChainImages.size());
-	setAllocateInfo.pSetLayouts = setLayouts.data();
-
-	//Allocate descriptor sets
-	if (vkAllocateDescriptorSets(Vk::Instance().m_device, &setAllocateInfo, m_descriptorSets.data()) != VK_SUCCESS)
-	{
-		throw std::runtime_error("Failed to create descriptor sets");
-	}
-
+	m_orderedDescriptorLayouts.push_back(uboLayout.m_descriptorLayout);
+	m_UBOdescriptorSets.resize(Vk::Instance().m_swapChainImages.size());
+	//Create 3 descriptor sets for ubo
 	for (size_t i = 0; i < Vk::Instance().m_swapChainImages.size(); i++)
 	{
-		VkDescriptorBufferInfo VPbufferInfo = {};
-		VPbufferInfo.buffer = Vk::Instance().m_VPUniformBuffers[i].buffer;
-;
-		VPbufferInfo.offset = 0;
-		VPbufferInfo.range = sizeof(_ViewProjection);
-
-		std::array<VkDescriptorBufferInfo, 1> infos = { VPbufferInfo };
-		VkWriteDescriptorSet mvpSetWrite = {};
-		mvpSetWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		mvpSetWrite.dstSet = m_descriptorSets[i];
-		mvpSetWrite.dstBinding = 0;
-		mvpSetWrite.dstArrayElement = 0;
-		mvpSetWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		mvpSetWrite.descriptorCount = 1;
-		mvpSetWrite.pBufferInfo = infos.data();
-
-		//Model Descriptor
-
-		//binding info
-		//Not used, changed to push constant
-		/*VkDescriptorBufferInfo modelBufferInfo = {};
-		modelBufferInfo.buffer = m_modelDynamicPuniformBuffer[i];
-		modelBufferInfo.offset = 0;
-		modelBufferInfo.range = m_modelUniformAlignment;
-
-		VkWriteDescriptorSet modelSetWrite = {};
-		modelSetWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		modelSetWrite.dstSet = m_descriptorSets[i];
-		modelSetWrite.dstBinding = 1;
-		modelSetWrite.dstArrayElement = 0;
-		modelSetWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-		modelSetWrite.descriptorCount = 1;
-		modelSetWrite.pBufferInfo = &modelBufferInfo;*/
-
-		std::vector< VkWriteDescriptorSet> setWrites = { mvpSetWrite };
-		vkUpdateDescriptorSets(Vk::Instance().m_device, setWrites.size(), setWrites.data(), 0, nullptr);
+		m_UBOdescriptorSets[i].CreateDescriptorSet(Vk::Instance().m_device, { uboLayout }, Vk::Instance().m_descriptorPool);
+		std::vector<UniformBuffer<_ViewProjection>> bufs = { Vk::Instance().m_VPUniformBuffers[i] };
+		m_UBOdescriptorSets[i].AssociateUniformBuffers<_ViewProjection>(Vk::Instance().m_device, bufs, 0, 0);
 	}
+
+
+
 }
+
+
+
 
 int Material::CreateTexture(std::string fileName)
 {
@@ -229,8 +157,29 @@ int Material::CreateTexture(std::string fileName)
 	VkImageView imageView = Vk::Instance().CreateImageView(m_textureImages[textureImgaLoc], VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 	m_textureImagesViews.push_back(imageView);
 
-	int descriptorLoc = CreateTextureDescriptor(imageView);
-	return descriptorLoc;
+	textureImgaLoc = CreateTextureImage("texture.jpg");
+	imageView = Vk::Instance().CreateImageView(m_textureImages[textureImgaLoc], VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+	m_textureImagesViews.push_back(imageView);
+
+	//Texture sampler descriptor set layout
+	VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
+	samplerLayoutBinding.binding = 0; //Binding number, check in vert shader
+	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	samplerLayoutBinding.descriptorCount = 2;
+	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	samplerLayoutBinding.pImmutableSamplers = nullptr;
+
+	DescriptorSetLayout samplerLayout;
+	samplerLayout.AddBinding(samplerLayoutBinding);
+	samplerLayout.Create(Vk::Instance().m_device);
+	m_orderedDescriptorLayouts.push_back(samplerLayout.m_descriptorLayout);
+
+	m_samplerDescriptorSets.resize(1);
+	m_samplerDescriptorSets[0].CreateDescriptorSet(Vk::Instance().m_device, { samplerLayout }, Vk::Instance().m_samplerDescriptorPool);
+
+	m_samplerDescriptorSets[0].AssociateTexture(Vk::Instance().m_device, m_textureImagesViews , 0, Vk::Instance().m_textureSampler.m_sampler);
+	//int descriptorLoc = CreateTextureDescriptor(imageView);
+	return 0;
 }
 
 int Material::CreateTextureImage(std::string fileName)
@@ -271,13 +220,13 @@ int Material::CreateTextureImage(std::string fileName)
 
 int Material::CreateTextureDescriptor(VkImageView textureImage)
 {
-	VkDescriptorSet descriptorSet;
+	/*VkDescriptorSet descriptorSet;
 
 	VkDescriptorSetAllocateInfo setAllocateInfo = {};
 	setAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	setAllocateInfo.descriptorPool = Vk::Instance().m_samplerDescriptorPool;
 	setAllocateInfo.descriptorSetCount = 1;
-	setAllocateInfo.pSetLayouts = &m_samplerDescriptorLayout;
+	setAllocateInfo.pSetLayouts = &m_orderedDescriptorLayouts[1];
 
 	if (vkAllocateDescriptorSets(Vk::Instance().m_device, &setAllocateInfo, &descriptorSet) != VK_SUCCESS)
 	{
@@ -304,5 +253,6 @@ int Material::CreateTextureDescriptor(VkImageView textureImage)
 	vkUpdateDescriptorSets(Vk::Instance().m_device, setWrites.size(), setWrites.data(), 0, nullptr);
 
 	m_samplerDescriptorSets.push_back(descriptorSet);
-	return m_samplerDescriptorSets.size() - 1;
+	return m_samplerDescriptorSets.size() - 1;*/
+	return 0;
 }
