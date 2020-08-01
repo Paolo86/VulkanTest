@@ -871,7 +871,7 @@ void Vk::CreateDepthBufferImage()
 		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_depthBufferMemory);
 
-	m_depthBufferImageView = CreateImageView(m_depthBufferImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+	m_depthBufferImageView = VkUtils::ImageUtils::CreateImageView(m_device, m_depthBufferImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 	
 }
 
@@ -1228,35 +1228,6 @@ void Vk::TransitionImageLayout(VkQueue queue, VkCommandPool pool, VkImage image,
 }
 
 
-VkImageView Vk::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
-{
-	VkImageViewCreateInfo viewCreateInfo = {};
-	viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	viewCreateInfo.image = image;											// Image to create view for
-	viewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;						// Type of image (1D, 2D, 3D, Cube, etc)
-	viewCreateInfo.format = format;											// Format of image data
-	viewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;			// Allows remapping of rgba components to other rgba values
-	viewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-	viewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-	viewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-	// Subresources allow the view to view only a part of an image
-	viewCreateInfo.subresourceRange.aspectMask = aspectFlags;				// Which aspect of image to view (e.g. COLOR_BIT for viewing colour)
-	viewCreateInfo.subresourceRange.baseMipLevel = 0;						// Start mipmap level to view from
-	viewCreateInfo.subresourceRange.levelCount = 1;							// Number of mipmap levels to view
-	viewCreateInfo.subresourceRange.baseArrayLayer = 0;						// Start array level to view from
-	viewCreateInfo.subresourceRange.layerCount = 1;							// Number of array levels to view
-
-	// Create image view and return it
-	VkImageView imageView;
-	VkResult result = vkCreateImageView(m_device, &viewCreateInfo, nullptr, &imageView);
-	if (result != VK_SUCCESS)
-	{
-		throw std::runtime_error("Failed to create an Image View!");
-	}
-
-	return imageView;
-}
 
 
 VkCommandBuffer Vk::BeginCmdBuffer(VkCommandPool pool)

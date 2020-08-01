@@ -151,11 +151,11 @@ void Material::CreateDescriptorSetLayout()
 int Material::CreateTexture(std::string fileName)
 {
 	int textureImgaLoc = CreateTextureImage(fileName);
-	VkImageView imageView = Vk::Instance().CreateImageView(m_textureImages[textureImgaLoc], VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+	VkImageView imageView = VkUtils::ImageUtils::CreateImageView(Vk::Instance().m_device, m_textureImages[textureImgaLoc], VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 	m_textureImagesViews.push_back(imageView);
 
 	textureImgaLoc = CreateTextureImage("texture.jpg");
-	imageView = Vk::Instance().CreateImageView(m_textureImages[textureImgaLoc], VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+	imageView = VkUtils::ImageUtils::CreateImageView(Vk::Instance().m_device, m_textureImages[textureImgaLoc], VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
 	m_textureImagesViews.push_back(imageView);
 
 	//Texture sampler descriptor set layout

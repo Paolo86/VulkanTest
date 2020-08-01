@@ -55,6 +55,8 @@ class VkUtils
 		public:
 			static VkImage CreateImage(VkPhysicalDevice m_physicalDevice, VkDevice m_device, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags useFlags,
 				VkMemoryPropertyFlags propFlags, VkDeviceMemory* outImageMemory);
+
+			static VkImageView CreateImageView(VkDevice m_device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 		};
 
 		class MemoryUtils

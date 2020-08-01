@@ -56,7 +56,6 @@ class Vk
 
 		void CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags usage, VkMemoryPropertyFlags bufferProperties, VkBuffer* buffer, VkDeviceMemory* bufferMemory);
 
-		VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 
 		stbi_uc* LoadTexture(std::string fileName, int* width, int* height, VkDeviceSize* imageSize);
 
@@ -64,7 +63,6 @@ class Vk
 		// Not done automatically if it's not an attachment
 		void TransitionImageLayout(VkQueue queue, VkCommandPool pool, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 		VkFormat m_swapChainImageFormat;
-		void CreatePushConstantRange();
 		VkExtent2D m_swapChainExtent;
 		VkDevice m_device;
 		VkRenderPass m_renderPass;
