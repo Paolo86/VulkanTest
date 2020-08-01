@@ -62,7 +62,7 @@ Vk::Vk()
 {
 	//Initialize validation layers
 	m_validationLayers = {"VK_LAYER_KHRONOS_validation"};
-	m_validationLayersEnabled = 1;
+	m_validationLayersEnabled = 0;
 }
 
 
@@ -134,6 +134,7 @@ void Vk::Init()
 	std::vector<Vertex> vertices = { v1,v2,v3, v4 };
 	std::vector<uint32_t> indices = { 0,1,2,2,3,0 };
 
+	testMaterial.Create();
 	firstMesh = Mesh(m_physicalDevice, m_device, m_graphicsQ, m_commandPool, vertices, indices, 0);
 	firstMesh.uboModel.model = glm::translate(firstMesh.uboModel.model, glm::vec3(0.2, 0, -0.1));
 
@@ -143,7 +144,6 @@ void Vk::Init()
 
 	m_meshes.push_back(firstMesh);
 	//m_meshes.push_back(secondMesh);
-	testMaterial.Create();
 
 
 }
@@ -964,7 +964,7 @@ void Vk::RecordCommands(uint32_t imageIndex)
 	vkCmdBeginRenderPass(m_commandBuffers[imageIndex], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE); //All render commands are primary
 
 	//Bind pipeline to be used
-	vkCmdBindPipeline(m_commandBuffers[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, testMaterial.m_graphicsPipeline);
+	vkCmdBindPipeline(m_commandBuffers[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, testMaterial.m_graphicsPipeline.m_graphicsPipeline);
 
 	for (size_t j = 0; j < m_meshes.size(); j++)
 	{

@@ -21,8 +21,7 @@ public:
 
 
 	VkPipelineLayout m_pipelineLayout; //Used to pass data to shaders (like mat4)
-	VkSampler m_textureSampler;
-	VkPipeline m_graphicsPipeline;
+	GraphicsPipeline m_graphicsPipeline;
 	PushConstant m_pushConstant;
 
 	std::vector<VkDescriptorSetLayout> m_orderedDescriptorLayouts;
