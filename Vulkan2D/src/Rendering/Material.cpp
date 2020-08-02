@@ -2,6 +2,7 @@
 #include "..\Utils\FileUtils.h"
 #include "VkUtils.h"
 #include "Vk.h"
+#include "../Asset/ResourceManager.h"
 
 Material::Material(std::string shaderName)
 {
@@ -25,11 +26,8 @@ void Material::AddTextures(std::vector<std::string> fileNames)
 {
 	for (std::string name : fileNames)
 	{
-		int w, h;
-		stbi_uc* imageData = Vk::Instance().LoadTexture(name, &w, &h);
 
-		Texture2D t(w, h, 4, VK_FORMAT_R8G8B8A8_UNORM, imageData);
-		stbi_image_free(imageData);
+		Texture2D t = ResourceManager::CreateSampleTextureFromFile(name);
 		m_textures.push_back(t);
 	}
 

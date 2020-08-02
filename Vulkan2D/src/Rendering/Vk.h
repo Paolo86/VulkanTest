@@ -16,10 +16,7 @@ class Vk
 		~Vk();
 		void Init();
 		void Destroy();
-
 		void Draw();
-
-		stbi_uc* LoadTexture(std::string fileName, int* width, int* height);
 
 		//Change image layout
 
@@ -28,7 +25,6 @@ class Vk
 		TextureSampler m_textureSampler;
 		VkDescriptorPool m_descriptorPool;
 		VkDescriptorPool m_samplerDescriptorPool;
-		VkDebugUtilsMessengerEXT m_debugMessenger;
 
 private:
 		void CreateDescriptorPool();
@@ -37,26 +33,18 @@ private:
 		Mesh secondMesh;
 		std::vector<Mesh> m_meshes;
 		static std::unique_ptr<Vk> m_instance;
-		int currentFrame = 0;
-
 
 		UboModel* m_modelTransferSpace;
-		/*Params*/
-		
+		/*Params*/	
 
 		std::vector<VkFramebuffer> m_swapChainFramebuffers;
 
-		VkImage m_depthBufferImage;			//No need for multiple (like swap chain images). It's loked when is being used
-		VkDeviceMemory m_depthBufferMemory;
-		VkImageView m_depthBufferImageView;
-
+		Texture2D m_depthBufferImage;
 
 		_ViewProjection ViewProjection;
 
-
 		std::vector<VkBuffer> m_modelDynamicPuniformBuffer;
 		std::vector<VkDeviceMemory> m_modelDynamicuniformBufferMemory;
-
 
 		/*Methods*/
 		void CreateRenderPass();
@@ -65,10 +53,6 @@ private:
 		void RenderCmds(uint32_t currentImage);
 		void CreateUniformBuffers();
 		void AllocateDynamicBufferTransferSpace();
-
-
-
-
 
 		size_t m_modelUniformAlignment;
 

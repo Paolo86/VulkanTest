@@ -11,6 +11,7 @@
 #include <vk_mem_alloc.h>
 #include "Material.h"
 #include "VkUtils.h"
+#include "../Asset/ResourceManager.h"
 
 
 std::unique_ptr<Vk> Vk::m_instance;
@@ -118,9 +119,7 @@ void Vk::Destroy()
 	vkDestroyDescriptorPool(VkContext::Instance().GetLogicalDevice(), m_descriptorPool, nullptr);
 	vkDestroyDescriptorPool(VkContext::Instance().GetLogicalDevice(), m_samplerDescriptorPool, nullptr);
 
-	vkDestroyImageView(VkContext::Instance().GetLogicalDevice(), m_depthBufferImageView, nullptr);
-	vkDestroyImage(VkContext::Instance().GetLogicalDevice(), m_depthBufferImage, nullptr);
-	vkFreeMemory(VkContext::Instance().GetLogicalDevice(), m_depthBufferMemory, nullptr);
+	m_depthBufferImage.Destroy();
 	woodMaterial.Destroy();
 	wallMaterial.Destroy();
 	
@@ -299,17 +298,8 @@ void Vk::CreateRenderPass()
 
 void Vk::CreateDepthBufferImage()
 {
-	VkFormat depthFormat = VkContext::Instance().ChooseSupportedFormat({ VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D24_UNORM_S8_UINT },
-		VK_IMAGE_TILING_OPTIMAL,
-		VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
-	m_depthBufferImage = VkUtils::ImageUtils::CreateImage(VkContext::Instance().GetPhysicalDevice(),VkContext::Instance().GetLogicalDevice(), VkContext::Instance().GetSwapChainExtent().width, VkContext::Instance().GetSwapChainExtent().height, depthFormat,
-		VK_IMAGE_TILING_OPTIMAL,
-		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_depthBufferMemory);
-
-	m_depthBufferImageView = VkUtils::ImageUtils::CreateImageView(VkContext::Instance().GetLogicalDevice(), m_depthBufferImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
-	
+	m_depthBufferImage = ResourceManager::CreateDepthBufferImage();
 }
 
 
@@ -321,7 +311,7 @@ void  Vk::CreateFramebuffers()
 
 		std::array<VkImageView, 2> attachments = {
 			VkContext::Instance().GetSwapChainImageViewAt(i) ,
-			m_depthBufferImageView
+			m_depthBufferImage.m_imageView
 		};
 
 		VkFramebufferCreateInfo framebufferInfo{};
@@ -392,13 +382,10 @@ void Vk::RenderCmds(uint32_t imageIndex)
 			static_cast<uint32_t>(dsets.size()),
 			dsets.data(), 0,nullptr);
 
-
 		vkCmdDrawIndexed(VkContext::Instance().GetCommandBuferAt(imageIndex), m_meshes[j].GetIndexCount(), 1, 0, 0, 0);
 	}
 
-
 	vkCmdEndRenderPass(VkContext::Instance().GetCommandBuferAt(imageIndex));
-
 
 	//End recording
 	result = vkEndCommandBuffer(VkContext::Instance().GetCommandBuferAt(imageIndex));
@@ -429,19 +416,4 @@ void Vk::AllocateDynamicBufferTransferSpace()
 	//Fixed space ot hold all model matrices of all objects
 	m_modelTransferSpace = (UboModel*)_aligned_malloc(m_modelUniformAlignment* MAX_OBJECTS, m_modelUniformAlignment);
 
-}
-
-
-
-
-stbi_uc* Vk::LoadTexture(std::string fileName, int* width, int* height)
-{
-	int channels;
-	std::string fileLoc = "Textures/" + fileName;
-	stbi_uc* image = stbi_load(fileLoc.c_str(), width, height, &channels, STBI_rgb_alpha);
-
-	if (!image)
-		throw std::runtime_error("Failed to load texture " + fileName);
-
-	return image;
 }

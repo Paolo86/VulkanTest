@@ -4,6 +4,7 @@
 
 #include <set>
 #define NOMINMAX
+
 #define VALIDATION_LAYERAS_ENABLED 0
 
 namespace
@@ -580,7 +581,6 @@ void VkContext::CreateSynch()
 
 	for (size_t i = 0; i < MAX_FRAME_DRAWS; i++)
 	{
-
 		if (vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &imageAvailable[i]) != VK_SUCCESS ||
 			vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &renderFinished[i]) != VK_SUCCESS ||
 			vkCreateFence(m_device, &fenceInfo, nullptr, &drawFences[i]) != VK_SUCCESS)

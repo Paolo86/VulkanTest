@@ -4,7 +4,6 @@
 
 Texture2D::Texture2D(uint32_t width, uint32_t height, uint32_t channels, VkFormat format, void* imageData)
 {
-	m_format = format;
 	VkDeviceSize size = width * height * channels;
 	VkBuffer staging;
 	VkDeviceMemory stagingMemory;
@@ -33,6 +32,9 @@ Texture2D::Texture2D(uint32_t width, uint32_t height, uint32_t channels, VkForma
 
 	m_imageView = VkUtils::ImageUtils::CreateImageView(VkContext::Instance().GetLogicalDevice(), m_image, format, VK_IMAGE_ASPECT_COLOR_BIT);
 }
+
+
+
 
 void Texture2D::Destroy()
 {
