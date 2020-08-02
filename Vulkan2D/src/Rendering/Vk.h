@@ -51,7 +51,6 @@ private:
 		std::vector<Mesh> m_meshes;
 		static std::unique_ptr<Vk> m_instance;
 		int currentFrame = 0;
-		int TextId;
 		/*Vk specific*/
 		std::vector<VkSemaphore> imageAvailable;	// Image ready to be drawn to
 		std::vector<VkSemaphore> renderFinished; // Image ready for screen presentation
@@ -62,7 +61,6 @@ private:
 
 		VkInstance m_vkInstance;
 		std::vector<VkExtensionProperties> m_supportedInstanceExtensions;
-
 
 		VkQueue m_presentationQ;
 		VkSwapchainKHR m_swapchain;
@@ -79,12 +77,6 @@ private:
 		std::vector<VkCommandBuffer> m_commandBuffers;
 
 
-		//Descriptor set
-		VkDescriptorSetLayout m_descriptorLayout;
-		std::vector<VkDescriptorSet> m_descriptorSets;
-
-		VkDescriptorSetLayout m_samplerDescriptorLayout;
-		std::vector<VkDescriptorSet> m_samplerDescriptorSets;
 
 		std::vector<VkImage> m_textureImages;
 		std::vector<VkDeviceMemory> m_textureImagesMemory;
@@ -93,8 +85,6 @@ private:
 		bool m_validationLayersEnabled;
 		std::vector<const char*> m_validationLayers;
 		_ViewProjection ViewProjection;
-		VkPipelineLayout m_pipelineLayout; //Used to pass data to shaders (like mat4)
-		VkPipeline m_graphicsPipeline;
 
 
 		std::vector<VkBuffer> m_modelDynamicPuniformBuffer;

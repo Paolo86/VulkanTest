@@ -152,7 +152,6 @@ void Vk::Destroy()
 
 	}
 
-	vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
 	vkDestroyRenderPass(m_device, m_renderPass, nullptr);
 
 	for (auto imageView : m_swapChainImageViews) {
