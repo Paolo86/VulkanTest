@@ -54,10 +54,6 @@ private:
 		std::vector<VkSemaphore> renderFinished; // Image ready for screen presentation
 		std::vector<VkFence> drawFences;
 
-		VmaAllocator allocator;
-
-		
-
 		UboModel* m_modelTransferSpace;
 		/*Params*/
 		VkDebugUtilsMessengerEXT m_debugMessenger;

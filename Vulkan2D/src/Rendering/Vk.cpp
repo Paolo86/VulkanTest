@@ -53,12 +53,6 @@ void Vk::Init()
 	CreateSurface();
 	PickPhysicalDevice();
 	CreateLogicalDevice();
-
-	VmaAllocatorCreateInfo allocatorInfo = {};
-	allocatorInfo.physicalDevice = m_physicalDevice;
-	allocatorInfo.device = m_device;
-	allocatorInfo.instance = m_vkInstance;
-
 	CreateSwapChain();
 	CreateImageViews();
 	CreateRenderPass();
@@ -66,6 +60,8 @@ void Vk::Init()
 	CreateFramebuffers();
 	CreateCommandPool();	
 	CreatecommandBuffers();
+	CreateSynch();
+
 	//AllocateDynamicBufferTransferSpace(); //Not used, using push constant
 	m_textureSampler.Create(
 		m_device,
@@ -80,7 +76,6 @@ void Vk::Init()
 	CreateUniformBuffers();
 	CreateDescriptorPool();
 
-	CreateSynch();
 	ViewProjection.projection = glm::perspective(glm::radians(60.0f), (float)m_swapChainExtent.width / m_swapChainExtent.height, 0.01f, 1000.0f);
 	ViewProjection.view = glm::lookAt(glm::vec3(0, 0, 2), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	ViewProjection.projection[1][1] *= -1;  //Vulkan inverts the Y axis...
