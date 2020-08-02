@@ -1,4 +1,5 @@
 #define NOMINMAX
+#include "VkDebugMessanger.h"
 #include "Vk.h"
 #include "Window.h"
 #include "../Utils/Logger.h"
@@ -10,6 +11,7 @@
 #include <vk_mem_alloc.h>
 #include "Material.h"
 #include "VkUtils.h"
+
 std::unique_ptr<Vk> Vk::m_instance;
 
 Material woodMaterial("basic");
@@ -21,36 +23,6 @@ namespace
 	const int MAX_OBJECTS = 50;
 }
 
-
-// Callback for validation layer debugging messages
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-	VkDebugUtilsMessageTypeFlagsEXT messageType,
-	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-	void* pUserData) {
-
-	//std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-	Logger::LogError("VK_VL:\n\t", pCallbackData->pMessage);
-
-	return VK_FALSE;
-}
-// Used to create the debug messenger.
-VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
-	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-	if (func != nullptr) {
-		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-	}
-	else {
-		return VK_ERROR_EXTENSION_NOT_PRESENT;
-	}
-}
-
-void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
-	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-	if (func != nullptr) {
-		func(instance, debugMessenger, pAllocator);
-	}
-}
 
 Vk& Vk::Instance()
 {
@@ -182,13 +154,9 @@ void Vk::Destroy()
 	for (size_t i = 0; i < m_swapChainImages.size(); i++)
 	{
 		m_VPUniformBuffers[i].Destroy(m_device);
-		//vkDestroyBuffer(m_device, m_modelDynamicPuniformBuffer[i], nullptr);
-		//vkFreeMemory(m_device, m_modelDynamicuniformBufferMemory[i], nullptr);
-	}
-	//vkDestroyDescriptorSetLayout(m_device, m_descriptorLayout, nullptr); //Destroy before pipeline
-	//vkDestroyDescriptorSetLayout(m_device, m_samplerDescriptorLayout, nullptr); //Destroy before pipeline
 
-	//vkDestroyPipeline(m_device, m_graphicsPipeline, nullptr);
+	}
+
 	vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
 	vkDestroyRenderPass(m_device, m_renderPass, nullptr);
 

@@ -5,33 +5,12 @@
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <optional>
+#include "CommonStructs.h"
 #include "Mesh.h"
 #include "stb_image.h"
 #include "UniformBuffer.h"
 #include "TextureSampler.h"
 #include <vk_mem_alloc.h>
-
-
-struct QueueFamilyIndices
-{
-	std::optional<uint32_t> graphicsFamily;
-	std::optional<uint32_t> presentFamily;
-
-	bool IsComplete()
-	{
-		return graphicsFamily.has_value() && presentFamily.has_value(); //If queues have been assigned
-	}
-};
-
-// Collect info about swapchain
-struct SwapChainSupportDetails
-{
-	VkSurfaceCapabilitiesKHR capabilities; //Resolution of images in swapchain
-	std::vector<VkSurfaceFormatKHR> formats; //Color depth
-	std::vector<VkPresentModeKHR> presentModes; //Condition for swapping images
-};
-
 
 
 class Vk
