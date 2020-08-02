@@ -139,6 +139,7 @@
     <ClCompile Include="src\Rendering\Texture2D.cpp" />
     <ClCompile Include="src\Rendering\Vertex.cpp" />
     <ClCompile Include="src\Rendering\Vk.cpp" />
+    <ClCompile Include="src\Rendering\VkContext.cpp" />
     <ClCompile Include="src\Rendering\VkDebugMessanger.cpp" />
     <ClCompile Include="src\Rendering\VkUtils.cpp" />
     <ClCompile Include="src\Rendering\Window.cpp" />
@@ -155,6 +156,7 @@
     <ClInclude Include="src\Rendering\UniformBuffer.h" />
     <ClInclude Include="src\Rendering\Vertex.h" />
     <ClInclude Include="src\Rendering\Vk.h" />
+    <ClInclude Include="src\Rendering\VkContext.h" />
     <ClInclude Include="src\Rendering\VkDebugMessanger.h" />
     <ClInclude Include="src\Rendering\VkUtils.h" />
     <ClInclude Include="src\Rendering\Window.h" />

@@ -10,6 +10,7 @@
 #include "stb_image.h"
 #include "UniformBuffer.h"
 #include "TextureSampler.h"
+#include "VkDebugMessanger.h"
 #include <vk_mem_alloc.h>
 
 
@@ -40,6 +41,8 @@ class Vk
 		VkDescriptorPool m_descriptorPool;
 		VkDescriptorPool m_samplerDescriptorPool;
 		VkPhysicalDevice m_physicalDevice; //Destroyed automatically when instance is gone
+		VkDebugUtilsMessengerEXT m_debugMessenger;
+
 
 private:
 
@@ -52,11 +55,10 @@ private:
 		/*Vk specific*/
 		std::vector<VkSemaphore> imageAvailable;	// Image ready to be drawn to
 		std::vector<VkSemaphore> renderFinished; // Image ready for screen presentation
-		std::vector<VkFence> drawFences;
+		std::vector<VkFence> drawFences;	
 
 		UboModel* m_modelTransferSpace;
 		/*Params*/
-		VkDebugUtilsMessengerEXT m_debugMessenger;
 
 		VkInstance m_vkInstance;
 		std::vector<VkExtensionProperties> m_supportedInstanceExtensions;

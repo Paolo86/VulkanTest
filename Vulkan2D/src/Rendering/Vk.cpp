@@ -55,13 +55,13 @@ void Vk::Init()
 	CreateLogicalDevice();
 	CreateSwapChain();
 	CreateImageViews();
-	CreateRenderPass();
-	CreateDepthBufferImage();
-	CreateFramebuffers();
 	CreateCommandPool();	
 	CreatecommandBuffers();
 	CreateSynch();
 
+	CreateDepthBufferImage();
+	CreateRenderPass();
+	CreateFramebuffers();
 	//AllocateDynamicBufferTransferSpace(); //Not used, using push constant
 	m_textureSampler.Create(
 		m_device,
@@ -342,9 +342,7 @@ bool Vk::IsDeviceSuitable(VkPhysicalDevice device)
 	}
 
 
-	result = basic && indices.IsComplete() && extensionsSupported && swapChainAdequate;
-
-	
+	result = basic && indices.IsComplete() && extensionsSupported && swapChainAdequate;	
 
 	if (result)
 		Logger::LogInfo("Selected GPU:", deviceProperties.deviceName);
@@ -879,7 +877,7 @@ void Vk::CreateCommandPool()
 void Vk::CreatecommandBuffers()
 {
 	// One command for each frame buffer
-	m_commandBuffers.resize(m_swapChainFramebuffers.size());
+	m_commandBuffers.resize(m_swapChainImages.size());
 
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
