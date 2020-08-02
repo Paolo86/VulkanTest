@@ -8,42 +8,38 @@
 #include <vk_mem_alloc.h>
 
 #include "CommonStructs.h"
-#include "Mesh.h"
-#include "stb_image.h"
 #include "UniformBuffer.h"
 #include "VkDebugMessanger.h"
-#include "TextureSampler.h"
 
 
 class VkContext
 {
 public:
+	static VkContext& Instance();
 	void Init();
-	void CreateInstance();
-	void SetUpDebugMessenger(); // Needs vkInstance so call after creating it
-	void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-	void CreateSurface();
-	void PickPhysicalDevice();
-	void CreateLogicalDevice();
-	void CreateSwapChain();
-	void CreateImageViews();
-	void CreateCommandPool();
-	void CreatecommandBuffers();
-	void CreateSynch();
-	void CreateDescriptorPool();
+	void Destroy();
 
-	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
-	SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
-	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availabeFormats);
-	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-	VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+	VkDevice& GetLogicalDevice() { return m_device; };
+	VkPhysicalDevice& GetPhysicalDevice() { return m_physicalDevice; }
+	uint32_t GetSwapChainImagesCount() { return m_swapChainImages.size(); }
+	VkQueue& GetGraphicsTransferQ() { return m_graphicsQ; }
+	VkQueue& GetPresentationQ() { return m_presentationQ; }
+	VkExtent2D& GetSwapChainExtent() { return m_swapChainExtent; }
+	VkCommandPool& GetCommandPool() { return m_commandPool; };
+	VkFormat& GetSwapChainImageFormat() { return m_swapChainImageFormat; };
+	VkImageView& GetSwapChainImageViewAt(int index) { return m_swapChainImageViews[index]; };
+	VkCommandBuffer& GetCommandBuferAt(int index) { return m_commandBuffers[index]; }
+	VkDeviceSize& GetMinUniformBufferOffset() { return m_minUniformBufferOffset; };
 
-	bool AreValidationLayersSupported();
-	std::vector<const char*> GetRequiredExtensions();
-	bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
-	bool IsDeviceSuitable(VkPhysicalDevice device);
+	int GetCurrentFrameIndex() { return currentFrame; }
+	void WaitForFenceAndAcquireImage(uint32_t& imageIndex);
+	void Present(uint32_t imageIndex);
 
+	VkFormat ChooseSupportedFormat(const std::vector<VkFormat>& formats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags);
 private:
+
+	static std::unique_ptr<VkContext> m_instance;
+
 	VkDebugUtilsMessengerEXT m_debugMessenger;
 	VkInstance m_vkInstance;
 	VkFormat m_swapChainImageFormat;
@@ -54,7 +50,6 @@ private:
 
 	VkExtent2D m_swapChainExtent;
 	VkDevice m_device;
-	VkRenderPass m_renderPass;
 	VkQueue m_graphicsQ;
 	VkCommandPool m_commandPool;
 	VkDescriptorPool m_descriptorPool;
@@ -71,6 +66,31 @@ private:
 	size_t m_modelUniformAlignment;
 	std::vector<VkExtensionProperties> m_supportedInstanceExtensions;
 	std::vector<const char*> m_validationLayers;
+
+	void CreateInstance();
+	void SetUpDebugMessenger(); // Needs vkInstance so call after creating it
+	void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+	void CreateSurface();
+	void PickPhysicalDevice();
+	void CreateLogicalDevice();
+	void CreateSwapChain();
+	void CreateImageViews();
+	void CreateCommandPool();
+	void CreatecommandBuffers();
+	void CreateSynch();
+
+	QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+	SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
+	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availabeFormats);
+	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+	VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+
+	bool AreValidationLayersSupported();
+	std::vector<const char*> GetRequiredExtensions();
+	bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
+	bool IsDeviceSuitable(VkPhysicalDevice device);
+
+	int currentFrame = 0;
 
 
 };

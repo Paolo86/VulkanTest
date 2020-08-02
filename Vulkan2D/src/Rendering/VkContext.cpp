@@ -12,6 +12,15 @@ namespace
 	const int MAX_FRAME_DRAWS = 2;
 }
 
+std::unique_ptr<VkContext> VkContext::m_instance;
+
+VkContext& VkContext::Instance() {
+	if (m_instance == nullptr)
+		m_instance = std::make_unique<VkContext>();
+
+	return *m_instance;
+}
+
 void VkContext::Init()
 {
 	CreateInstance();
@@ -21,10 +30,41 @@ void VkContext::Init()
 	CreateLogicalDevice();
 	CreateSwapChain();
 	CreateImageViews();
-	/*CreateDepthBufferImage();
 	CreateCommandPool();
 	CreatecommandBuffers();
-	CreateSynch();*/
+	CreateSynch();
+}
+
+void VkContext::Destroy()
+{
+
+	vkDeviceWaitIdle(m_device); //Wait for device to be idle before cleaning up (so won't clean commands currently on queue)
+
+	vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
+	vkDestroyDescriptorPool(m_device, m_samplerDescriptorPool, nullptr);
+
+	for (size_t i = 0; i < MAX_FRAME_DRAWS; i++)
+	{
+		vkDestroySemaphore(m_device, renderFinished[i], nullptr);
+		vkDestroySemaphore(m_device, imageAvailable[i], nullptr);
+		vkDestroyFence(m_device, drawFences[i], nullptr);
+	}
+	//_aligned_free(m_modelTransferSpace);
+	vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+
+
+	for (auto imageView : m_swapChainImageViews) {
+		vkDestroyImageView(m_device, imageView, nullptr);
+	}
+
+	vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
+	if (VALIDATION_LAYERAS_ENABLED)
+	{
+		DestroyDebugUtilsMessengerEXT(m_vkInstance, m_debugMessenger, nullptr);
+	}
+	vkDestroyDevice(m_device, nullptr);
+	vkDestroySurfaceKHR(m_vkInstance, m_surface, nullptr);
+	vkDestroyInstance(m_vkInstance, nullptr);
 }
 
 void VkContext::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
@@ -523,46 +563,7 @@ void VkContext::CreatecommandBuffers()
 	}
 }
 
-void VkContext::CreateDescriptorPool()
-{
-	//Create uniform descriptor pool
-	VkDescriptorPoolSize VPpoolSize = {};
-	VPpoolSize.descriptorCount = static_cast<uint32_t>(m_swapChainImages.size());
-	VPpoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 
-	/*VkDescriptorPoolSize modelPoolSize = {};
-	modelPoolSize.descriptorCount = static_cast<uint32_t>(m_modelDynamicPuniformBuffer.size());
-	modelPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;*/
-
-	std::vector< VkDescriptorPoolSize> poolSizes = { VPpoolSize }; //modelPoolSize no longer used, using push constant
-
-	VkDescriptorPoolCreateInfo poolCreateInfo = {};
-	poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolCreateInfo.maxSets = static_cast<uint32_t>(m_swapChainImages.size() * 2);
-	poolCreateInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-	poolCreateInfo.pPoolSizes = poolSizes.data();
-
-	if (vkCreateDescriptorPool(m_device, &poolCreateInfo, nullptr, &m_descriptorPool) != VK_SUCCESS)
-	{
-		throw std::runtime_error("Failed to create descriptor pool");
-	}
-
-	//Create sampler descriptor pool
-	VkDescriptorPoolSize samplerPoolSize = {};
-	samplerPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	samplerPoolSize.descriptorCount = 200;		//This is the max number of textures to sample
-
-	VkDescriptorPoolCreateInfo samplerPoolCreateInfo = {};
-	samplerPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	samplerPoolCreateInfo.maxSets = 200;
-	samplerPoolCreateInfo.poolSizeCount = 1;
-	samplerPoolCreateInfo.pPoolSizes = &samplerPoolSize;
-
-	if (vkCreateDescriptorPool(m_device, &samplerPoolCreateInfo, nullptr, &m_samplerDescriptorPool) != VK_SUCCESS)
-	{
-		throw std::runtime_error("Failed to create descriptor pool");
-	}
-}
 
 void VkContext::CreateSynch()
 {
@@ -589,3 +590,67 @@ void VkContext::CreateSynch()
 		}
 	}
 }
+
+VkFormat VkContext::ChooseSupportedFormat(const std::vector<VkFormat>& formats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags)
+{
+	for (VkFormat format : formats)
+	{
+		VkFormatProperties properties;
+		vkGetPhysicalDeviceFormatProperties(m_physicalDevice, format, &properties);
+
+		if (tiling == VK_IMAGE_TILING_LINEAR && (properties.linearTilingFeatures & featureFlags) == featureFlags)
+		{
+			return format;
+		}
+		else if (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & featureFlags) == featureFlags)
+		{
+			return format;
+		}
+	}
+
+	throw std::runtime_error("Failed to find a matching format for image");
+}
+
+void VkContext::WaitForFenceAndAcquireImage(uint32_t& imageIndex)
+{
+	vkWaitForFences(GetLogicalDevice(), 1, &drawFences[currentFrame], VK_TRUE, UINT64_MAX);
+	vkResetFences(GetLogicalDevice(), 1, &drawFences[currentFrame]);
+
+
+	vkAcquireNextImageKHR(GetLogicalDevice(), m_swapchain, UINT64_MAX, imageAvailable[currentFrame], VK_NULL_HANDLE, &imageIndex);
+}
+
+void VkContext::Present(uint32_t imageIndex)
+{
+	VkSemaphore waitSemaphores[] = { imageAvailable[currentFrame] };
+	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.pWaitSemaphores = waitSemaphores; // One semaphore for each stage described in line above
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitDstStageMask = waitStages;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &m_commandBuffers[imageIndex];
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = &renderFinished[currentFrame];		//When it's done drawing, signal the renderFinished sempahore
+
+	if (vkQueueSubmit(m_graphicsQ, 1, &submitInfo, drawFences[currentFrame]) != VK_SUCCESS) {
+		throw std::runtime_error("failed to submit draw command buffer!");
+	}
+	// 3. Present to screen when the signal of end rendering comes
+
+	VkPresentInfoKHR presentInfo{};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	VkSwapchainKHR swapChains[] = { m_swapchain };
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = swapChains;
+	presentInfo.pImageIndices = &imageIndex;
+	presentInfo.waitSemaphoreCount = 1;
+	presentInfo.pWaitSemaphores = &renderFinished[currentFrame];
+	presentInfo.pResults = nullptr; // Optional
+	vkQueuePresentKHR(m_presentationQ, &presentInfo);
+
+	currentFrame = (currentFrame + 1) % MAX_FRAME_DRAWS;
+}
+

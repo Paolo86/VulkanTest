@@ -46,11 +46,11 @@ void Material::Destroy()
 
 	for (VkDescriptorSetLayout layout : m_orderedDescriptorLayouts)
 	{
-		vkDestroyDescriptorSetLayout(Vk::Instance().m_device, layout, nullptr); //Destroy before pipeline
+		vkDestroyDescriptorSetLayout(VkContext::Instance().GetLogicalDevice(), layout, nullptr); //Destroy before pipeline
 	}
 
-	vkDestroyPipelineLayout(Vk::Instance().m_device, m_pipelineLayout, nullptr);
-	m_graphicsPipeline.Destroy(Vk::Instance().m_device);
+	vkDestroyPipelineLayout(VkContext::Instance().GetLogicalDevice(), m_pipelineLayout, nullptr);
+	m_graphicsPipeline.Destroy(VkContext::Instance().GetLogicalDevice());
 }
 
 
@@ -66,8 +66,8 @@ void Material::CreateGraphicsPipeline()
 	auto vertexShaderCode = FileUtils::ReadFile("Shaders/" + vertexShaderName);
 	auto fragmentShaderCode = FileUtils::ReadFile("Shaders/" + fragmentShaderName);
 
-	VkShaderModule vertShaderModule = VkUtils::PipelineUtils::CreateShadeModule(Vk::Instance().m_device, vertexShaderCode);
-	VkShaderModule fragShaderModule = VkUtils::PipelineUtils::CreateShadeModule(Vk::Instance().m_device, fragmentShaderCode);
+	VkShaderModule vertShaderModule = VkUtils::PipelineUtils::CreateShadeModule(VkContext::Instance().GetLogicalDevice(), vertexShaderCode);
+	VkShaderModule fragShaderModule = VkUtils::PipelineUtils::CreateShadeModule(VkContext::Instance().GetLogicalDevice(), fragmentShaderCode);
 
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo = VkUtils::PipelineUtils::GetPipelineVertexShaderStage(vertShaderModule);
 	VkPipelineShaderStageCreateInfo fragShaderStageInfo = VkUtils::PipelineUtils::GetPipelineFragmentShaderStage(fragShaderModule);
@@ -78,8 +78,8 @@ void Material::CreateGraphicsPipeline()
 
 	Vertex::GetVertexAttributeDescription(&bindigDescription, &vertexInputInfo, attributeDescription);	
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly = VkUtils::PipelineUtils::GetPipelineInputAssemblyState();
-	VkViewport viewport = VkUtils::PipelineUtils::GetViewport(Vk::Instance().m_swapChainExtent.width, Vk::Instance().m_swapChainExtent.height);
-	VkRect2D scissor = VkUtils::PipelineUtils::GetScissor(Vk::Instance().m_swapChainExtent.width, Vk::Instance().m_swapChainExtent.height);
+	VkViewport viewport = VkUtils::PipelineUtils::GetViewport(VkContext::Instance().GetSwapChainExtent().width, VkContext::Instance().GetSwapChainExtent().height);
+	VkRect2D scissor = VkUtils::PipelineUtils::GetScissor(VkContext::Instance().GetSwapChainExtent().width, VkContext::Instance().GetSwapChainExtent().height);
 	VkPipelineViewportStateCreateInfo viewportState = VkUtils::PipelineUtils::GetPipelineViewportState(&viewport, &scissor);
 	VkPipelineRasterizationStateCreateInfo rasterizerCreateInfo = VkUtils::PipelineUtils::GetPipelineRasterizer();
 
@@ -97,7 +97,7 @@ void Material::CreateGraphicsPipeline()
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = VkUtils::PipelineUtils::GetPipelineLayoutInfo(m_orderedDescriptorLayouts, &m_pushConstant.m_vkPushConstant);
 
 	// Create Pipeline Layout
-	VkResult result = vkCreatePipelineLayout(Vk::Instance().m_device, &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
+	VkResult result = vkCreatePipelineLayout(VkContext::Instance().GetLogicalDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
 	if (result != VK_SUCCESS)
 	{
 		throw std::runtime_error("Failed to create Pipeline Layout!");
@@ -106,7 +106,7 @@ void Material::CreateGraphicsPipeline()
 	VkPipelineDepthStencilStateCreateInfo depthStencilCreateInfo = VkUtils::PipelineUtils::GetPipelineDepthStencilAttachmentState();
 
 	m_graphicsPipeline.Create(
-		Vk::Instance().m_device,
+		VkContext::Instance().GetLogicalDevice(),
 		shaderStages,
 		&vertexInputInfo,
 		&inputAssembly,
@@ -120,8 +120,8 @@ void Material::CreateGraphicsPipeline()
 		0);
 
 
-	vkDestroyShaderModule(Vk::Instance().m_device, fragShaderModule, nullptr);
-	vkDestroyShaderModule(Vk::Instance().m_device, vertShaderModule, nullptr);
+	vkDestroyShaderModule(VkContext::Instance().GetLogicalDevice(), fragShaderModule, nullptr);
+	vkDestroyShaderModule(VkContext::Instance().GetLogicalDevice(), vertShaderModule, nullptr);
 }
 
 
@@ -137,16 +137,16 @@ void Material::CreateUBODescriptorSet()
 	vpLayoutBinding.pImmutableSamplers = nullptr;
 
 	DescriptorSetLayout uboLayout;
-	uboLayout.AddBinding({ vpLayoutBinding }).Create(Vk::Instance().m_device);
+	uboLayout.AddBinding({ vpLayoutBinding }).Create(VkContext::Instance().GetLogicalDevice());
 
 	m_orderedDescriptorLayouts.push_back(uboLayout.m_descriptorLayout);
-	m_UBOdescriptorSets.resize(Vk::Instance().m_swapChainImages.size());
+	m_UBOdescriptorSets.resize(VkContext::Instance().GetSwapChainImagesCount());
 	//Create 3 descriptor sets for ubo
-	for (size_t i = 0; i < Vk::Instance().m_swapChainImages.size(); i++)
+	for (size_t i = 0; i < VkContext::Instance().GetSwapChainImagesCount(); i++)
 	{
-		m_UBOdescriptorSets[i].CreateDescriptorSet(Vk::Instance().m_device, { uboLayout }, Vk::Instance().m_descriptorPool);
+		m_UBOdescriptorSets[i].CreateDescriptorSet(VkContext::Instance().GetLogicalDevice(), { uboLayout }, Vk::Instance().m_descriptorPool);
 		std::vector<UniformBuffer<_ViewProjection>> bufs = { Vk::Instance().m_VPUniformBuffers[i] };
-		m_UBOdescriptorSets[i].AssociateUniformBuffers<_ViewProjection>(Vk::Instance().m_device, bufs, 0, 0);
+		m_UBOdescriptorSets[i].AssociateUniformBuffers<_ViewProjection>(VkContext::Instance().GetLogicalDevice(), bufs, 0, 0);
 	}
 
 }
@@ -160,13 +160,13 @@ void Material::CreateSamplerDescriptorSet()
 		, m_textures.size(), VK_SHADER_STAGE_FRAGMENT_BIT);
 
 	DescriptorSetLayout samplerLayout;
-	samplerLayout.AddBinding({ imagesLayoutBinding }).Create(Vk::Instance().m_device);
+	samplerLayout.AddBinding({ imagesLayoutBinding }).Create(VkContext::Instance().GetLogicalDevice());
 	m_orderedDescriptorLayouts.push_back(samplerLayout.m_descriptorLayout);
 
 	m_samplerDescriptorSets.resize(1);
-	m_samplerDescriptorSets[0].CreateDescriptorSet(Vk::Instance().m_device, { samplerLayout }, Vk::Instance().m_samplerDescriptorPool);
+	m_samplerDescriptorSets[0].CreateDescriptorSet(VkContext::Instance().GetLogicalDevice(), { samplerLayout }, Vk::Instance().m_samplerDescriptorPool);
 
-	m_samplerDescriptorSets[0].AssociateTextureSamplerCombo(Vk::Instance().m_device, m_textures, 0, Vk::Instance().m_textureSampler.m_sampler);
+	m_samplerDescriptorSets[0].AssociateTextureSamplerCombo(VkContext::Instance().GetLogicalDevice(), m_textures, 0, Vk::Instance().m_textureSampler.m_sampler);
 
 }
 
