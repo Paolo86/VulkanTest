@@ -6,7 +6,7 @@
 #include "UniformBuffer.h"
 #include "TextureSampler.h"
 #include "VkDebugMessanger.h"
-
+#include "FrameBuffer.h"
 
 class Vk
 {
@@ -37,7 +37,7 @@ private:
 		UboModel* m_modelTransferSpace;
 		/*Params*/	
 
-		std::vector<VkFramebuffer> m_swapChainFramebuffers;
+		std::vector<FrameBuffer> m_swapChainFramebuffers;
 
 		Texture2D m_depthBufferImage;
 

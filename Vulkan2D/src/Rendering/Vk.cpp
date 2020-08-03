@@ -126,7 +126,7 @@ void Vk::Destroy()
 	//_aligned_free(m_modelTransferSpace);
 
 	for (auto framebuffer : m_swapChainFramebuffers) {
-		vkDestroyFramebuffer(VkContext::Instance().GetLogicalDevice(), framebuffer, nullptr);
+		framebuffer.Destroy(VkContext::Instance().GetLogicalDevice());
 	}
 	for (size_t i = 0; i < VkContext::Instance().GetSwapChainImagesCount(); i++)
 	{
@@ -314,18 +314,12 @@ void  Vk::CreateFramebuffers()
 			m_depthBufferImage.m_imageView
 		};
 
-		VkFramebufferCreateInfo framebufferInfo{};
-		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-		framebufferInfo.renderPass = m_renderPass;
-		framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-		framebufferInfo.pAttachments = attachments.data();
-		framebufferInfo.width = VkContext::Instance().GetSwapChainExtent().width;
-		framebufferInfo.height = VkContext::Instance().GetSwapChainExtent().height;
-		framebufferInfo.layers = 1;
-
-		if (vkCreateFramebuffer(VkContext::Instance().GetLogicalDevice(), &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create framebuffer!");
-		}
+		m_swapChainFramebuffers[i].Create(VkContext::Instance().GetLogicalDevice(),
+			m_renderPass,
+			VkContext::Instance().GetSwapChainExtent().width,
+			VkContext::Instance().GetSwapChainExtent().height,
+			{ VkContext::Instance().GetSwapChainImageViewAt(i) , m_depthBufferImage.m_imageView });
+		
 	}
 }
 
@@ -351,7 +345,7 @@ void Vk::RenderCmds(uint32_t imageIndex)
 	renderPassBeginInfo.pClearValues = clearValues.data();					// List of clear values
 	renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 
-	renderPassBeginInfo.framebuffer = m_swapChainFramebuffers[imageIndex];
+	renderPassBeginInfo.framebuffer = m_swapChainFramebuffers[imageIndex].GetVkFrameBuffer();
 
 	//Start recording
 	VkResult result = vkBeginCommandBuffer( VkContext::Instance().GetCommandBuferAt(imageIndex), &bufferBeginInfo);
