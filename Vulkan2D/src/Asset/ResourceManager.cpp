@@ -25,6 +25,7 @@ Texture2D ResourceManager::CreateSampleTextureFromFile(std::string fileName, VkF
 	VkUtils::MemoryUtils::CreateBuffer(VkContext::Instance().GetLogicalDevice(), VkContext::Instance().GetPhysicalDevice(),
 		size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &staging, &stagingMemory);
 
+
 	void* data;
 	vkMapMemory(VkContext::Instance().GetLogicalDevice(), stagingMemory, 0, size, 0, &data);
 	memcpy(data, imageData, static_cast<size_t>(size));

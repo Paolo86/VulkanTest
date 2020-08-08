@@ -5,7 +5,7 @@
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <vk_mem_alloc.h>
+
 
 #include "CommonStructs.h"
 #include "UniformBuffer.h"
@@ -21,7 +21,7 @@ public:
 
 	VkDevice& GetLogicalDevice() { return m_device; };
 	VkPhysicalDevice& GetPhysicalDevice() { return m_physicalDevice; }
-	uint32_t GetSwapChainImagesCount() { return m_swapChainImages.size(); }
+	uint32_t GetSwapChainImagesCount() { return static_cast<uint32_t>(m_swapChainImages.size()); }
 	VkQueue& GetGraphicsTransferQ() { return m_graphicsQ; }
 	VkQueue& GetPresentationQ() { return m_presentationQ; }
 	VkExtent2D& GetSwapChainExtent() { return m_swapChainExtent; }
@@ -30,6 +30,7 @@ public:
 	VkImageView& GetSwapChainImageViewAt(int index) { return m_swapChainImageViews[index]; };
 	VkCommandBuffer& GetCommandBuferAt(int index) { return m_commandBuffers[index]; }
 	VkDeviceSize& GetMinUniformBufferOffset() { return m_minUniformBufferOffset; };
+	VkInstance& GetVkInstance() { return m_vkInstance; }
 
 	int GetCurrentFrameIndex() { return currentFrame; }
 	void WaitForFenceAndAcquireImage(uint32_t& imageIndex);

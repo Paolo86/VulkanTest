@@ -69,24 +69,26 @@ void Mesh::CreateVertexBuffer(VkQueue transferQ, VkCommandPool transferPool, std
 
 	//Stage buffer for GPU transfer
 	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
+	VmaAllocation stagingBufferMemory;
 
-	VkUtils::MemoryUtils::CreateBuffer(VkContext::Instance().GetLogicalDevice(), VkContext::Instance().GetPhysicalDevice(), size,
-		VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferMemory);
+	VkUtils::MemoryUtils::CreateBufferVMA(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_ONLY, &stagingBuffer, &stagingBufferMemory);
 
 	//Map memory to vertex buffer
 	void* data;
-	vkMapMemory(m_device, stagingBufferMemory, 0, size,0,&data);
+	vmaMapMemory(VkUtils::MemoryUtils::allocator, stagingBufferMemory, &data);
+	memcpy(data,vertices.data(), (size_t)size);
+	vmaUnmapMemory(VkUtils::MemoryUtils::allocator, stagingBufferMemory);
+
+	/*vkMapMemory(m_device, stagingBufferMemory, 0, size,0,&data);
 	memcpy(data, vertices.data(), (size_t)size);
-	vkUnmapMemory(m_device, stagingBufferMemory);
+	vkUnmapMemory(m_device, stagingBufferMemory);*/
 
 	VkUtils::MemoryUtils::CreateBuffer(VkContext::Instance().GetLogicalDevice(), VkContext::Instance().GetPhysicalDevice(), 
 		size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_vertexBuffer, &m_bufferMemory);
 
 	VkUtils::MemoryUtils::CopyBuffer(VkContext::Instance().GetLogicalDevice(), transferQ, transferPool, stagingBuffer, m_vertexBuffer, size);
 
-	vkDestroyBuffer(m_device, stagingBuffer, nullptr);
-	vkFreeMemory(m_device, stagingBufferMemory, nullptr);
+	VkUtils::MemoryUtils::DestroyBuffer(stagingBuffer, stagingBufferMemory);
 }
 
 void Mesh::CreateVertexBuffer(VkQueue transferQ, VkCommandPool transferPool, std::vector<uint32_t>& indices)

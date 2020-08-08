@@ -1,8 +1,7 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 #include <string>
-
-
+#include <vk_mem_alloc.h>
 
 class VkUtils
 {
@@ -69,12 +68,21 @@ class VkUtils
 		class MemoryUtils
 		{
 		public:
+			static void InitVMA(VkPhysicalDevice physicalDevice, VkDevice device, VkInstance instance);
 			static uint32_t FindMemoryTypeIndex(VkPhysicalDevice m_physicalDevice, uint32_t allowedTypes, VkMemoryPropertyFlags properties);
 			static void CreateBuffer(VkDevice m_device, VkPhysicalDevice m_physicalDevice, VkDeviceSize bufferSize, VkBufferUsageFlags usage,
 				VkMemoryPropertyFlags bufferProperties, VkBuffer* buffer, VkDeviceMemory* bufferMemory);
 
+			static void CreateBufferVMA(VkDeviceSize bufferSize, VkBufferUsageFlags usage,
+				VmaMemoryUsage bufferProperties, VkBuffer* buffer, VmaAllocation* bufferMemory);
+
+			static void DestroyBuffer(VkBuffer buffer, VmaAllocation allocation) { vmaDestroyBuffer(allocator, buffer, allocation); }
+
 			static void CopyBuffer(VkDevice device, VkQueue transferQueue, 
 				VkCommandPool transferPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize);
+
+			static VmaAllocator allocator;
+		private:
 		};
 
 		class CmdUtils

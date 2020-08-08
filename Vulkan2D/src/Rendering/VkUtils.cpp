@@ -1,5 +1,7 @@
 #include "VkUtils.h"
 #include "Vk.h"
+#define VMA_IMPLEMENTATION
+#include "vk_mem_alloc.h"
 
 VkPipelineShaderStageCreateInfo VkUtils::PipelineUtils::PipelineUtils::GetPipelineVertexShaderStage(VkShaderModule vertShaderModule)
 {
@@ -187,6 +189,19 @@ VkDescriptorSetLayoutBinding VkUtils::PipelineUtils::GetDescriptorLayout(uint32_
 	return samplerLayoutBinding;
 }
 
+VmaAllocator VkUtils::MemoryUtils::allocator;
+
+void VkUtils::MemoryUtils::InitVMA(VkPhysicalDevice physicalDevice, VkDevice device, VkInstance instance)
+{
+	VmaAllocatorCreateInfo allocatorInfo = {};
+	allocatorInfo.physicalDevice = physicalDevice;
+	allocatorInfo.device = device;
+	allocatorInfo.instance = instance;
+
+	vmaCreateAllocator(&allocatorInfo, &VkUtils::MemoryUtils::allocator);
+}
+
+
 uint32_t VkUtils::MemoryUtils::FindMemoryTypeIndex(VkPhysicalDevice m_physicalDevice, uint32_t allowedTypes, VkMemoryPropertyFlags properties)
 {
 	// Get properties of physical device memory
@@ -215,6 +230,21 @@ void VkUtils::MemoryUtils::CopyBuffer(VkDevice device, VkQueue transferQueue, Vk
 
 	vkCmdCopyBuffer(cmdBuffer, srcBuffer, dstBuffer, 1, &bufferCopyRegion);
 	VkUtils::CmdUtils::EndCmdBuffer(device,transferPool, transferQueue, cmdBuffer);
+}
+
+void VkUtils::MemoryUtils::CreateBufferVMA(VkDeviceSize bufferSize, VkBufferUsageFlags usage,
+	VmaMemoryUsage bufferProperties, VkBuffer* buffer, VmaAllocation* bufferMemory)
+{
+	VkBufferCreateInfo bufferInfo = {};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = bufferSize * 1024;
+	bufferInfo.usage = usage;
+
+	VmaAllocationCreateInfo allocInfo = {};
+	allocInfo.usage = bufferProperties;
+
+
+	vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, buffer, bufferMemory, nullptr);
 }
 
 void VkUtils::MemoryUtils::CreateBuffer(VkDevice m_device, VkPhysicalDevice m_physicalDevice, VkDeviceSize bufferSize, VkBufferUsageFlags usage, 

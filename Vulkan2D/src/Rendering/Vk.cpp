@@ -7,8 +7,7 @@
 #include <algorithm>
 #include <cstdint>
 #include "../Utils/FileUtils.h"
-#define VMA_IMPLEMENTATION
-#include <vk_mem_alloc.h>
+
 #include "Material.h"
 #include "VkUtils.h"
 #include "../Asset/ResourceManager.h"
@@ -49,6 +48,7 @@ Vk::~Vk()
 void Vk::Init()
 {
 	VkContext::Instance().Init();
+	VkUtils::MemoryUtils::InitVMA(VkContext::Instance().GetPhysicalDevice(), VkContext::Instance().GetLogicalDevice(), VkContext::Instance().GetVkInstance());
 
 	CreateDescriptorPool();
 	CreateDepthBufferImage();
@@ -68,7 +68,7 @@ void Vk::Init()
 	CreateUniformBuffers();
 
 	ViewProjection.projection = glm::perspective(glm::radians(60.0f), (float)VkContext::Instance().GetSwapChainExtent().width / VkContext::Instance().GetSwapChainExtent().height, 0.01f, 1000.0f);
-	ViewProjection.view = glm::lookAt(glm::vec3(0, 0, 2), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	ViewProjection.view = glm::lookAt(glm::vec3(0, 0, 4), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	ViewProjection.projection[1][1] *= -1;  //Vulkan inverts the Y axis...
 
 	Vertex v1;
@@ -91,16 +91,22 @@ void Vk::Init()
 	v4.color = glm::vec3(0.0, 0.0, 1.0);
 	v4.uvs = glm::vec2(0, 1);
 
-	std::vector<Vertex> vertices = { v1,v2,v3, v4 };
-	std::vector<uint32_t> indices = { 0,1,2,2,3,0 };
+	std::vector<Vertex> vertices1 = { v1,v2,v3, v4 };
+	std::vector<uint32_t> indices1 = { 0,1,2,2,3,0 };
+
+	std::vector<Vertex> vertices2 = { v1,v3,v4 };
+	std::vector<uint32_t> indices2 = { 0,1,2 };
 
 	woodMaterial.Create({"wood.jpg"});
 	wallMaterial.Create({"wall.jpg"});
-	firstMesh = Mesh(VkContext::Instance().GetPhysicalDevice(), VkContext::Instance().GetLogicalDevice(), VkContext::Instance().GetGraphicsTransferQ(), VkContext::Instance().GetCommandPool(), vertices, indices, &woodMaterial);
-	firstMesh.uboModel.model = glm::translate(firstMesh.uboModel.model, glm::vec3(0.2, 0, -0.1));
+	firstMesh = Mesh(VkContext::Instance().GetPhysicalDevice(), VkContext::Instance().GetLogicalDevice(), 
+		VkContext::Instance().GetGraphicsTransferQ(), VkContext::Instance().GetCommandPool(), vertices1, indices1, &woodMaterial);
+	firstMesh.uboModel.model = glm::translate(firstMesh.uboModel.model, glm::vec3(1.5, 0, -0.1));
 
-	secondMesh = Mesh(VkContext::Instance().GetPhysicalDevice(), VkContext::Instance().GetLogicalDevice(), VkContext::Instance().GetGraphicsTransferQ(), VkContext::Instance().GetCommandPool(), vertices, indices, &wallMaterial);
-	secondMesh.uboModel.model = glm::translate(secondMesh.uboModel.model, glm::vec3(-0.2, 0, -0.1));
+	secondMesh = Mesh(VkContext::Instance().GetPhysicalDevice(), VkContext::Instance().GetLogicalDevice(), 
+		VkContext::Instance().GetGraphicsTransferQ(), VkContext::Instance().GetCommandPool(), vertices2, indices2, &wallMaterial);
+
+	secondMesh.uboModel.model = glm::translate(secondMesh.uboModel.model, glm::vec3(-1.5, 0, -0.1));
 	secondMesh.uboModel.model = glm::rotate(secondMesh.uboModel.model, glm::radians(45.0f), glm::vec3(0, 0, 1));
 
 	m_meshes.push_back(firstMesh);
@@ -357,20 +363,22 @@ void Vk::RenderCmds(uint32_t imageIndex)
 	vkCmdBeginRenderPass(VkContext::Instance().GetCommandBuferAt(imageIndex), &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE); //All render commands are primary
 
 	//Bind pipeline to be used
+	VkBuffer vertexBuffer[] = { firstMesh.GetVertexBuffer(), secondMesh.GetIndexBuffer() };
+	VkDeviceSize offsets[] = { 0 };
+
+	vkCmdBindVertexBuffers(VkContext::Instance().GetCommandBuferAt(imageIndex), 0, 1, vertexBuffer, offsets);
 
 	for (size_t j = 0; j < m_meshes.size(); j++)
 	{
-		VkBuffer vertexBuffer[] = { m_meshes[j].GetVertexBuffer() };
-		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindPipeline(VkContext::Instance().GetCommandBuferAt(imageIndex), VK_PIPELINE_BIND_POINT_GRAPHICS, m_meshes[j].material->m_graphicsPipeline.m_graphicsPipeline);
 
-		vkCmdBindVertexBuffers(VkContext::Instance().GetCommandBuferAt(imageIndex), 0, 1, vertexBuffer, offsets);
 		vkCmdBindIndexBuffer(VkContext::Instance().GetCommandBuferAt(imageIndex), m_meshes[j].GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-
 		//uint32_t dynamicOffset = static_cast<uint32_t>(m_modelUniformAlignment * j);
-		vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), m_meshes[j].material->m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &m_meshes[j].uboModel.model);
+		vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), m_meshes[j].material->m_pipelineLayout,
+			VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &m_meshes[j].uboModel.model);
 		
-		std::array<VkDescriptorSet, 2> dsets = { m_meshes[j].material->m_UBOdescriptorSets[imageIndex].m_descriptorSet , m_meshes[j].material->m_samplerDescriptorSets[0].m_descriptorSet };
+		std::array<VkDescriptorSet, 2> dsets = { m_meshes[j].material->m_UBOdescriptorSets[imageIndex].m_descriptorSet , 
+			m_meshes[j].material->m_samplerDescriptorSets[0].m_descriptorSet };
 		
 		vkCmdBindDescriptorSets(VkContext::Instance().GetCommandBuferAt(imageIndex), VK_PIPELINE_BIND_POINT_GRAPHICS, m_meshes[j].material->m_pipelineLayout, 0,
 			static_cast<uint32_t>(dsets.size()),

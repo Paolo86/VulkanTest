@@ -124,7 +124,7 @@ public:
 
 		//Image-sampler Descriptor
 		std::vector< VkWriteDescriptorSet> setWrites = { descriptorWrite };
-		vkUpdateDescriptorSets(device, setWrites.size(), setWrites.data(), 0, nullptr);
+		vkUpdateDescriptorSets(device, static_cast<uint32_t>(setWrites.size()), setWrites.data(), 0, nullptr);
 	}
 
 	void AssociateTexture(VkDevice device, std::vector<VkImageView>& images, uint32_t binding)
