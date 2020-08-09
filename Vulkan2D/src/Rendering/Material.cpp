@@ -4,22 +4,12 @@
 #include "Vk.h"
 #include "../Asset/ResourceManager.h"
 
-Material::Material(std::string shaderName)
-{
-	m_shaderName = shaderName;
-}
-
-Material::Material(GraphicsPipeline pipeilne)
-{
-	m_graphicsPipeline = pipeilne;
-}
 
 
-void Material::Create(std::vector<std::string> textureNames)
+void Material::Create(GraphicsPipeline* pipeline, std::vector<std::string> textureNames) 
 {
-	CreateUBODescriptorSet();
+	m_pipeline = pipeline;
 	AddTextures(textureNames);
-	CreateGraphicsPipeline();
 }
 
 void Material::AddTextures(std::vector<std::string> fileNames)
@@ -42,13 +32,7 @@ void Material::Destroy()
 		m_textures[i].Destroy();
 	}
 
-	for (VkDescriptorSetLayout layout : m_orderedDescriptorLayouts)
-	{
-		vkDestroyDescriptorSetLayout(VkContext::Instance().GetLogicalDevice(), layout, nullptr); //Destroy before pipeline
-	}
 
-	vkDestroyPipelineLayout(VkContext::Instance().GetLogicalDevice(), m_pipelineLayout, nullptr);
-	m_graphicsPipeline.Destroy(VkContext::Instance().GetLogicalDevice());
 }
 
 
@@ -57,112 +41,15 @@ Material::~Material()
 
 }
 
-void Material::CreateGraphicsPipeline()
-{
-	std::string vertexShaderName = m_shaderName + "_vertex.spv";
-	std::string fragmentShaderName = m_shaderName + "_fragment.spv";
-	auto vertexShaderCode = FileUtils::ReadFile("Shaders/" + vertexShaderName);
-	auto fragmentShaderCode = FileUtils::ReadFile("Shaders/" + fragmentShaderName);
-
-	VkShaderModule vertShaderModule = VkUtils::PipelineUtils::CreateShadeModule(VkContext::Instance().GetLogicalDevice(), vertexShaderCode);
-	VkShaderModule fragShaderModule = VkUtils::PipelineUtils::CreateShadeModule(VkContext::Instance().GetLogicalDevice(), fragmentShaderCode);
-
-	VkPipelineShaderStageCreateInfo vertShaderStageInfo = VkUtils::PipelineUtils::GetPipelineVertexShaderStage(vertShaderModule);
-	VkPipelineShaderStageCreateInfo fragShaderStageInfo = VkUtils::PipelineUtils::GetPipelineFragmentShaderStage(fragShaderModule);
-	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
-	VkVertexInputBindingDescription bindigDescription = {};
-	std::array<VkVertexInputAttributeDescription, 3> attributeDescription;
-	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
-
-	Vertex::GetVertexAttributeDescription(&bindigDescription, &vertexInputInfo, attributeDescription);	
-	VkPipelineInputAssemblyStateCreateInfo inputAssembly = VkUtils::PipelineUtils::GetPipelineInputAssemblyState();
-	VkViewport viewport = VkUtils::PipelineUtils::GetViewport(VkContext::Instance().GetSwapChainExtent().width, VkContext::Instance().GetSwapChainExtent().height);
-	VkRect2D scissor = VkUtils::PipelineUtils::GetScissor(VkContext::Instance().GetSwapChainExtent().width, VkContext::Instance().GetSwapChainExtent().height);
-	VkPipelineViewportStateCreateInfo viewportState = VkUtils::PipelineUtils::GetPipelineViewportState(&viewport, &scissor);
-	VkPipelineRasterizationStateCreateInfo rasterizerCreateInfo = VkUtils::PipelineUtils::GetPipelineRasterizer();
-
-	//For some AA, requires GPU feature to be enabled
-	VkPipelineMultisampleStateCreateInfo multisampling = VkUtils::PipelineUtils::GetPipelineMultisampling();
-
-	//Blending stuff, disabled for now
-	VkPipelineColorBlendAttachmentState colorBlendAttachment = VkUtils::PipelineUtils::GetPipelineBlendAttachmentState();
-
-	VkPipelineColorBlendStateCreateInfo colorBlending = VkUtils::PipelineUtils::GetPipelineColorBlendingState(&colorBlendAttachment);
-
-	m_pushConstant.Create<UboModel>(VK_SHADER_STAGE_VERTEX_BIT);
-
-
-	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = VkUtils::PipelineUtils::GetPipelineLayoutInfo(m_orderedDescriptorLayouts, &m_pushConstant.m_vkPushConstant);
-
-	// Create Pipeline Layout
-	VkResult result = vkCreatePipelineLayout(VkContext::Instance().GetLogicalDevice(), &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
-	if (result != VK_SUCCESS)
-	{
-		throw std::runtime_error("Failed to create Pipeline Layout!");
-	}
-
-	VkPipelineDepthStencilStateCreateInfo depthStencilCreateInfo = VkUtils::PipelineUtils::GetPipelineDepthStencilAttachmentState();
-
-	m_graphicsPipeline.Create(
-		VkContext::Instance().GetLogicalDevice(),
-		shaderStages,
-		&vertexInputInfo,
-		&inputAssembly,
-		&viewportState,
-		&rasterizerCreateInfo,
-		&multisampling,
-		&depthStencilCreateInfo,
-		&colorBlending,
-		&m_pipelineLayout,
-		Vk::Instance().m_renderPass,
-		0);
-
-
-	vkDestroyShaderModule(VkContext::Instance().GetLogicalDevice(), fragShaderModule, nullptr);
-	vkDestroyShaderModule(VkContext::Instance().GetLogicalDevice(), vertShaderModule, nullptr);
-}
-
-
-void Material::CreateUBODescriptorSet()
-{
-	//Uniform 
-	//Binding info
-	VkDescriptorSetLayoutBinding vpLayoutBinding = {};
-	vpLayoutBinding.binding = 0; //Binding number, check in vert shader
-	vpLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	vpLayoutBinding.descriptorCount = 1;
-	vpLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	vpLayoutBinding.pImmutableSamplers = nullptr;
-
-	DescriptorSetLayout uboLayout;
-	uboLayout.AddBinding({ vpLayoutBinding }).Create(VkContext::Instance().GetLogicalDevice());
-
-	m_orderedDescriptorLayouts.push_back(uboLayout.m_descriptorLayout);
-	m_UBOdescriptorSets.resize(VkContext::Instance().GetSwapChainImagesCount());
-	//Create 3 descriptor sets for ubo
-	for (size_t i = 0; i < VkContext::Instance().GetSwapChainImagesCount(); i++)
-	{
-		m_UBOdescriptorSets[i].CreateDescriptorSet(VkContext::Instance().GetLogicalDevice(), { uboLayout }, Vk::Instance().m_descriptorPool);
-		std::vector<UniformBuffer<_ViewProjection>> bufs = { Vk::Instance().m_VPUniformBuffers[i] };
-		m_UBOdescriptorSets[i].AssociateUniformBuffers<_ViewProjection>(VkContext::Instance().GetLogicalDevice(), bufs, 0, 0);
-	}
-
-}
 
 
 void Material::CreateSamplerDescriptorSet()
 {
 
 	//Texture sampler descriptor set layout
-	VkDescriptorSetLayoutBinding imagesLayoutBinding = VkUtils::PipelineUtils::GetDescriptorLayout(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
-		, m_textures.size(), VK_SHADER_STAGE_FRAGMENT_BIT);
-
-	DescriptorSetLayout samplerLayout;
-	samplerLayout.AddBinding({ imagesLayoutBinding }).Create(VkContext::Instance().GetLogicalDevice());
-	m_orderedDescriptorLayouts.push_back(samplerLayout.m_descriptorLayout);
-
+	
 	m_samplerDescriptorSets.resize(1);
-	m_samplerDescriptorSets[0].CreateDescriptorSet(VkContext::Instance().GetLogicalDevice(), { samplerLayout }, Vk::Instance().m_samplerDescriptorPool);
+	m_samplerDescriptorSets[0].CreateDescriptorSet(VkContext::Instance().GetLogicalDevice(), { m_pipeline->GetSamplerLayout() }, Vk::Instance().m_samplerDescriptorPool);
 
 	m_samplerDescriptorSets[0].AssociateTextureSamplerCombo(VkContext::Instance().GetLogicalDevice(), m_textures, 0, Vk::Instance().m_textureSampler.m_sampler);
 

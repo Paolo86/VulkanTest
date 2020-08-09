@@ -2,11 +2,14 @@
 
 #include <vulkan/vulkan.hpp>
 #include <string>
+#include "DescriptorSet.h"
 
 class GraphicsPipeline
 {
 public:
 	GraphicsPipeline() {};
+	virtual ~GraphicsPipeline() {};
+
 	void Create(
 		VkDevice& device,
 		VkPipelineShaderStageCreateInfo* shaderStages,
@@ -21,8 +24,16 @@ public:
 		VkRenderPass &renderPass,
 		uint32_t subpass);
 
-	void Destroy(VkDevice device);
+	virtual void Destroy(VkDevice device) = 0;
+	virtual void Bind(VkCommandBuffer cmdBuffer, int imageIndex) = 0;
+
+
+	DescriptorSetLayout& GetSamplerLayout() { return allLayouts[1]; }
 
 	VkPipeline m_graphicsPipeline;
+	VkPipelineLayout m_pipelineLayout;
+	std::vector<DescriptorSetLayout> allLayouts;
+
+
 
 };

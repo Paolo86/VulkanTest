@@ -1,6 +1,11 @@
 #include "ResourceManager.h"
 #include "..\Rendering\VkUtils.h"
 #include "..\Rendering\VkContext.h"
+#include "Pipelines\BasicPipeline.h"
+
+
+std::map<std::string, std::unique_ptr<GraphicsPipeline>> ResourceManager::allPipelines;
+std::map<std::string, std::unique_ptr<Mesh>> ResourceManager::allMeshes;
 
 stbi_uc* ResourceManager::LoadTexture(std::string fileName, int* width, int* height, int* channels)
 {
@@ -67,4 +72,41 @@ Texture2D ResourceManager::CreateDepthBufferImage()
 	texture.m_imageView = VkUtils::ImageUtils::CreateImageView(VkContext::Instance().GetLogicalDevice(), texture.m_image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 	return texture;
 
+}
+
+void ResourceManager::CreatePipelines()
+{
+	allPipelines["Basic"] = std::unique_ptr<BasicPipeline>(new BasicPipeline());
+}
+
+void ResourceManager::CreateMeshes()
+{
+	Vertex v1;
+	v1.pos = glm::vec3(-0.5, -0.5, 0.0);
+	v1.color = glm::vec3(1.0, 0.0, 0.0);
+	v1.uvs = glm::vec2(0, 0);
+
+	Vertex v2;
+	v2.pos = glm::vec3(0.5, -0.5, 0.0);
+	v2.color = glm::vec3(0.0, 1.0, 0.0);
+	v2.uvs = glm::vec2(1, 0);
+
+	Vertex v3;
+	v3.pos = glm::vec3(0.5, 0.5, 0.0);
+	v3.color = glm::vec3(0.0, 0.0, 1.0);
+	v3.uvs = glm::vec2(1, 1);
+
+	Vertex v4;
+	v4.pos = glm::vec3(-0.5, 0.5, 0.0);
+	v4.color = glm::vec3(0.0, 0.0, 1.0);
+	v4.uvs = glm::vec2(0, 1);
+
+	std::vector<Vertex> vertices1 = { v1,v2,v3, v4 };
+	std::vector<uint32_t> indices1 = { 0,1,2,2,3,0 };
+
+	std::vector<Vertex> vertices2 = { v1,v3,v4 };
+	std::vector<uint32_t> indices2 = { 0,1,2 };
+
+	/*Mesh firstMesh = Mesh(VkContext::Instance().GetPhysicalDevice(), VkContext::Instance().GetLogicalDevice(),
+		VkContext::Instance().GetGraphicsTransferQ(), VkContext::Instance().GetCommandPool(), vertices1, indices1, &woodMaterial);*/
 }

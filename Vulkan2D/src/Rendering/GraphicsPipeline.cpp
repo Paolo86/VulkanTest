@@ -39,7 +39,3 @@ void GraphicsPipeline::Create(
 	}
 }
 
-void GraphicsPipeline::Destroy(VkDevice device)
-{
-	vkDestroyPipeline(device, m_graphicsPipeline, nullptr);
-}

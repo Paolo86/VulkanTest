@@ -146,6 +146,7 @@
     <ClCompile Include="src\Rendering\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Asset\Pipelines\BasicPipeline.h" />
     <ClInclude Include="src\Asset\ResourceManager.h" />
     <ClInclude Include="src\Rendering\CommonStructs.h" />
     <ClInclude Include="src\Rendering\DescriptorSet.h" />

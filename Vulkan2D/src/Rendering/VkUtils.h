@@ -43,7 +43,7 @@ class VkUtils
 			static VkPipelineInputAssemblyStateCreateInfo GetPipelineInputAssemblyState(VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 			static VkShaderModule CreateShadeModule(VkDevice device, const std::vector<char>& code);
 
-			static VkDescriptorSetLayoutBinding GetDescriptorLayout(uint32_t binding,
+			static VkDescriptorSetLayoutBinding GetDescriptorLayoutBinding(uint32_t binding,
 				VkDescriptorType descriptorType,
 				uint32_t descriptorCount,
 				VkShaderStageFlags shaderStage,

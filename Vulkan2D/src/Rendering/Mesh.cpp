@@ -50,7 +50,7 @@ void Mesh::CreateVertexBuffer(VkQueue transferQ, VkCommandPool transferPool, std
 
 void Mesh::CreateIndexBuffer(VkQueue transferQ, VkCommandPool transferPool, std::vector<uint32_t>& indices)
 {
-	UniformBuffer<uint32_t> stage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, indices.size());
+	UniformBuffer<uint32_t> stage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, static_cast<uint32_t>(indices.size()));
 	stage.Update(m_device, indices.data());
 	m_IndexBuffer.Create(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, indices.size());
 	VkUtils::MemoryUtils::CopyBuffer(VkContext::Instance().GetLogicalDevice(), transferQ, transferPool, stage.buffer, m_IndexBuffer.buffer, stage.bufferSize);

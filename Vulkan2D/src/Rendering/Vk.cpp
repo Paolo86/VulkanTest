@@ -15,8 +15,8 @@
 
 std::unique_ptr<Vk> Vk::m_instance;
 
-Material woodMaterial("basic");
-Material wallMaterial("basic");
+Material woodMaterial;
+Material wallMaterial;
 namespace 
 {
 	const std::vector<const char*> supportedDeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
@@ -97,8 +97,11 @@ void Vk::Init()
 	std::vector<Vertex> vertices2 = { v1,v3,v4 };
 	std::vector<uint32_t> indices2 = { 0,1,2 };
 
-	woodMaterial.Create({"wood.jpg"});
-	wallMaterial.Create({"wall.jpg"});
+	ResourceManager::CreatePipelines();
+
+	woodMaterial.Create(ResourceManager::GetPipeline("Basic"),{"wood.jpg"});
+	wallMaterial.Create(ResourceManager::GetPipeline("Basic") ,{"wall.jpg"});
+
 	firstMesh = Mesh(VkContext::Instance().GetPhysicalDevice(), VkContext::Instance().GetLogicalDevice(), 
 		VkContext::Instance().GetGraphicsTransferQ(), VkContext::Instance().GetCommandPool(), vertices1, indices1, &woodMaterial);
 	firstMesh.uboModel.model = glm::translate(firstMesh.uboModel.model, glm::vec3(1.5, 0, -0.1));
@@ -179,7 +182,7 @@ void Vk::CreateDescriptorPool()
 
 	VkDescriptorPoolCreateInfo poolCreateInfo = {};
 	poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolCreateInfo.maxSets = static_cast<uint32_t>(VkContext::Instance().GetSwapChainImagesCount() * 2);
+	poolCreateInfo.maxSets = static_cast<uint32_t>(VkContext::Instance().GetSwapChainImagesCount());
 	poolCreateInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 	poolCreateInfo.pPoolSizes = poolSizes.data();
 
@@ -195,7 +198,7 @@ void Vk::CreateDescriptorPool()
 
 	VkDescriptorPoolCreateInfo samplerPoolCreateInfo = {};
 	samplerPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	samplerPoolCreateInfo.maxSets = 200;
+	samplerPoolCreateInfo.maxSets = 200; //Max number of sets (in this case, number of materials)
 	samplerPoolCreateInfo.poolSizeCount = 1;
 	samplerPoolCreateInfo.pPoolSizes = &samplerPoolSize;
 
@@ -370,19 +373,16 @@ void Vk::RenderCmds(uint32_t imageIndex)
 
 	for (size_t j = 0; j < m_meshes.size(); j++)
 	{
-		vkCmdBindPipeline(VkContext::Instance().GetCommandBuferAt(imageIndex), VK_PIPELINE_BIND_POINT_GRAPHICS, m_meshes[j].material->m_graphicsPipeline.m_graphicsPipeline);
+		m_meshes[j].material->m_pipeline->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
 
 		vkCmdBindIndexBuffer(VkContext::Instance().GetCommandBuferAt(imageIndex), m_meshes[j].GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
 		//uint32_t dynamicOffset = static_cast<uint32_t>(m_modelUniformAlignment * j);
-		vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), m_meshes[j].material->m_pipelineLayout,
+		vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), m_meshes[j].material->m_pipeline->m_pipelineLayout,
 			VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &m_meshes[j].uboModel.model);
-		
-		std::array<VkDescriptorSet, 2> dsets = { m_meshes[j].material->m_UBOdescriptorSets[imageIndex].m_descriptorSet , 
-			m_meshes[j].material->m_samplerDescriptorSets[0].m_descriptorSet };
-		
-		vkCmdBindDescriptorSets(VkContext::Instance().GetCommandBuferAt(imageIndex), VK_PIPELINE_BIND_POINT_GRAPHICS, m_meshes[j].material->m_pipelineLayout, 0,
-			static_cast<uint32_t>(dsets.size()),
-			dsets.data(), 0,nullptr);
+
+		vkCmdBindDescriptorSets(VkContext::Instance().GetCommandBuferAt(imageIndex), VK_PIPELINE_BIND_POINT_GRAPHICS, m_meshes[j].material->m_pipeline->m_pipelineLayout, 1,
+			1,
+			&m_meshes[j].material->m_samplerDescriptorSets[0].m_descriptorSet, 0, nullptr);
 
 		vkCmdDrawIndexed(VkContext::Instance().GetCommandBuferAt(imageIndex), m_meshes[j].GetIndexCount(), 1, 0, 0, 0);
 	}

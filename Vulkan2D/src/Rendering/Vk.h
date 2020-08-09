@@ -7,6 +7,7 @@
 #include "TextureSampler.h"
 #include "VkDebugMessanger.h"
 #include "FrameBuffer.h"
+#include <map>
 
 
 
@@ -58,5 +59,6 @@ private:
 		void AllocateDynamicBufferTransferSpace();
 
 		size_t m_modelUniformAlignment;
+
 
 };

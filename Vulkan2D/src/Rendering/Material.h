@@ -16,25 +16,16 @@
 class Material
 {
 public:
-	Material(std::string shaderName);
-	Material(GraphicsPipeline pipeline);
+	Material() {}
 	~Material();
-	void Create(std::vector<std::string> textureNames);
+	void Create(GraphicsPipeline* pipeline, std::vector<std::string> textureNames);
 	void Destroy();
 	void AddTextures(std::vector<std::string> fileNames);
 
-	VkPipelineLayout m_pipelineLayout; //Used to pass data to shaders (like mat4)
-	GraphicsPipeline m_graphicsPipeline;
-	PushConstant m_pushConstant;
-
-	std::vector<VkDescriptorSetLayout> m_orderedDescriptorLayouts;
-	std::vector<DescriptorSet> m_UBOdescriptorSets;
 	std::vector<DescriptorSet> m_samplerDescriptorSets;
 	std::vector<Texture2D> m_textures;
 
-
-	void CreateGraphicsPipeline();
-	void CreateUBODescriptorSet();
+	GraphicsPipeline* m_pipeline;
 	void CreateSamplerDescriptorSet();
 
 	std::string m_shaderName;
