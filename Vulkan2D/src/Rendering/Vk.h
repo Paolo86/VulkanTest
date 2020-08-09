@@ -36,7 +36,7 @@ private:
 		void CreateDescriptorPool();
 
 		std::map<GraphicsPipeline*, std::map<Mesh*, std::map<Material*,std::set<MeshRenderer*>>>> m_dynamicObjrenderMap;
-		std::map<GraphicsPipeline*, std::map<Material*, std::map<Mesh*, uint32_t>>> m_staticObjrenderMap; //For caching
+		std::map<GraphicsPipeline*, std::map<Material*, std::vector<MeshRenderer*>>> m_staticObjrenderMap; //For caching
 		std::map<GraphicsPipeline*, std::map<Material*, UniformBuffer<Vertex>>> m_vertexBuffers; //For caching
 		std::map<GraphicsPipeline*, std::map<Material*, UniformBuffer<uint32_t>>> m_indexBuffers; //For caching
 		std::map<GraphicsPipeline*, std::map<Material*, uint32_t>> m_indexBuffersCount; //For caching

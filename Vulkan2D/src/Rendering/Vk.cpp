@@ -364,12 +364,12 @@ void Vk::RenderCmds(uint32_t imageIndex)
 
 	}
 
-
-
+	//TODO do not re record this every time, record cmd once
 	for (auto pipIt = m_vertexBuffers.begin(); pipIt != m_vertexBuffers.end(); pipIt++)
 	{
 		UboModel identity;
 		identity.model = glm::mat4(1);
+
 		vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipIt->first->m_pipelineLayout,
 			VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &identity);
 		pipIt->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
@@ -423,7 +423,7 @@ void Vk::AddMeshRenderer(MeshRenderer* meshRenderer, bool isStatic)
 		m_dynamicObjrenderMap[meshRenderer->m_material->m_pipeline][meshRenderer->m_mesh][meshRenderer->m_material].insert(meshRenderer);
 	else
 	{
-		m_staticObjrenderMap[meshRenderer->m_material->m_pipeline][meshRenderer->m_material][meshRenderer->m_mesh]++;
+		m_staticObjrenderMap[meshRenderer->m_material->m_pipeline][meshRenderer->m_material].push_back(meshRenderer);
 	}
 }
 
@@ -438,24 +438,21 @@ void Vk::PrepareStaticBuffers()
 			std::vector<uint32_t> indices;
 			int vertexOffset = 0;
 
-			for (auto mesh = material->second.begin(); mesh != material->second.end(); mesh++)
+			for (int mesh = 0; mesh < material->second.size(); mesh++)
 			{
-				for (int i = 0; i < mesh->second; i++)
+				for (int v = 0; v < material->second[mesh]->m_mesh->GetVertexCount(); v++)
 				{
-					for (int v = 0; v < mesh->first->GetVertexCount(); v++)
-					{
-						vertices.push_back(mesh->first->GetVertices()[v]);
-					}
-
-					for (int v = 0; v < mesh->first->GetIndexCount(); v++)
-					{
-						indices.push_back(mesh->first->GetIndices()[v] + vertexOffset);
-					}
-
-					vertexOffset+= mesh->first->GetVertexCount();
-
-		
+					Vertex vertex = material->second[mesh]->m_mesh->GetVertices()[v];
+					vertex.pos = material->second[mesh]->uboModel.model * glm::vec4(vertex.pos, 1.0);
+					vertices.push_back(vertex);
 				}
+
+				for (int v = 0; v < material->second[mesh]->m_mesh->GetIndexCount(); v++)
+				{
+					indices.push_back(material->second[mesh]->m_mesh->GetIndices()[v] + vertexOffset);
+				}
+
+				vertexOffset += material->second[mesh]->m_mesh->GetVertexCount();
 
 				m_indexBuffersCount[pipeline->first][material->first] = indices.size();
 			}
