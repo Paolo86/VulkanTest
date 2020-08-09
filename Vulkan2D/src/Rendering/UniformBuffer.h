@@ -24,7 +24,7 @@ public:
 		vmaUnmapMemory(VkUtils::MemoryUtils::allocator, bufferMemoryVMA);
 	}
 
-	void Destroy(VkDevice device)
+	void Destroy()
 	{
 		VkUtils::MemoryUtils::DestroyBuffer(buffer, bufferMemoryVMA);
 	}

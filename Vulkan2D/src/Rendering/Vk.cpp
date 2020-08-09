@@ -102,12 +102,10 @@ void Vk::Init()
 	woodMaterial.Create(ResourceManager::GetPipeline("Basic"),{"wood.jpg"});
 	wallMaterial.Create(ResourceManager::GetPipeline("Basic") ,{"wall.jpg"});
 
-	firstMesh = Mesh(VkContext::Instance().GetPhysicalDevice(), VkContext::Instance().GetLogicalDevice(), 
-		VkContext::Instance().GetGraphicsTransferQ(), VkContext::Instance().GetCommandPool(), vertices1, indices1, &woodMaterial);
+	firstMesh = Mesh(vertices1, indices1, &woodMaterial);
 	firstMesh.uboModel.model = glm::translate(firstMesh.uboModel.model, glm::vec3(1.5, 0, -0.1));
 
-	secondMesh = Mesh(VkContext::Instance().GetPhysicalDevice(), VkContext::Instance().GetLogicalDevice(), 
-		VkContext::Instance().GetGraphicsTransferQ(), VkContext::Instance().GetCommandPool(), vertices2, indices2, &wallMaterial);
+	secondMesh = Mesh(vertices2, indices2, &wallMaterial);
 
 	secondMesh.uboModel.model = glm::translate(secondMesh.uboModel.model, glm::vec3(-1.5, 0, -0.1));
 	secondMesh.uboModel.model = glm::rotate(secondMesh.uboModel.model, glm::radians(45.0f), glm::vec3(0, 0, 1));
@@ -139,7 +137,7 @@ void Vk::Destroy()
 	}
 	for (size_t i = 0; i < VkContext::Instance().GetSwapChainImagesCount(); i++)
 	{
-		m_VPUniformBuffers[i].Destroy(VkContext::Instance().GetLogicalDevice());
+		m_VPUniformBuffers[i].Destroy();
 
 	}
 

@@ -12,8 +12,7 @@
 class Mesh
 {
 public:
-	Mesh(VkPhysicalDevice physicalDevice, VkDevice device, VkQueue transferQ, VkCommandPool transferPool, std::vector<Vertex>& vertices, 
-		std::vector<uint32_t>& indices, Material* material);
+	Mesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, Material* material);
 
 	Mesh() {};
 	~Mesh() {};
@@ -28,8 +27,8 @@ public:
 	Material* material;
 private:
 	int m_vertexCount;
-	VkPhysicalDevice m_physicalDevice;
-	VkDevice m_device;
+
+
 
 	UniformBuffer<uint32_t> m_IndexBuffer;
 	UniformBuffer<Vertex> m_VertexBuffer;
@@ -38,7 +37,7 @@ private:
 	VkQueue transferQ;
 	VkCommandPool transferPool;
 
-	void CreateVertexBuffer(VkQueue transferQ, VkCommandPool transferPool, std::vector<Vertex>& vertices);
-	void CreateIndexBuffer(VkQueue transferQ, VkCommandPool transferPool, std::vector<uint32_t>& indices);
+	void CreateVertexBuffer(std::vector<Vertex>& vertices);
+	void CreateIndexBuffer( std::vector<uint32_t>& indices);
 
 };
