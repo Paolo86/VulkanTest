@@ -34,3 +34,7 @@ struct _ViewProjection {
 typedef struct {
 	glm::mat4 model;
 } UboModel;
+
+typedef struct {
+	glm::vec3 tint;
+} MaterialProps;

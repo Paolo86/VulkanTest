@@ -105,7 +105,6 @@ void Vk::Destroy()
 	wallMaterial.Destroy();
 	
 	ResourceManager::DestroyAll();
-	//_aligned_free(m_modelTransferSpace);
 
 	for (auto framebuffer : m_swapChainFramebuffers) {
 		framebuffer.Destroy(VkContext::Instance().GetLogicalDevice());
@@ -128,6 +127,7 @@ void Vk::CreateUniformBuffers()
 	//VkDeviceSize modelBufferSize = m_modelUniformAlignment * MAX_OBJECTS;
 
 	m_VPUniformBuffers.resize(VkContext::Instance().GetSwapChainImagesCount());
+	m_dynamicBuffer.resize(VkContext::Instance().GetSwapChainImagesCount());
 
 	//m_modelDynamicPuniformBuffer.resize(m_swapChainImages.size());
 	//m_modelDynamicuniformBufferMemory.resize(m_swapChainImages.size());
@@ -136,6 +136,9 @@ void Vk::CreateUniformBuffers()
 	{
 		m_VPUniformBuffers[i] =  UniformBuffer<_ViewProjection>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
 		m_VPUniformBuffers[i].Update(VkContext::Instance().GetLogicalDevice(), &ViewProjection);
+
+		m_dynamicBuffer[i] = DynamicUniformBuffer<_ViewProjection>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+
 
 	}
 
@@ -149,11 +152,11 @@ void Vk::CreateDescriptorPool()
 	VPpoolSize.descriptorCount = static_cast<uint32_t>(VkContext::Instance().GetSwapChainImagesCount());
 	VPpoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 
-	/*VkDescriptorPoolSize modelPoolSize = {};
-	modelPoolSize.descriptorCount = static_cast<uint32_t>(m_modelDynamicPuniformBuffer.size());
-	modelPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;*/
+	VkDescriptorPoolSize dynamicBuffer = {};
+	dynamicBuffer.descriptorCount = static_cast<uint32_t>(VkContext::Instance().GetSwapChainImagesCount());
+	dynamicBuffer.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
 
-	std::vector< VkDescriptorPoolSize> poolSizes = { VPpoolSize }; //modelPoolSize no longer used, using push constant
+	std::vector< VkDescriptorPoolSize> poolSizes = { VPpoolSize, dynamicBuffer }; //modelPoolSize no longer used, using push constant
 
 	VkDescriptorPoolCreateInfo poolCreateInfo = {};
 	poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -316,7 +319,7 @@ void Vk::RenderCmds(uint32_t imageIndex)
 	renderPassBeginInfo.renderArea.extent = VkContext::Instance().GetSwapChainExtent();
 
 	std::array<VkClearValue, 2> clearValues = {};
-	clearValues[0].color = { 0.6f, 0.65f, 0.4f, 1.0f };
+	clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 	clearValues[1].depthStencil.depth = 1.0f;
 
 	renderPassBeginInfo.pClearValues = clearValues.data();					// List of clear values
@@ -391,14 +394,6 @@ void Vk::Draw()
 	VkContext::Instance().Present(imageIndex);
 }
 
-void Vk::AllocateDynamicBufferTransferSpace()
-{
-
-	m_modelUniformAlignment = (sizeof(UboModel) + VkContext::Instance().GetMinUniformBufferOffset() - 1) & ~(VkContext::Instance().GetMinUniformBufferOffset() - 1);
-	//Fixed space ot hold all model matrices of all objects
-	m_modelTransferSpace = (UboModel*)_aligned_malloc(m_modelUniformAlignment* MAX_OBJECTS, m_modelUniformAlignment);
-
-}
 
 void Vk::AddMeshRenderer(MeshRenderer* meshRenderer)
 {

@@ -24,6 +24,7 @@ class Vk
 
 		VkRenderPass m_renderPass;
 		std::vector<UniformBuffer<_ViewProjection>> m_VPUniformBuffers;
+		std::vector<DynamicUniformBuffer<_ViewProjection>> m_dynamicBuffer;;
 		TextureSampler m_textureSampler;
 		VkDescriptorPool m_descriptorPool;
 		VkDescriptorPool m_samplerDescriptorPool;
@@ -51,9 +52,7 @@ private:
 		void CreateFramebuffers();
 		void RenderCmds(uint32_t currentImage);
 		void CreateUniformBuffers();
-		void AllocateDynamicBufferTransferSpace();
 
-		size_t m_modelUniformAlignment;
 
 
 };

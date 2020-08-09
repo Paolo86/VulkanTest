@@ -151,6 +151,7 @@
     <ClInclude Include="src\Core\Components\MeshRenderer.h" />
     <ClInclude Include="src\Rendering\CommonStructs.h" />
     <ClInclude Include="src\Rendering\DescriptorSet.h" />
+    <ClInclude Include="src\Rendering\DynamicUniformBuffer.h" />
     <ClInclude Include="src\Rendering\FrameBuffer.h" />
     <ClInclude Include="src\Rendering\GraphicsPipeline.h" />
     <ClInclude Include="src\Rendering\Material.h" />

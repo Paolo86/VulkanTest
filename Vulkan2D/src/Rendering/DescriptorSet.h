@@ -4,6 +4,7 @@
 #include <vector>
 #include <array>
 #include "UniformBuffer.h"
+#include "DynamicUniformBuffer.h"
 #include "Texture2D.h"
 
 
@@ -86,7 +87,37 @@ public:
 
 
 		std::vector< VkWriteDescriptorSet> setWrites = { mvpSetWrite };
-		vkUpdateDescriptorSets(device, setWrites.size(), setWrites.data(), 0, nullptr);
+		vkUpdateDescriptorSets(device, static_cast<uint32_t>(setWrites.size()), setWrites.data(), 0, nullptr);
+	}
+
+	template <class T>
+	void AssociateDynamicUniformBuffers(VkDevice device, std::vector<DynamicUniformBuffer<T>>& buffer, float offset, uint32_t binding)
+	{
+
+		std::vector<VkDescriptorBufferInfo> infos;
+
+		for (int i = 0; i < buffer.size(); i++)
+		{
+			VkDescriptorBufferInfo bufferInfo = {};
+			bufferInfo.buffer = buffer[i].buffer;
+			bufferInfo.offset = offset;
+			bufferInfo.range = buffer[i].m_uniformAlignment;
+			infos.push_back(bufferInfo);
+		}
+
+
+		VkWriteDescriptorSet mvpSetWrite = {};
+		mvpSetWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		mvpSetWrite.dstSet = m_descriptorSet;
+		mvpSetWrite.dstBinding = binding;
+		mvpSetWrite.dstArrayElement = 0;
+		mvpSetWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+		mvpSetWrite.descriptorCount = static_cast<uint32_t>(buffer.size());
+		mvpSetWrite.pBufferInfo = infos.data();
+
+
+		std::vector< VkWriteDescriptorSet> setWrites = { mvpSetWrite };
+		vkUpdateDescriptorSets(device, static_cast<uint32_t>(setWrites.size()), setWrites.data(), 0, nullptr);
 	}
 
 	void AssociateTextureSamplerCombo(VkDevice device, std::vector<Texture2D>& images, uint32_t binding, VkSampler sampler)

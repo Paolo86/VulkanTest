@@ -117,6 +117,8 @@ public:
 			m_pipelineDescriptorSet[i].CreateDescriptorSet(VkContext::Instance().GetLogicalDevice(), { uboLayout }, Vk::Instance().m_descriptorPool);
 			std::vector<UniformBuffer<_ViewProjection>> bufs = { Vk::Instance().m_VPUniformBuffers[i] };
 			m_pipelineDescriptorSet[i].AssociateUniformBuffers<_ViewProjection>(VkContext::Instance().GetLogicalDevice(), bufs, 0, 0);
+
+
 		}
 	}
 
@@ -124,6 +126,8 @@ public:
 	{
 		Logger::LogInfo("\tBinding pipeline BASIC");
 		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
+
+		uint32_t offset = 0;
 		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 			1,
 			&m_pipelineDescriptorSet[imageIndex].m_descriptorSet, 0, nullptr);
