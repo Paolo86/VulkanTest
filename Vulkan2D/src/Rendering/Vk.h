@@ -33,16 +33,14 @@ class Vk
 private:
 		void CreateDescriptorPool();
 
-		std::map<GraphicsPipeline*, std::map<Mesh*, std::set<MeshRenderer*>>> m_renderMap;
+		std::map<GraphicsPipeline*, std::map<Mesh*, std::map<Material*,std::set<MeshRenderer*>>>> m_renderMap;
 		static std::unique_ptr<Vk> m_instance;
 
 		UboModel* m_modelTransferSpace;
 		/*Params*/	
 
 		std::vector<FrameBuffer> m_swapChainFramebuffers;
-
 		Texture2D m_depthBufferImage;
-
 		_ViewProjection ViewProjection;
 
 		std::vector<VkBuffer> m_modelDynamicPuniformBuffer;
@@ -50,7 +48,6 @@ private:
 
 		/*Methods*/
 		void CreateRenderPass();
-		void CreateDepthBufferImage();
 		void CreateFramebuffers();
 		void RenderCmds(uint32_t currentImage);
 		void CreateUniformBuffers();

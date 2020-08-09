@@ -15,8 +15,8 @@
 
 std::unique_ptr<Vk> Vk::m_instance;
 
-Material woodMaterial;
-Material wallMaterial;
+Material woodMaterial("Wood");
+Material wallMaterial("Wall");
 MeshRenderer m;
 MeshRenderer m2;
  namespace
@@ -53,7 +53,7 @@ void Vk::Init()
 	VkUtils::MemoryUtils::InitVMA(VkContext::Instance().GetPhysicalDevice(), VkContext::Instance().GetLogicalDevice(), VkContext::Instance().GetVkInstance());
 
 	CreateDescriptorPool();
-	CreateDepthBufferImage();
+	m_depthBufferImage = ResourceManager::CreateDepthBufferImage();
 	CreateRenderPass();
 	CreateFramebuffers();
 	//AllocateDynamicBufferTransferSpace(); //Not used, using push constant
@@ -67,12 +67,12 @@ void Vk::Init()
 		VK_SAMPLER_ADDRESS_MODE_REPEAT,
 		VK_SAMPLER_MIPMAP_MODE_LINEAR,
 		0.0, 0.0, false, 16);
-	CreateUniformBuffers();
 
 	ViewProjection.projection = glm::perspective(glm::radians(60.0f), (float)VkContext::Instance().GetSwapChainExtent().width / VkContext::Instance().GetSwapChainExtent().height, 0.01f, 1000.0f);
 	ViewProjection.view = glm::lookAt(glm::vec3(0, 0, 4), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	ViewProjection.projection[1][1] *= -1;  //Vulkan inverts the Y axis...
 
+	CreateUniformBuffers();
 	ResourceManager::CreatePipelines();
 	ResourceManager::CreateMeshes();
 
@@ -124,7 +124,6 @@ void Vk::Destroy()
 
 void Vk::CreateUniformBuffers()
 {
-	VkDeviceSize bufferSize = sizeof(_ViewProjection);
 
 	//VkDeviceSize modelBufferSize = m_modelUniformAlignment * MAX_OBJECTS;
 
@@ -135,9 +134,12 @@ void Vk::CreateUniformBuffers()
 
 	for (size_t i = 0; i < VkContext::Instance().GetSwapChainImagesCount(); i++)
 	{
-		//Vk::Instance().CreateBuffer(modelBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &m_modelDynamicPuniformBuffer[i], &m_modelDynamicuniformBufferMemory[i]);
 		m_VPUniformBuffers[i] =  UniformBuffer<_ViewProjection>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+		m_VPUniformBuffers[i].Update(VkContext::Instance().GetLogicalDevice(), &ViewProjection);
+
 	}
+
+
 }
 
 void Vk::CreateDescriptorPool()
@@ -278,13 +280,6 @@ void Vk::CreateRenderPass()
 	}
 }
 
-void Vk::CreateDepthBufferImage()
-{
-
-	m_depthBufferImage = ResourceManager::CreateDepthBufferImage();
-}
-
-
 void  Vk::CreateFramebuffers()
 {
 	m_swapChainFramebuffers.resize(VkContext::Instance().GetSwapChainImagesCount());
@@ -344,22 +339,25 @@ void Vk::RenderCmds(uint32_t imageIndex)
 
 	for (auto pipIt = m_renderMap.begin(); pipIt != m_renderMap.end(); pipIt++)
 	{
+		//Bind pipeline
 		pipIt->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
 
 		for (auto meshIt = pipIt->second.begin(); meshIt != pipIt->second.end(); meshIt++)
 		{
+			//Bind mesh buffers
 			meshIt->first->BindBuffers(VkContext::Instance().GetCommandBuferAt(imageIndex));
-			for (auto mr : meshIt->second)
+			for (auto matName = meshIt->second.begin(); matName != meshIt->second.end(); matName++)
 			{
-				vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipIt->first->m_pipelineLayout,
-					VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &mr->uboModel.model);
+				matName->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex));
+				for (auto mr : matName->second)
+				{
+					vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipIt->first->m_pipelineLayout,
+						VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &mr->uboModel.model);
 
-				vkCmdBindDescriptorSets(VkContext::Instance().GetCommandBuferAt(imageIndex), VK_PIPELINE_BIND_POINT_GRAPHICS, 
-					pipIt->first->m_pipelineLayout, 1,
-					1,
-					&mr->m_material->m_samplerDescriptorSets.m_descriptorSet, 0, nullptr);
 
-				vkCmdDrawIndexed(VkContext::Instance().GetCommandBuferAt(imageIndex), mr->m_mesh->GetIndexCount(), 1, 0, 0, 0);
+					vkCmdDrawIndexed(VkContext::Instance().GetCommandBuferAt(imageIndex), mr->m_mesh->GetIndexCount(), 1, 0, 0, 0);
+				}
+		
 			}
 		}
 
@@ -380,12 +378,15 @@ void Vk::RenderCmds(uint32_t imageIndex)
 
 void Vk::Draw()
 {
+	static float angle = 0;
+	angle = 0.1;
+	m.uboModel.model = glm::rotate(m.uboModel.model, glm::radians(angle), glm::vec3(0, 1, 0));
+
 	uint32_t imageIndex;
 
 	VkContext::Instance().WaitForFenceAndAcquireImage(imageIndex);
 
 	RenderCmds(imageIndex);
-	m_VPUniformBuffers[imageIndex].Update(VkContext::Instance().GetLogicalDevice(), &ViewProjection);
 
 	VkContext::Instance().Present(imageIndex);
 }
@@ -401,5 +402,5 @@ void Vk::AllocateDynamicBufferTransferSpace()
 
 void Vk::AddMeshRenderer(MeshRenderer* meshRenderer)
 {
-	m_renderMap[meshRenderer->m_material->m_pipeline][meshRenderer->m_mesh].insert(meshRenderer);
+	m_renderMap[meshRenderer->m_material->m_pipeline][meshRenderer->m_mesh][meshRenderer->m_material].insert(meshRenderer);
 }

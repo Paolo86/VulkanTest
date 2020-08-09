@@ -42,7 +42,11 @@ public:
 		VkViewport viewport = VkUtils::PipelineUtils::GetViewport(VkContext::Instance().GetSwapChainExtent().width, VkContext::Instance().GetSwapChainExtent().height);
 		VkRect2D scissor = VkUtils::PipelineUtils::GetScissor(VkContext::Instance().GetSwapChainExtent().width, VkContext::Instance().GetSwapChainExtent().height);
 		VkPipelineViewportStateCreateInfo viewportState = VkUtils::PipelineUtils::GetPipelineViewportState(&viewport, &scissor);
-		VkPipelineRasterizationStateCreateInfo rasterizerCreateInfo = VkUtils::PipelineUtils::GetPipelineRasterizer();
+		VkPipelineRasterizationStateCreateInfo rasterizerCreateInfo = VkUtils::PipelineUtils::GetPipelineRasterizer(
+			1.0f,
+			VK_POLYGON_MODE_FILL,
+			VK_CULL_MODE_NONE
+		);
 
 		//For some AA, requires GPU feature to be enabled
 		VkPipelineMultisampleStateCreateInfo multisampling = VkUtils::PipelineUtils::GetPipelineMultisampling();

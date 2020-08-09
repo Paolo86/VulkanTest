@@ -16,11 +16,12 @@
 class Material
 {
 public:
-	Material() {}
+	Material(std::string name) : m_name(name) {}
 	~Material();
 	void Create(GraphicsPipeline* pipeline, std::vector<std::string> textureNames);
 	void Destroy();
 	void AddTextures(std::vector<std::string> fileNames);
+	void Bind(VkCommandBuffer cmdBuffer);
 
 	DescriptorSet m_samplerDescriptorSets;
 	std::vector<Texture2D> m_textures;
@@ -28,6 +29,6 @@ public:
 	GraphicsPipeline* m_pipeline;
 	void CreateSamplerDescriptorSet();
 
-	std::string m_shaderName;
+	std::string m_name;
 
 };
