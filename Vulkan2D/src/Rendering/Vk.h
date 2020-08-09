@@ -30,11 +30,17 @@ class Vk
 		VkDescriptorPool m_samplerDescriptorPool;
 
 		void AddMeshRenderer(MeshRenderer* meshRenderer, bool isStatic);
+		void PrepareStaticBuffers();
 
 private:
 		void CreateDescriptorPool();
 
 		std::map<GraphicsPipeline*, std::map<Mesh*, std::map<Material*,std::set<MeshRenderer*>>>> m_dynamicObjrenderMap;
+		std::map<GraphicsPipeline*, std::map<Material*, std::map<Mesh*, uint32_t>>> m_staticObjrenderMap; //For caching
+		std::map<GraphicsPipeline*, std::map<Material*, UniformBuffer<Vertex>>> m_vertexBuffers; //For caching
+		std::map<GraphicsPipeline*, std::map<Material*, UniformBuffer<uint32_t>>> m_indexBuffers; //For caching
+		std::map<GraphicsPipeline*, std::map<Material*, uint32_t>> m_indexBuffersCount; //For caching
+
 		static std::unique_ptr<Vk> m_instance;
 
 		UboModel* m_modelTransferSpace;

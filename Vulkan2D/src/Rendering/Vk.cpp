@@ -84,12 +84,13 @@ void Vk::Init()
 	m.SetMesh(ResourceManager::GetMesh("Quad"));
 	m2.SetMesh(ResourceManager::GetMesh("Quad"));
 	m.SetMaterial(&woodMaterial);
-	m2.SetMaterial(&wallMaterial);
+	m2.SetMaterial(&woodMaterial);
 	m.uboModel.model = glm::translate(m.uboModel.model, glm::vec3(-1, 0, 0));
 	m2.uboModel.model = glm::translate(m2.uboModel.model, glm::vec3(0, 0, 0));
 
-	AddMeshRenderer(&m,false);
+	AddMeshRenderer(&m,true);
 	AddMeshRenderer(&m2,true);
+	PrepareStaticBuffers();
 }
 
 void Vk::Destroy()
@@ -364,6 +365,30 @@ void Vk::RenderCmds(uint32_t imageIndex)
 	}
 
 
+
+	for (auto pipIt = m_vertexBuffers.begin(); pipIt != m_vertexBuffers.end(); pipIt++)
+	{
+		UboModel identity;
+		identity.model = glm::mat4(1);
+		vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipIt->first->m_pipelineLayout,
+			VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &identity);
+		pipIt->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
+
+		for (auto material = pipIt->second.begin(); material != pipIt->second.end(); material++)
+		{
+			material->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex));
+
+			vkCmdBindVertexBuffers(VkContext::Instance().GetCommandBuferAt(imageIndex), 0, 1, &material->second.buffer, offsets);
+			vkCmdBindIndexBuffer(VkContext::Instance().GetCommandBuferAt(imageIndex), m_indexBuffers[pipIt->first][material->first].buffer, 0, VK_INDEX_TYPE_UINT32);
+			vkCmdDrawIndexed(VkContext::Instance().GetCommandBuferAt(imageIndex), 
+				m_indexBuffersCount[pipIt->first][material->first], 1, 0, 0, 0);
+
+
+		}
+
+	}
+
+
 	vkCmdEndRenderPass(VkContext::Instance().GetCommandBuferAt(imageIndex));
 
 	//End recording
@@ -394,7 +419,69 @@ void Vk::Draw()
 
 void Vk::AddMeshRenderer(MeshRenderer* meshRenderer, bool isStatic)
 {
-	if(isStatic)
+	if(!isStatic)
 		m_dynamicObjrenderMap[meshRenderer->m_material->m_pipeline][meshRenderer->m_mesh][meshRenderer->m_material].insert(meshRenderer);
-
+	else
+	{
+		m_staticObjrenderMap[meshRenderer->m_material->m_pipeline][meshRenderer->m_material][meshRenderer->m_mesh]++;
+	}
 }
+
+void Vk::PrepareStaticBuffers()
+{
+	for (auto pipeline = m_staticObjrenderMap.begin(); pipeline != m_staticObjrenderMap.end(); pipeline++)
+	{
+		for (auto material = pipeline->second.begin(); material != pipeline->second.end(); material++)
+		{
+			uint32_t vertexCount = 0;
+			std::vector<Vertex> vertices;
+			std::vector<uint32_t> indices;
+			int vertexOffset = 0;
+
+			for (auto mesh = material->second.begin(); mesh != material->second.end(); mesh++)
+			{
+				for (int i = 0; i < mesh->second; i++)
+				{
+					for (int v = 0; v < mesh->first->GetVertexCount(); v++)
+					{
+						vertices.push_back(mesh->first->GetVertices()[v]);
+					}
+
+					for (int v = 0; v < mesh->first->GetIndexCount(); v++)
+					{
+						indices.push_back(mesh->first->GetIndices()[v] + vertexOffset);
+					}
+
+					vertexOffset+= mesh->first->GetVertexCount();
+
+		
+				}
+
+				m_indexBuffersCount[pipeline->first][material->first] = indices.size();
+			}
+
+			{
+				UniformBuffer<Vertex> staging(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_ONLY, vertices.size());
+				staging.Update(VkContext::Instance().GetLogicalDevice(), vertices.data());
+
+				m_vertexBuffers[pipeline->first][material->first].Create(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+					VMA_MEMORY_USAGE_GPU_ONLY, vertices.size());
+				VkUtils::MemoryUtils::CopyBuffer(VkContext::Instance().GetLogicalDevice(), VkContext::Instance().GetGraphicsTransferQ(),
+					VkContext::Instance().GetCommandPool(), staging.buffer, m_vertexBuffers[pipeline->first][material->first].buffer, staging.bufferSize);
+				staging.Destroy();
+			}
+
+			{
+				UniformBuffer<uint32_t> stage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, static_cast<uint32_t>(indices.size()));
+				stage.Update(VkContext::Instance().GetLogicalDevice(), indices.data());
+				m_indexBuffers[pipeline->first][material->first].Create(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, indices.size());
+				VkUtils::MemoryUtils::CopyBuffer(VkContext::Instance().GetLogicalDevice(), VkContext::Instance().GetGraphicsTransferQ(), 
+					VkContext::Instance().GetCommandPool(), stage.buffer, m_indexBuffers[pipeline->first][material->first].buffer, stage.bufferSize);
+				stage.Destroy();
+			}
+
+
+		}
+	}
+}
+

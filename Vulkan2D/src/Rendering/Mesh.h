@@ -24,6 +24,9 @@ public:
 	uint32_t GetIndexCount() { return m_indexCount; }
 	void BindBuffers(VkCommandBuffer cmdBuffer);
 
+	std::vector<Vertex>& GetVertices() { return m_vertices; }
+	std::vector<uint32_t>& GetIndices() { return m_indices; }
+
 	void DestroyVertexBuffer();
 private:
 	int m_vertexCount;
@@ -32,6 +35,8 @@ private:
 	UniformBuffer<Vertex> m_VertexBuffer;
 	int m_indexCount;
 
+	std::vector<Vertex> m_vertices;
+	std::vector<uint32_t> m_indices;
 
 	void CreateVertexBuffer(std::vector<Vertex>& vertices);
 	void CreateIndexBuffer( std::vector<uint32_t>& indices);

@@ -1,7 +1,7 @@
 #include "Mesh.h"
 #include "Vk.h"
 #include "..\Utils\Logger.h"
-Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices) : m_vertices(vertices), m_indices(indices)
 {
 	m_vertexCount = vertices.size();
 	m_indexCount = indices.size();
