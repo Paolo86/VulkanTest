@@ -118,6 +118,7 @@ public:
 
 	virtual void Bind(VkCommandBuffer cmdBuffer, int imageIndex) override
 	{
+		Logger::LogInfo("\tBinding pipeline BASIC");
 		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
 			1,

@@ -15,7 +15,10 @@ public:
 	static void CreatePipelines();
 	static void CreateMeshes();
 
+	static void DestroyAll();
+
 	static GraphicsPipeline* GetPipeline(std::string name) { return allPipelines[name].get(); }
+	static Mesh* GetMesh(std::string name) { return allMeshes[name].get(); }
 
 private:
 	static std::map<std::string, std::unique_ptr<GraphicsPipeline>> allPipelines;

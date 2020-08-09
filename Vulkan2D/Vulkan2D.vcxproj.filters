@@ -113,5 +113,8 @@
     <ClInclude Include="src\Asset\Pipelines\BasicPipeline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Core\Components\MeshRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

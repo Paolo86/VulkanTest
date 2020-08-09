@@ -17,7 +17,9 @@ std::unique_ptr<Vk> Vk::m_instance;
 
 Material woodMaterial;
 Material wallMaterial;
-namespace 
+MeshRenderer m;
+MeshRenderer m2;
+ namespace
 {
 	const std::vector<const char*> supportedDeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 	const int MAX_FRAME_DRAWS = 2;
@@ -71,55 +73,27 @@ void Vk::Init()
 	ViewProjection.view = glm::lookAt(glm::vec3(0, 0, 4), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	ViewProjection.projection[1][1] *= -1;  //Vulkan inverts the Y axis...
 
-	Vertex v1;
-	v1.pos = glm::vec3(-0.5, -0.5, 0.0);
-	v1.color = glm::vec3(1.0, 0.0, 0.0);
-	v1.uvs = glm::vec2(0, 0);
-
-	Vertex v2;
-	v2.pos = glm::vec3(0.5, -0.5, 0.0);
-	v2.color = glm::vec3(0.0, 1.0, 0.0);
-	v2.uvs = glm::vec2(1, 0);
-
-	Vertex v3;
-	v3.pos = glm::vec3(0.5, 0.5, 0.0);
-	v3.color = glm::vec3(0.0, 0.0, 1.0);
-	v3.uvs = glm::vec2(1, 1);
-
-	Vertex v4;
-	v4.pos = glm::vec3(-0.5, 0.5, 0.0);
-	v4.color = glm::vec3(0.0, 0.0, 1.0);
-	v4.uvs = glm::vec2(0, 1);
-
-	std::vector<Vertex> vertices1 = { v1,v2,v3, v4 };
-	std::vector<uint32_t> indices1 = { 0,1,2,2,3,0 };
-
-	std::vector<Vertex> vertices2 = { v1,v3,v4 };
-	std::vector<uint32_t> indices2 = { 0,1,2 };
-
 	ResourceManager::CreatePipelines();
+	ResourceManager::CreateMeshes();
 
 	woodMaterial.Create(ResourceManager::GetPipeline("Basic"),{"wood.jpg"});
 	wallMaterial.Create(ResourceManager::GetPipeline("Basic") ,{"wall.jpg"});
 
-	firstMesh = Mesh(vertices1, indices1, &woodMaterial);
-	firstMesh.uboModel.model = glm::translate(firstMesh.uboModel.model, glm::vec3(1.5, 0, -0.1));
 
-	secondMesh = Mesh(vertices2, indices2, &wallMaterial);
+	m.SetMesh(ResourceManager::GetMesh("Quad"));
+	m2.SetMesh(ResourceManager::GetMesh("Quad"));
+	m.SetMaterial(&woodMaterial);
+	m2.SetMaterial(&wallMaterial);
+	m.uboModel.model = glm::translate(m.uboModel.model, glm::vec3(-1, 0, 0));
+	m2.uboModel.model = glm::translate(m2.uboModel.model, glm::vec3(0, 0, 0));
 
-	secondMesh.uboModel.model = glm::translate(secondMesh.uboModel.model, glm::vec3(-1.5, 0, -0.1));
-	secondMesh.uboModel.model = glm::rotate(secondMesh.uboModel.model, glm::radians(45.0f), glm::vec3(0, 0, 1));
-
-	m_meshes.push_back(firstMesh);
-	m_meshes.push_back(secondMesh);
-
-
+	AddMeshRenderer(&m);
+	AddMeshRenderer(&m2);
 }
 
 void Vk::Destroy()
 {
-	firstMesh.DestroyVertexBuffer();
-	secondMesh.DestroyVertexBuffer();
+
 	vkDeviceWaitIdle(VkContext::Instance().GetLogicalDevice()); //Wait for device to be idle before cleaning up (so won't clean commands currently on queue)
 
 	m_textureSampler.Destroy(VkContext::Instance().GetLogicalDevice());
@@ -130,6 +104,7 @@ void Vk::Destroy()
 	woodMaterial.Destroy();
 	wallMaterial.Destroy();
 	
+	ResourceManager::DestroyAll();
 	//_aligned_free(m_modelTransferSpace);
 
 	for (auto framebuffer : m_swapChainFramebuffers) {
@@ -363,27 +338,33 @@ void Vk::RenderCmds(uint32_t imageIndex)
 
 	vkCmdBeginRenderPass(VkContext::Instance().GetCommandBuferAt(imageIndex), &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE); //All render commands are primary
 
-	//Bind pipeline to be used
-	VkBuffer vertexBuffer[] = { firstMesh.GetVertexBuffer(), secondMesh.GetIndexBuffer() };
 	VkDeviceSize offsets[] = { 0 };
 
-	vkCmdBindVertexBuffers(VkContext::Instance().GetCommandBuferAt(imageIndex), 0, 1, vertexBuffer, offsets);
+	Logger::LogInfo("StartRendering");
 
-	for (size_t j = 0; j < m_meshes.size(); j++)
+	for (auto pipIt = m_renderMap.begin(); pipIt != m_renderMap.end(); pipIt++)
 	{
-		m_meshes[j].material->m_pipeline->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
+		pipIt->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
 
-		vkCmdBindIndexBuffer(VkContext::Instance().GetCommandBuferAt(imageIndex), m_meshes[j].GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-		//uint32_t dynamicOffset = static_cast<uint32_t>(m_modelUniformAlignment * j);
-		vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), m_meshes[j].material->m_pipeline->m_pipelineLayout,
-			VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &m_meshes[j].uboModel.model);
+		for (auto meshIt = pipIt->second.begin(); meshIt != pipIt->second.end(); meshIt++)
+		{
+			meshIt->first->BindBuffers(VkContext::Instance().GetCommandBuferAt(imageIndex));
+			for (auto mr : meshIt->second)
+			{
+				vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipIt->first->m_pipelineLayout,
+					VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &mr->uboModel.model);
 
-		vkCmdBindDescriptorSets(VkContext::Instance().GetCommandBuferAt(imageIndex), VK_PIPELINE_BIND_POINT_GRAPHICS, m_meshes[j].material->m_pipeline->m_pipelineLayout, 1,
-			1,
-			&m_meshes[j].material->m_samplerDescriptorSets[0].m_descriptorSet, 0, nullptr);
+				vkCmdBindDescriptorSets(VkContext::Instance().GetCommandBuferAt(imageIndex), VK_PIPELINE_BIND_POINT_GRAPHICS, 
+					pipIt->first->m_pipelineLayout, 1,
+					1,
+					&mr->m_material->m_samplerDescriptorSets.m_descriptorSet, 0, nullptr);
 
-		vkCmdDrawIndexed(VkContext::Instance().GetCommandBuferAt(imageIndex), m_meshes[j].GetIndexCount(), 1, 0, 0, 0);
+				vkCmdDrawIndexed(VkContext::Instance().GetCommandBuferAt(imageIndex), mr->m_mesh->GetIndexCount(), 1, 0, 0, 0);
+			}
+		}
+
 	}
+
 
 	vkCmdEndRenderPass(VkContext::Instance().GetCommandBuferAt(imageIndex));
 
@@ -416,4 +397,9 @@ void Vk::AllocateDynamicBufferTransferSpace()
 	//Fixed space ot hold all model matrices of all objects
 	m_modelTransferSpace = (UboModel*)_aligned_malloc(m_modelUniformAlignment* MAX_OBJECTS, m_modelUniformAlignment);
 
+}
+
+void Vk::AddMeshRenderer(MeshRenderer* meshRenderer)
+{
+	m_renderMap[meshRenderer->m_material->m_pipeline][meshRenderer->m_mesh].insert(meshRenderer);
 }

@@ -107,6 +107,15 @@ void ResourceManager::CreateMeshes()
 	std::vector<Vertex> vertices2 = { v1,v3,v4 };
 	std::vector<uint32_t> indices2 = { 0,1,2 };
 
-	/*Mesh firstMesh = Mesh(VkContext::Instance().GetPhysicalDevice(), VkContext::Instance().GetLogicalDevice(),
-		VkContext::Instance().GetGraphicsTransferQ(), VkContext::Instance().GetCommandPool(), vertices1, indices1, &woodMaterial);*/
+	allMeshes["Quad"] = std::unique_ptr<Mesh>(new Mesh(vertices1, indices1));
 }
+
+void ResourceManager::DestroyAll()
+{
+	for (auto it = allMeshes.begin(); it != allMeshes.end(); it++)
+		it->second->DestroyVertexBuffer();
+
+	for (auto it = allPipelines.begin(); it != allPipelines.end(); it++)
+		it->second->Destroy(VkContext::Instance().GetLogicalDevice());
+}
+

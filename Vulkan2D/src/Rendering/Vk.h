@@ -1,16 +1,14 @@
 #pragma once
 
 #include "VkContext.h"
-#include "Mesh.h"
+#include "..\Core\Components\MeshRenderer.h"
 #include "stb_image.h"
 #include "UniformBuffer.h"
 #include "TextureSampler.h"
 #include "VkDebugMessanger.h"
 #include "FrameBuffer.h"
 #include <map>
-
-
-
+#include <set>
 
 class Vk
 {
@@ -30,12 +28,12 @@ class Vk
 		VkDescriptorPool m_descriptorPool;
 		VkDescriptorPool m_samplerDescriptorPool;
 
+		void AddMeshRenderer(MeshRenderer* meshRenderer);
+
 private:
 		void CreateDescriptorPool();
 
-		Mesh firstMesh;
-		Mesh secondMesh;
-		std::vector<Mesh> m_meshes;
+		std::map<GraphicsPipeline*, std::map<Mesh*, std::set<MeshRenderer*>>> m_renderMap;
 		static std::unique_ptr<Vk> m_instance;
 
 		UboModel* m_modelTransferSpace;

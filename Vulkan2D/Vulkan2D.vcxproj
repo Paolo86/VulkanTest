@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClInclude Include="src\Asset\Pipelines\BasicPipeline.h" />
     <ClInclude Include="src\Asset\ResourceManager.h" />
+    <ClInclude Include="src\Core\Components\MeshRenderer.h" />
     <ClInclude Include="src\Rendering\CommonStructs.h" />
     <ClInclude Include="src\Rendering\DescriptorSet.h" />
     <ClInclude Include="src\Rendering\FrameBuffer.h" />

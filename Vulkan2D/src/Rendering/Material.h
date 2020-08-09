@@ -22,7 +22,7 @@ public:
 	void Destroy();
 	void AddTextures(std::vector<std::string> fileNames);
 
-	std::vector<DescriptorSet> m_samplerDescriptorSets;
+	DescriptorSet m_samplerDescriptorSets;
 	std::vector<Texture2D> m_textures;
 
 	GraphicsPipeline* m_pipeline;

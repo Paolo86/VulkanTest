@@ -1,15 +1,13 @@
 #include "Mesh.h"
 #include "Vk.h"
-
-Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, Material* material)
+#include "..\Utils\Logger.h"
+Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 {
 	m_vertexCount = vertices.size();
 	m_indexCount = indices.size();
 	CreateVertexBuffer(vertices);
 	CreateIndexBuffer(indices);
 
-	uboModel.model = glm::mat4(1);
-	this->material = material;
 }
 
 int Mesh::GetVertexCount()
@@ -53,6 +51,15 @@ void Mesh::CreateIndexBuffer(std::vector<uint32_t>& indices)
 	m_IndexBuffer.Create(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, indices.size());
 	VkUtils::MemoryUtils::CopyBuffer(VkContext::Instance().GetLogicalDevice(), VkContext::Instance().GetGraphicsTransferQ(), VkContext::Instance().GetCommandPool(), stage.buffer, m_IndexBuffer.buffer, stage.bufferSize);
 	stage.Destroy();
+}
+
+void Mesh::BindBuffers(VkCommandBuffer cmdBuffer)
+{
+	VkDeviceSize offsets[] = { 0 };
+
+	Logger::LogInfo("\tBind Mesh buffers");
+	vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &m_VertexBuffer.buffer, offsets);
+	vkCmdBindIndexBuffer(cmdBuffer, m_IndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 }
 
 

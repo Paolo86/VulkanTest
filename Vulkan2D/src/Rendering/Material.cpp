@@ -48,10 +48,9 @@ void Material::CreateSamplerDescriptorSet()
 
 	//Texture sampler descriptor set layout
 	
-	m_samplerDescriptorSets.resize(1);
-	m_samplerDescriptorSets[0].CreateDescriptorSet(VkContext::Instance().GetLogicalDevice(), { m_pipeline->GetSamplerLayout() }, Vk::Instance().m_samplerDescriptorPool);
+	m_samplerDescriptorSets.CreateDescriptorSet(VkContext::Instance().GetLogicalDevice(), { m_pipeline->GetSamplerLayout() }, Vk::Instance().m_samplerDescriptorPool);
 
-	m_samplerDescriptorSets[0].AssociateTextureSamplerCombo(VkContext::Instance().GetLogicalDevice(), m_textures, 0, Vk::Instance().m_textureSampler.m_sampler);
+	m_samplerDescriptorSets.AssociateTextureSamplerCombo(VkContext::Instance().GetLogicalDevice(), m_textures, 0, Vk::Instance().m_textureSampler.m_sampler);
 
 }
 
