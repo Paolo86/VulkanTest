@@ -2,6 +2,7 @@
 #include <vulkan/vulkan.hpp>
 #include <string>
 #include <vk_mem_alloc.h>
+#include "UniformBuffer.h"
 
 class VkUtils
 {
@@ -78,11 +79,14 @@ class VkUtils
 
 			static void DestroyBuffer(VkBuffer buffer, VmaAllocation allocation) { vmaDestroyBuffer(allocator, buffer, allocation); }
 
+
 			static void CopyBuffer(VkDevice device, VkQueue transferQueue, 
-				VkCommandPool transferPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize);
+				VkCommandPool transferPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize bufferSize);		
 
 			static VmaAllocator allocator;
 		private:
+			static VkDevice device;
+			static VkPhysicalDevice physicalDevice;
 		};
 
 		class CmdUtils
@@ -92,3 +96,5 @@ class VkUtils
 			static void EndCmdBuffer(VkDevice m_device, VkCommandPool pool, VkQueue sumitTo, VkCommandBuffer cmdBuffer);
 		};
 };
+
+

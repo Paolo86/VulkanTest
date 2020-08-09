@@ -160,7 +160,7 @@ void Vk::CreateUniformBuffers()
 	for (size_t i = 0; i < VkContext::Instance().GetSwapChainImagesCount(); i++)
 	{
 		//Vk::Instance().CreateBuffer(modelBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &m_modelDynamicPuniformBuffer[i], &m_modelDynamicuniformBufferMemory[i]);
-		m_VPUniformBuffers[i] =  UniformBuffer<_ViewProjection>(VkContext::Instance().GetPhysicalDevice(), VkContext::Instance().GetLogicalDevice(), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		m_VPUniformBuffers[i] =  UniformBuffer<_ViewProjection>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
 	}
 }
 

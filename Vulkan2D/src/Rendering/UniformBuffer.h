@@ -1,39 +1,50 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 #include "VkUtils.h"
+#include <vk_mem_alloc.h>
 
 template <class T>
 class UniformBuffer
 {
 public:
-	UniformBuffer(VkPhysicalDevice physical, VkDevice device, VkBufferUsageFlagBits usageFlag, VkMemoryPropertyFlags memProps);
+	UniformBuffer(VkBufferUsageFlags usageFlag, VmaMemoryUsage memProps, int count = 1);
 	UniformBuffer() {}
 
-	void Update(VkDevice device, T* data)
+	void Create(VkBufferUsageFlags usageFlag, VmaMemoryUsage memProps, int count = 1)
 	{
-		void* mapper;
-		vkMapMemory(device, bufferMemory, 0, sizeof(T), 0, &mapper);
-		memcpy(mapper, data, sizeof(T));
-		vkUnmapMemory(device, bufferMemory);
+		bufferSize = sizeof(T) * count;
+
+		VkUtils::MemoryUtils::CreateBufferVMA(bufferSize, usageFlag, memProps, &buffer, &bufferMemoryVMA);
+	}
+	void Update(VkDevice device, T* newData)
+	{
+		void* data;
+		vmaMapMemory(VkUtils::MemoryUtils::allocator, bufferMemoryVMA, &data);
+		memcpy(data, newData, (size_t)bufferSize);
+		vmaUnmapMemory(VkUtils::MemoryUtils::allocator, bufferMemoryVMA);
 	}
 
 	void Destroy(VkDevice device)
 	{
-		vkDestroyBuffer(device, buffer, nullptr);
-		vkFreeMemory(device, bufferMemory, nullptr);
+		VkUtils::MemoryUtils::DestroyBuffer(buffer, bufferMemoryVMA);
 	}
 
 
 	VkDeviceSize bufferSize;
 	VkBuffer buffer;
-	VkDeviceMemory bufferMemory;
+	VmaAllocation bufferMemoryVMA;
 };
 
+
 template <class T>
-UniformBuffer<T>::UniformBuffer(VkPhysicalDevice physical, VkDevice device, VkBufferUsageFlagBits usageFlag, VkMemoryPropertyFlags memProps)
+
+UniformBuffer<T>::UniformBuffer(VkBufferUsageFlags usageFlag, VmaMemoryUsage memProps, int count)
 {
-	bufferSize = sizeof(T);
-	VkUtils::MemoryUtils::CreateBuffer(device, physical, bufferSize, usageFlag, memProps, &buffer, &bufferMemory);
+	bufferSize = sizeof(T) * count;
+
+	VkUtils::MemoryUtils::CreateBufferVMA(bufferSize, usageFlag, memProps, &buffer, &bufferMemoryVMA);
 }
+
+
 
 
