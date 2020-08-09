@@ -17,6 +17,7 @@ Texture2D::Texture2D(uint32_t width, uint32_t height, uint32_t channels, VkForma
 
 	m_image = VkUtils::ImageUtils::CreateImage(VkContext::Instance().GetPhysicalDevice(), VkContext::Instance().GetLogicalDevice(),width, height, 
 		format, VK_IMAGE_TILING_OPTIMAL, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_imageMemory);
+
 	//Before copy, transition layout to optimal transfer
 	VkUtils::ImageUtils::TransitionImageLayout(VkContext::Instance().GetLogicalDevice(), VkContext::Instance().GetGraphicsTransferQ(), VkContext::Instance().GetCommandPool(),
 		m_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);

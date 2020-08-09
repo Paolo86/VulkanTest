@@ -36,5 +36,5 @@ typedef struct {
 } UboModel;
 
 typedef struct {
-	glm::vec3 tint;
+	glm::vec4 tint;
 } MaterialProps;

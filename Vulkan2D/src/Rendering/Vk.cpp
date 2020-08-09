@@ -69,7 +69,7 @@ void Vk::Init()
 		0.0, 0.0, false, 16);
 
 	ViewProjection.projection = glm::perspective(glm::radians(60.0f), (float)VkContext::Instance().GetSwapChainExtent().width / VkContext::Instance().GetSwapChainExtent().height, 0.01f, 1000.0f);
-	ViewProjection.view = glm::lookAt(glm::vec3(0, 0, 4), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	ViewProjection.view = glm::lookAt(glm::vec3(0, 0, 2), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	ViewProjection.projection[1][1] *= -1;  //Vulkan inverts the Y axis...
 
 	CreateUniformBuffers();
@@ -77,6 +77,7 @@ void Vk::Init()
 	ResourceManager::CreateMeshes();
 
 	woodMaterial.Create(ResourceManager::GetPipeline("Basic"),{"wood.jpg"});
+	woodMaterial.SetTint(1, 0, 0, 0.2);
 	wallMaterial.Create(ResourceManager::GetPipeline("Basic") ,{"wall.jpg"});
 
 
@@ -87,8 +88,8 @@ void Vk::Init()
 	m.uboModel.model = glm::translate(m.uboModel.model, glm::vec3(-1, 0, 0));
 	m2.uboModel.model = glm::translate(m2.uboModel.model, glm::vec3(0, 0, 0));
 
-	AddMeshRenderer(&m);
-	AddMeshRenderer(&m2);
+	AddMeshRenderer(&m,false);
+	AddMeshRenderer(&m2,true);
 }
 
 void Vk::Destroy()
@@ -124,13 +125,9 @@ void Vk::Destroy()
 void Vk::CreateUniformBuffers()
 {
 
-	//VkDeviceSize modelBufferSize = m_modelUniformAlignment * MAX_OBJECTS;
 
 	m_VPUniformBuffers.resize(VkContext::Instance().GetSwapChainImagesCount());
 	m_dynamicBuffer.resize(VkContext::Instance().GetSwapChainImagesCount());
-
-	//m_modelDynamicPuniformBuffer.resize(m_swapChainImages.size());
-	//m_modelDynamicuniformBufferMemory.resize(m_swapChainImages.size());
 
 	for (size_t i = 0; i < VkContext::Instance().GetSwapChainImagesCount(); i++)
 	{
@@ -156,7 +153,7 @@ void Vk::CreateDescriptorPool()
 	dynamicBuffer.descriptorCount = static_cast<uint32_t>(VkContext::Instance().GetSwapChainImagesCount());
 	dynamicBuffer.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
 
-	std::vector< VkDescriptorPoolSize> poolSizes = { VPpoolSize, dynamicBuffer }; //modelPoolSize no longer used, using push constant
+	std::vector< VkDescriptorPoolSize> poolSizes = { VPpoolSize }; //modelPoolSize no longer used, using push constant
 
 	VkDescriptorPoolCreateInfo poolCreateInfo = {};
 	poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -340,7 +337,7 @@ void Vk::RenderCmds(uint32_t imageIndex)
 
 	Logger::LogInfo("StartRendering");
 
-	for (auto pipIt = m_renderMap.begin(); pipIt != m_renderMap.end(); pipIt++)
+	for (auto pipIt = m_dynamicObjrenderMap.begin(); pipIt != m_dynamicObjrenderMap.end(); pipIt++)
 	{
 		//Bind pipeline
 		pipIt->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
@@ -395,7 +392,9 @@ void Vk::Draw()
 }
 
 
-void Vk::AddMeshRenderer(MeshRenderer* meshRenderer)
+void Vk::AddMeshRenderer(MeshRenderer* meshRenderer, bool isStatic)
 {
-	m_renderMap[meshRenderer->m_material->m_pipeline][meshRenderer->m_mesh][meshRenderer->m_material].insert(meshRenderer);
+	if(isStatic)
+		m_dynamicObjrenderMap[meshRenderer->m_material->m_pipeline][meshRenderer->m_mesh][meshRenderer->m_material].insert(meshRenderer);
+
 }

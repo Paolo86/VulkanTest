@@ -29,12 +29,12 @@ class Vk
 		VkDescriptorPool m_descriptorPool;
 		VkDescriptorPool m_samplerDescriptorPool;
 
-		void AddMeshRenderer(MeshRenderer* meshRenderer);
+		void AddMeshRenderer(MeshRenderer* meshRenderer, bool isStatic);
 
 private:
 		void CreateDescriptorPool();
 
-		std::map<GraphicsPipeline*, std::map<Mesh*, std::map<Material*,std::set<MeshRenderer*>>>> m_renderMap;
+		std::map<GraphicsPipeline*, std::map<Mesh*, std::map<Material*,std::set<MeshRenderer*>>>> m_dynamicObjrenderMap;
 		static std::unique_ptr<Vk> m_instance;
 
 		UboModel* m_modelTransferSpace;

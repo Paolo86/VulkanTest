@@ -61,7 +61,7 @@ public:
 	}
 
 	template <class T>
-	void AssociateUniformBuffers(VkDevice device, std::vector<UniformBuffer<T>>& buffer, float offset, uint32_t binding)
+	void AssociateUniformBuffers(VkDevice device, std::vector<UniformBuffer<T>> buffer, float offset, uint32_t binding)
 	{
 
 		std::vector<VkDescriptorBufferInfo> infos;
