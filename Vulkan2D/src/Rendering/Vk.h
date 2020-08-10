@@ -31,6 +31,7 @@ class Vk
 
 		void AddMeshRenderer(MeshRenderer* meshRenderer, bool isStatic);
 		void PrepareStaticBuffers();
+		void UpdateView(glm::vec3 pos, glm::vec3 dir);
 
 private:
 		void CreateDescriptorPool();

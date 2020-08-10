@@ -12,13 +12,14 @@
 #include "VkUtils.h"
 #include "../Asset/ResourceManager.h"
 
-
+#define MESH_COUNT 20
 std::unique_ptr<Vk> Vk::m_instance;
 
 Material woodMaterial("Wood");
 Material wallMaterial("Wall");
-MeshRenderer m;
-MeshRenderer m2;
+
+MeshRenderer meshes[MESH_COUNT];
+
  namespace
 {
 	const std::vector<const char*> supportedDeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
@@ -81,15 +82,15 @@ void Vk::Init()
 	wallMaterial.Create(ResourceManager::GetPipeline("Basic") ,{"wall.jpg"});
 
 
-	m.SetMesh(ResourceManager::GetMesh("Quad"));
-	m2.SetMesh(ResourceManager::GetMesh("Quad"));
-	m.SetMaterial(&woodMaterial);
-	m2.SetMaterial(&woodMaterial);
-	m.uboModel.model = glm::translate(m.uboModel.model, glm::vec3(-1, 0, 0));
-	m2.uboModel.model = glm::translate(m2.uboModel.model, glm::vec3(0, 0, 0));
+	for (int i = 0; i < MESH_COUNT; i++)
+	{
+		meshes[i].SetMesh(ResourceManager::GetMesh("Quad"));
+		meshes[i].SetMaterial(&woodMaterial);
+		meshes[i].uboModel.model = glm::translate(meshes[i].uboModel.model, glm::vec3(i, 0, -5));
+		AddMeshRenderer(&meshes[i],true);
 
-	AddMeshRenderer(&m,true);
-	AddMeshRenderer(&m2,true);
+	}
+
 	PrepareStaticBuffers();
 }
 
@@ -101,6 +102,15 @@ void Vk::Destroy()
 	m_textureSampler.Destroy(VkContext::Instance().GetLogicalDevice());
 	vkDestroyDescriptorPool(VkContext::Instance().GetLogicalDevice(), m_descriptorPool, nullptr);
 	vkDestroyDescriptorPool(VkContext::Instance().GetLogicalDevice(), m_samplerDescriptorPool, nullptr);
+
+	for (auto pipIt = m_vertexBuffers.begin(); pipIt != m_vertexBuffers.end(); pipIt++)
+	{
+		for (auto material = pipIt->second.begin(); material != pipIt->second.end(); material++)
+		{
+			m_vertexBuffers[pipIt->first][material->first].Destroy();
+			m_indexBuffers[pipIt->first][material->first].Destroy();
+		}
+	}
 
 	m_depthBufferImage.Destroy();
 	woodMaterial.Destroy();
@@ -124,9 +134,7 @@ void Vk::Destroy()
 
 
 void Vk::CreateUniformBuffers()
-{
-
-
+{	
 	m_VPUniformBuffers.resize(VkContext::Instance().GetSwapChainImagesCount());
 	m_dynamicBuffer.resize(VkContext::Instance().GetSwapChainImagesCount());
 
@@ -134,14 +142,18 @@ void Vk::CreateUniformBuffers()
 	{
 		m_VPUniformBuffers[i] =  UniformBuffer<_ViewProjection>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
 		m_VPUniformBuffers[i].Update(VkContext::Instance().GetLogicalDevice(), &ViewProjection);
-
-		m_dynamicBuffer[i] = DynamicUniformBuffer<_ViewProjection>(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
-
-
 	}
-
-
 }
+
+void Vk::UpdateView(glm::vec3 pos, glm::vec3 dir)
+{
+	ViewProjection.view = glm::lookAt(pos, dir, glm::vec3(0, 1, 0));
+	for (size_t i = 0; i < VkContext::Instance().GetSwapChainImagesCount(); i++)
+	{
+		m_VPUniformBuffers[i].Update(VkContext::Instance().GetLogicalDevice(), &ViewProjection);
+	}
+}
+
 
 void Vk::CreateDescriptorPool()
 {
@@ -303,6 +315,8 @@ void  Vk::CreateFramebuffers()
 
 
 
+
+
 void Vk::RenderCmds(uint32_t imageIndex)
 {
 	VkCommandBufferBeginInfo bufferBeginInfo = {};
@@ -403,9 +417,6 @@ void Vk::RenderCmds(uint32_t imageIndex)
 
 void Vk::Draw()
 {
-	static float angle = 0;
-	angle = 0.1;
-	m.uboModel.model = glm::rotate(m.uboModel.model, glm::radians(angle), glm::vec3(0, 1, 0));
 
 	uint32_t imageIndex;
 

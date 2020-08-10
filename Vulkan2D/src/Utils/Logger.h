@@ -10,7 +10,7 @@
 #include<Windows.h>
 #endif
 
-#define DEBUG 0
+#define DEBUG 1
 
 /**
 	* @brief Check if it's the first variable in the pack
