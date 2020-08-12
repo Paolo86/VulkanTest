@@ -137,6 +137,7 @@
     <ClCompile Include="src\Rendering\GraphicsPipeline.cpp" />
     <ClCompile Include="src\Rendering\Material.cpp" />
     <ClCompile Include="src\Rendering\Mesh.cpp" />
+    <ClCompile Include="src\Rendering\StaticBatch.cpp" />
     <ClCompile Include="src\Rendering\Texture2D.cpp" />
     <ClCompile Include="src\Rendering\Vertex.cpp" />
     <ClCompile Include="src\Rendering\Vk.cpp" />
@@ -157,6 +158,7 @@
     <ClInclude Include="src\Rendering\Material.h" />
     <ClInclude Include="src\Rendering\Mesh.h" />
     <ClInclude Include="src\Rendering\PushConstant.h" />
+    <ClInclude Include="src\Rendering\StaticBatch.h" />
     <ClInclude Include="src\Rendering\Texture2D.h" />
     <ClInclude Include="src\Rendering\TextureSampler.h" />
     <ClInclude Include="src\Rendering\UniformBuffer.h" />

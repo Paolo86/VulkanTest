@@ -26,6 +26,7 @@ public:
 	VkQueue& GetPresentationQ() { return m_presentationQ; }
 	VkExtent2D& GetSwapChainExtent() { return m_swapChainExtent; }
 	VkCommandPool& GetCommandPool() { return m_commandPool; };
+	VkCommandPool& GetCommandLargerPool() { return m_commandLargerPool; };
 	VkFormat& GetSwapChainImageFormat() { return m_swapChainImageFormat; };
 	VkImageView& GetSwapChainImageViewAt(int index) { return m_swapChainImageViews[index]; };
 	VkCommandBuffer& GetCommandBuferAt(int index) { return m_commandBuffers[index]; }
@@ -53,6 +54,7 @@ private:
 	VkDevice m_device;
 	VkQueue m_graphicsQ;
 	VkCommandPool m_commandPool;
+	VkCommandPool m_commandLargerPool;
 	VkDescriptorPool m_descriptorPool;
 	VkDescriptorPool m_samplerDescriptorPool;
 	VkPhysicalDevice m_physicalDevice; //Destroyed automatically when instance is gone

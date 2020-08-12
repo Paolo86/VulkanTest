@@ -12,7 +12,7 @@
 #include "VkUtils.h"
 #include "../Asset/ResourceManager.h"
 
-#define MESH_COUNT 20
+#define MESH_COUNT 1000000
 std::unique_ptr<Vk> Vk::m_instance;
 
 Material woodMaterial("Wood");
@@ -91,7 +91,7 @@ void Vk::Init()
 
 	}
 
-	PrepareStaticBuffers();
+	m_staticBatch.PrepareStaticBuffers(); //Call after adding all static objects
 }
 
 void Vk::Destroy()
@@ -103,14 +103,7 @@ void Vk::Destroy()
 	vkDestroyDescriptorPool(VkContext::Instance().GetLogicalDevice(), m_descriptorPool, nullptr);
 	vkDestroyDescriptorPool(VkContext::Instance().GetLogicalDevice(), m_samplerDescriptorPool, nullptr);
 
-	for (auto pipIt = m_vertexBuffers.begin(); pipIt != m_vertexBuffers.end(); pipIt++)
-	{
-		for (auto material = pipIt->second.begin(); material != pipIt->second.end(); material++)
-		{
-			m_vertexBuffers[pipIt->first][material->first].Destroy();
-			m_indexBuffers[pipIt->first][material->first].Destroy();
-		}
-	}
+	m_staticBatch.DestroyBuffers();
 
 	m_depthBufferImage.Destroy();
 	woodMaterial.Destroy();
@@ -350,7 +343,7 @@ void Vk::RenderCmds(uint32_t imageIndex)
 
 	VkDeviceSize offsets[] = { 0 };
 
-	Logger::LogInfo("StartRendering");
+	//Logger::LogInfo("StartRendering");
 
 	for (auto pipIt = m_dynamicObjrenderMap.begin(); pipIt != m_dynamicObjrenderMap.end(); pipIt++)
 	{
@@ -379,28 +372,7 @@ void Vk::RenderCmds(uint32_t imageIndex)
 	}
 
 	//TODO do not re record this every time, record cmd once
-	for (auto pipIt = m_vertexBuffers.begin(); pipIt != m_vertexBuffers.end(); pipIt++)
-	{
-		UboModel identity;
-		identity.model = glm::mat4(1);
-
-		vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipIt->first->m_pipelineLayout,
-			VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &identity);
-		pipIt->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
-
-		for (auto material = pipIt->second.begin(); material != pipIt->second.end(); material++)
-		{
-			material->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex));
-
-			vkCmdBindVertexBuffers(VkContext::Instance().GetCommandBuferAt(imageIndex), 0, 1, &material->second.buffer, offsets);
-			vkCmdBindIndexBuffer(VkContext::Instance().GetCommandBuferAt(imageIndex), m_indexBuffers[pipIt->first][material->first].buffer, 0, VK_INDEX_TYPE_UINT32);
-			vkCmdDrawIndexed(VkContext::Instance().GetCommandBuferAt(imageIndex), 
-				m_indexBuffersCount[pipIt->first][material->first], 1, 0, 0, 0);
-
-
-		}
-
-	}
+	m_staticBatch.RenderBatches(imageIndex);
 
 
 	vkCmdEndRenderPass(VkContext::Instance().GetCommandBuferAt(imageIndex));
@@ -434,62 +406,10 @@ void Vk::AddMeshRenderer(MeshRenderer* meshRenderer, bool isStatic)
 		m_dynamicObjrenderMap[meshRenderer->m_material->m_pipeline][meshRenderer->m_mesh][meshRenderer->m_material].insert(meshRenderer);
 	else
 	{
-		m_staticObjrenderMap[meshRenderer->m_material->m_pipeline][meshRenderer->m_material].push_back(meshRenderer);
+		m_staticBatch.AddMeshRenderer(meshRenderer);
 	}
 }
 
-void Vk::PrepareStaticBuffers()
-{
-	for (auto pipeline = m_staticObjrenderMap.begin(); pipeline != m_staticObjrenderMap.end(); pipeline++)
-	{
-		for (auto material = pipeline->second.begin(); material != pipeline->second.end(); material++)
-		{
-			uint32_t vertexCount = 0;
-			std::vector<Vertex> vertices;
-			std::vector<uint32_t> indices;
-			int vertexOffset = 0;
-
-			for (int mesh = 0; mesh < material->second.size(); mesh++)
-			{
-				for (int v = 0; v < material->second[mesh]->m_mesh->GetVertexCount(); v++)
-				{
-					Vertex vertex = material->second[mesh]->m_mesh->GetVertices()[v];
-					vertex.pos = material->second[mesh]->uboModel.model * glm::vec4(vertex.pos, 1.0);
-					vertices.push_back(vertex);
-				}
-
-				for (int v = 0; v < material->second[mesh]->m_mesh->GetIndexCount(); v++)
-				{
-					indices.push_back(material->second[mesh]->m_mesh->GetIndices()[v] + vertexOffset);
-				}
-
-				vertexOffset += material->second[mesh]->m_mesh->GetVertexCount();
-
-				m_indexBuffersCount[pipeline->first][material->first] = indices.size();
-			}
-
-			{
-				UniformBuffer<Vertex> staging(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_ONLY, vertices.size());
-				staging.Update(VkContext::Instance().GetLogicalDevice(), vertices.data());
-
-				m_vertexBuffers[pipeline->first][material->first].Create(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-					VMA_MEMORY_USAGE_GPU_ONLY, vertices.size());
-				VkUtils::MemoryUtils::CopyBuffer(VkContext::Instance().GetLogicalDevice(), VkContext::Instance().GetGraphicsTransferQ(),
-					VkContext::Instance().GetCommandPool(), staging.buffer, m_vertexBuffers[pipeline->first][material->first].buffer, staging.bufferSize);
-				staging.Destroy();
-			}
-
-			{
-				UniformBuffer<uint32_t> stage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY, static_cast<uint32_t>(indices.size()));
-				stage.Update(VkContext::Instance().GetLogicalDevice(), indices.data());
-				m_indexBuffers[pipeline->first][material->first].Create(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY, indices.size());
-				VkUtils::MemoryUtils::CopyBuffer(VkContext::Instance().GetLogicalDevice(), VkContext::Instance().GetGraphicsTransferQ(), 
-					VkContext::Instance().GetCommandPool(), stage.buffer, m_indexBuffers[pipeline->first][material->first].buffer, stage.bufferSize);
-				stage.Destroy();
-			}
 
 
-		}
-	}
-}
 

@@ -55,7 +55,7 @@ void Material::SetTint(float r, float g, float b, float a)
 /*Material descriptor set for textures is index 1*/
 void Material::Bind(VkCommandBuffer cmdBuffer)
 {
-	Logger::LogInfo("\tBind material ",m_name);
+	//Logger::LogInfo("\tBind material ",m_name);
 
 
 	vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,

@@ -232,19 +232,57 @@ void VkUtils::MemoryUtils::CopyBuffer(VkDevice device, VkQueue transferQueue, Vk
 	VkUtils::CmdUtils::EndCmdBuffer(device,transferPool, transferQueue, cmdBuffer);
 }
 
-void VkUtils::MemoryUtils::CreateBufferVMA(VkDeviceSize bufferSize, VkBufferUsageFlags usage,
+bool VkUtils::MemoryUtils::CreateBufferVMA(VkDeviceSize bufferSize, VkBufferUsageFlags usage,
+	VkMemoryPropertyFlags preferredFlags, VkMemoryPropertyFlags requiredFlags, VkBuffer* buffer, VmaAllocation* bufferMemory)
+{
+	VkBufferCreateInfo bufferInfo = {};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = bufferSize;
+	bufferInfo.usage = usage;
+
+	VmaAllocationCreateInfo allocInfo = {};
+	allocInfo.requiredFlags = requiredFlags;
+	allocInfo.preferredFlags = preferredFlags;
+
+	VmaAllocationInfo allocationInfo;
+	vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, buffer, bufferMemory, &allocationInfo);
+
+	VkMemoryPropertyFlags memFlags;
+	vmaGetMemoryTypeProperties(allocator, allocationInfo.memoryType, &memFlags);
+
+	if ((memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == 0)
+	{
+		return true;
+	}
+
+	return false;
+
+}
+
+bool VkUtils::MemoryUtils::CreateBufferVMA(VkDeviceSize bufferSize, VkBufferUsageFlags usage,
 	VmaMemoryUsage bufferProperties, VkBuffer* buffer, VmaAllocation* bufferMemory)
 {
 	VkBufferCreateInfo bufferInfo = {};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = bufferSize * 1024;
+	bufferInfo.size = bufferSize;
 	bufferInfo.usage = usage;
 
 	VmaAllocationCreateInfo allocInfo = {};
 	allocInfo.usage = bufferProperties;
 
+	VmaAllocationInfo allocationInfo;
+	vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, buffer, bufferMemory, &allocationInfo);
 
-	vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, buffer, bufferMemory, nullptr);
+	VkMemoryPropertyFlags memFlags;
+	vmaGetMemoryTypeProperties(allocator, allocationInfo.memoryType, &memFlags);
+
+	if ((memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == 0)
+	{
+		return true;
+	}
+	
+	return false;
+
 }
 
 void VkUtils::MemoryUtils::CreateBuffer(VkDevice m_device, VkPhysicalDevice m_physicalDevice, VkDeviceSize bufferSize, VkBufferUsageFlags usage, 

@@ -127,7 +127,7 @@ public:
 
 	virtual void Bind(VkCommandBuffer cmdBuffer, int imageIndex) override
 	{
-		Logger::LogInfo("\tBinding pipeline BASIC");
+		//Logger::LogInfo("\tBinding pipeline BASIC");
 		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 
 		uint32_t offset = 0;

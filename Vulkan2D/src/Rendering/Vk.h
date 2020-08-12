@@ -7,6 +7,7 @@
 #include "TextureSampler.h"
 #include "VkDebugMessanger.h"
 #include "FrameBuffer.h"
+#include "StaticBatch.h"
 #include <map>
 #include <set>
 
@@ -30,17 +31,14 @@ class Vk
 		VkDescriptorPool m_samplerDescriptorPool;
 
 		void AddMeshRenderer(MeshRenderer* meshRenderer, bool isStatic);
-		void PrepareStaticBuffers();
 		void UpdateView(glm::vec3 pos, glm::vec3 dir);
 
 private:
 		void CreateDescriptorPool();
 
 		std::map<GraphicsPipeline*, std::map<Mesh*, std::map<Material*,std::set<MeshRenderer*>>>> m_dynamicObjrenderMap;
-		std::map<GraphicsPipeline*, std::map<Material*, std::vector<MeshRenderer*>>> m_staticObjrenderMap; //For caching
-		std::map<GraphicsPipeline*, std::map<Material*, UniformBuffer<Vertex>>> m_vertexBuffers; //For caching
-		std::map<GraphicsPipeline*, std::map<Material*, UniformBuffer<uint32_t>>> m_indexBuffers; //For caching
-		std::map<GraphicsPipeline*, std::map<Material*, uint32_t>> m_indexBuffersCount; //For caching
+		
+		StaticBatch m_staticBatch;
 
 		static std::unique_ptr<Vk> m_instance;
 

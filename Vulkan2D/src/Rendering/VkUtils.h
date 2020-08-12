@@ -74,8 +74,11 @@ class VkUtils
 			static void CreateBuffer(VkDevice m_device, VkPhysicalDevice m_physicalDevice, VkDeviceSize bufferSize, VkBufferUsageFlags usage,
 				VkMemoryPropertyFlags bufferProperties, VkBuffer* buffer, VkDeviceMemory* bufferMemory);
 
-			static void CreateBufferVMA(VkDeviceSize bufferSize, VkBufferUsageFlags usage,
+			static bool CreateBufferVMA(VkDeviceSize bufferSize, VkBufferUsageFlags usage,
 				VmaMemoryUsage bufferProperties, VkBuffer* buffer, VmaAllocation* bufferMemory);
+
+			static bool CreateBufferVMA(VkDeviceSize bufferSize, VkBufferUsageFlags usage,
+				VkMemoryPropertyFlags preferredFlags, VkMemoryPropertyFlags requiredFlags, VkBuffer* buffer, VmaAllocation* bufferMemory);
 
 			static void DestroyBuffer(VkBuffer buffer, VmaAllocation allocation) { vmaDestroyBuffer(allocator, buffer, allocation); }
 
