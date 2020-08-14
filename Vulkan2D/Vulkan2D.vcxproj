@@ -49,7 +49,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -84,15 +84,15 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VMA;$(SolutionDir)Dependencies\Vulkan\Include;$(SolutionDir)\Dependencies\glm;$(SolutionDir)Dependencies\stb;$(SolutionDir)Dependencies\GLFW\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\Assimp\include\;$(SolutionDir)Dependencies\VMA;$(SolutionDir)Dependencies\Vulkan\Include;$(SolutionDir)\Dependencies\glm;$(SolutionDir)Dependencies\stb;$(SolutionDir)Dependencies\GLFW\include;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shaderc_combined.lib;VkLayer_utils.lib;vulkan-1.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>VkLayer_utils.lib;vulkan-1.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\Vulkan\Lib;$(SolutionDir)Dependencies\GLFW\lib-vc2017;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\Assimp\lib;$(SolutionDir)Dependencies\Vulkan\Lib;$(SolutionDir)Dependencies\GLFW\lib-vc2017;</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -118,21 +118,28 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\VMA;$(SolutionDir)Dependencies\Vulkan\Include;$(SolutionDir)\Dependencies\glm;$(SolutionDir)Dependencies\stb;$(SolutionDir)Dependencies\GLFW\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\Assimp\include\;$(SolutionDir)Dependencies\VMA;$(SolutionDir)Dependencies\Vulkan\Include;$(SolutionDir)\Dependencies\glm;$(SolutionDir)Dependencies\stb;$(SolutionDir)Dependencies\GLFW\include;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>shaderc_combined.lib;VkLayer_utils.lib;vulkan-1.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>VkLayer_utils.lib;vulkan-1.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\Vulkan\Lib;$(SolutionDir)Dependencies\GLFW\lib-vc2017;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\Assimp\lib;$(SolutionDir)Dependencies\Vulkan\Lib;$(SolutionDir)Dependencies\GLFW\lib-vc2017;</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Asset\ResourceManager.cpp" />
+    <ClCompile Include="src\Asset\ResourceManager.cpp">
+      <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <ClCompile Include="src\Asset\TinyOBJLoader.cc">
+      <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <ClCompile Include="src\Core\Input.cpp" />
+    <ClCompile Include="src\Core\Timer.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Rendering\GraphicsPipeline.cpp" />
     <ClCompile Include="src\Rendering\Material.cpp" />
@@ -149,7 +156,10 @@
   <ItemGroup>
     <ClInclude Include="src\Asset\Pipelines\BasicPipeline.h" />
     <ClInclude Include="src\Asset\ResourceManager.h" />
+    <ClInclude Include="src\Asset\TinyOBJLoader.h" />
     <ClInclude Include="src\Core\Components\MeshRenderer.h" />
+    <ClInclude Include="src\Core\Input.h" />
+    <ClInclude Include="src\Core\Timer.h" />
     <ClInclude Include="src\Rendering\CommonStructs.h" />
     <ClInclude Include="src\Rendering\DescriptorSet.h" />
     <ClInclude Include="src\Rendering\DynamicUniformBuffer.h" />

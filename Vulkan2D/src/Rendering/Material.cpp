@@ -12,6 +12,7 @@ void Material::Create(GraphicsPipeline* pipeline, std::vector<std::string> textu
 
 	propertiesBuffer.Create(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY, 1);
 	SetTint(1, 1, 1);
+	SetUVScale(2,2);
 	AddTextures(textureNames);
 }
 
@@ -50,6 +51,13 @@ void Material::SetTint(float r, float g, float b, float a)
 	propertiesBuffer.Update(VkContext::Instance().GetLogicalDevice(), &materialProperties);
 
 }
+
+void Material::SetUVScale(float r, float g)
+{
+	materialProperties.uvScale = glm::vec2(r, g);
+	propertiesBuffer.Update(VkContext::Instance().GetLogicalDevice(), &materialProperties);
+}
+
 
 
 /*Material descriptor set for textures is index 1*/

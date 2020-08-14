@@ -95,7 +95,6 @@ void StaticBatch::DestroyBuffers()
 				m_batches[pipIt->first][material->first][i].Destroy();
 		}
 	}
-
 }
 
 void StaticBatch::RenderBatches(int imageIndex)
@@ -114,6 +113,7 @@ void StaticBatch::RenderBatches(int imageIndex)
 		{
 			material->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex));
 
+			//For each batch using this pipeline and material....
 			for (int i = 0; i < m_batches[pipeline->first][material->first].size(); i++)
 			{
 
@@ -121,7 +121,7 @@ void StaticBatch::RenderBatches(int imageIndex)
 				vkCmdBindVertexBuffers(VkContext::Instance().GetCommandBuferAt(imageIndex), 0, 1, &material->second[i].vertexBuffer.buffer, &offset);
 				vkCmdBindIndexBuffer(VkContext::Instance().GetCommandBuferAt(imageIndex), material->second[i].indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 				vkCmdDrawIndexed(VkContext::Instance().GetCommandBuferAt(imageIndex),
-					material->second[i].indices.size(), 1, 0, 0, 0);
+					material->second[i].indexCount, 1, 0, 0, 0);
 
 			}
 		}
@@ -141,7 +141,7 @@ void StaticBatch::PrepareStaticBuffers()
 			for (int i = 0; i < m_batches[pipeline->first][material->first].size(); i++)
 			{
 				//Logger::LogInfo("Preparing one batch");
-				Logger::LogInfo("\tVertices ", m_batches[pipeline->first][material->first][i].vertices.size());
+				//Logger::LogInfo("\tVertices ", m_batches[pipeline->first][material->first][i].vertices.size());
 				//Logger::LogInfo("\tIndices ", m_batches[pipeline->first][material->first][i].indices.size());
 				m_batches[pipeline->first][material->first][i].PrepareBuffers();
 			}

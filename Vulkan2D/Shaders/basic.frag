@@ -11,10 +11,11 @@ layout(set=1, binding=0) uniform sampler2D textureSampler[2];
 layout(set=1, binding=1) uniform MatProperties
 {
 	vec4 tint;
+	vec2 uvScale;
 } matProps;
 
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    outColor = texture(textureSampler[0], fragTex) * matProps.tint;
+    outColor = texture(textureSampler[0], fragTex * matProps.uvScale) * matProps.tint;
 }

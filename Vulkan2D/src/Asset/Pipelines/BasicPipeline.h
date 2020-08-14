@@ -34,7 +34,7 @@ public:
 		VkPipelineShaderStageCreateInfo fragShaderStageInfo = VkUtils::PipelineUtils::GetPipelineFragmentShaderStage(fragShaderModule);
 		VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 		VkVertexInputBindingDescription bindigDescription = {};
-		std::array<VkVertexInputAttributeDescription, 3> attributeDescription;
+		std::array<VkVertexInputAttributeDescription, 4> attributeDescription;
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 
 		Vertex::GetVertexAttributeDescription(&bindigDescription, &vertexInputInfo, attributeDescription);
@@ -42,11 +42,7 @@ public:
 		VkViewport viewport = VkUtils::PipelineUtils::GetViewport(VkContext::Instance().GetSwapChainExtent().width, VkContext::Instance().GetSwapChainExtent().height);
 		VkRect2D scissor = VkUtils::PipelineUtils::GetScissor(VkContext::Instance().GetSwapChainExtent().width, VkContext::Instance().GetSwapChainExtent().height);
 		VkPipelineViewportStateCreateInfo viewportState = VkUtils::PipelineUtils::GetPipelineViewportState(&viewport, &scissor);
-		VkPipelineRasterizationStateCreateInfo rasterizerCreateInfo = VkUtils::PipelineUtils::GetPipelineRasterizer(
-			1.0f,
-			VK_POLYGON_MODE_FILL,
-			VK_CULL_MODE_NONE
-		);
+		VkPipelineRasterizationStateCreateInfo rasterizerCreateInfo = VkUtils::PipelineUtils::GetPipelineRasterizer();
 
 		//For some AA, requires GPU feature to be enabled
 		VkPipelineMultisampleStateCreateInfo multisampling = VkUtils::PipelineUtils::GetPipelineMultisampling();

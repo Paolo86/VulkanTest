@@ -3,7 +3,7 @@
 void Vertex::GetVertexAttributeDescription(
 	VkVertexInputBindingDescription* bindigDescription,
 	VkPipelineVertexInputStateCreateInfo* vertexInputInfo,
-	std::array<VkVertexInputAttributeDescription, 3>& attributeDescription,
+	std::array<VkVertexInputAttributeDescription, 4>& attributeDescription,
 	uint32_t binding)
 {
 	// Vertex input
@@ -28,6 +28,11 @@ void Vertex::GetVertexAttributeDescription(
 	attributeDescription[2].location = 2;
 	attributeDescription[2].format = VK_FORMAT_R32G32_SFLOAT;
 	attributeDescription[2].offset = offsetof(Vertex, uvs);
+
+	attributeDescription[3].binding = 0;
+	attributeDescription[3].location = 3;
+	attributeDescription[3].format = VK_FORMAT_R32G32B32_SFLOAT;
+	attributeDescription[3].offset = offsetof(Vertex, normal);
 
 	vertexInputInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertexInputInfo->vertexBindingDescriptionCount = 1;

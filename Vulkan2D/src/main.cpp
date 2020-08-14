@@ -1,48 +1,76 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-
-
 #include "Utils/Logger.h"
 #include "Rendering/Window.h"
 #include "Rendering/Vk.h"
+#include "Core/Input.h"
+
+float camSpeed = 0.1;
+float mouseSensitivity = 0.3;
+glm::vec3 camPos;
+glm::vec3 camDir;
+glm::vec3 camSide;
+float yaw = 0;
+float pitch = 0;
+
+void UpdateCamera()
+{
+	yaw -= Input::GetDeltaMousePosX() * mouseSensitivity;
+	pitch += Input::GetDeltaMousePosY() * mouseSensitivity;
+
+	camDir.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	camDir.y = sin(glm::radians(pitch));
+	camDir.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+	camSide = glm::cross(camDir, glm::vec3(0, 1, 0));
+
+	if (Input::GetMouseDown(GLFW_MOUSE_BUTTON_2))
+	{
+		Input::SetCursorMode("hidden");
+	}
+	else
+		Input::SetCursorMode("normal");
+
+
+	if (Input::GetKeyDown(GLFW_KEY_W))
+	{
+		camPos += camDir * camSpeed;
+	}
+	if (Input::GetKeyDown(GLFW_KEY_S))
+	{
+		camPos -= camDir * camSpeed;
+	}
+	if (Input::GetKeyDown(GLFW_KEY_A))
+	{
+		camPos -= camSide * camSpeed;
+	}
+	if (Input::GetKeyDown(GLFW_KEY_D))
+	{
+		camPos += camSide * camSpeed;
+	}
+
+
+}
+
 
 int main() {
 
 	Window::Instance().Create();
-
+	Input::Init();
+	Input::SetCursorMode("normal");
 	Vk::Instance().Init();
-	glm::vec3 camPos;
-	Vk::Instance().UpdateView(camPos, glm::vec3(0, 0, -1));
-	float camSpeed = 0.1;
+
 	while (!glfwWindowShouldClose(Window::Instance().GetWindow())) {
 		glfwPollEvents();
 
-		if (GetAsyncKeyState('W') & 0x8000)
-		{
-			camPos.z -= camSpeed;
-			Vk::Instance().UpdateView(camPos, camPos + glm::vec3(0, 0, -1));
-		}
-		if (GetAsyncKeyState('S') & 0x8000)
-		{
-			camPos.z += camSpeed;
-			Vk::Instance().UpdateView(camPos, camPos + glm::vec3(0, 0, -1));
-
-		}
-		if (GetAsyncKeyState('A') & 0x8000)
-		{
-			camPos.x -= camSpeed;
-			Vk::Instance().UpdateView(camPos, camPos + glm::vec3(0, 0, -1));
-		}
-		if (GetAsyncKeyState('D') & 0x8000)
-		{
-			camPos.x += camSpeed;
-			Vk::Instance().UpdateView(camPos, camPos + glm::vec3(0, 0, -1));
-		}
-
+		UpdateCamera();
+		Vk::Instance().UpdateView(camPos, camPos + camDir);
 
 
 		Vk::Instance().Draw();
+		Input::Update();
+
 	}
 	
 	//std::cin.get();

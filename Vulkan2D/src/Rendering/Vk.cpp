@@ -7,12 +7,12 @@
 #include <algorithm>
 #include <cstdint>
 #include "../Utils/FileUtils.h"
-
 #include "Material.h"
 #include "VkUtils.h"
 #include "../Asset/ResourceManager.h"
+#include "..\Core\Timer.h"
 
-#define MESH_COUNT 1000000
+#define MESH_COUNT 10
 std::unique_ptr<Vk> Vk::m_instance;
 
 Material woodMaterial("Wood");
@@ -24,7 +24,6 @@ MeshRenderer meshes[MESH_COUNT];
 {
 	const std::vector<const char*> supportedDeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 	const int MAX_FRAME_DRAWS = 2;
-	const int MAX_OBJECTS = 50;
 }
 
 
@@ -76,20 +75,21 @@ void Vk::Init()
 	CreateUniformBuffers();
 	ResourceManager::CreatePipelines();
 	ResourceManager::CreateMeshes();
+	auto mesh = ResourceManager::LoadModel("Models\\geosphere.obj","Sphere");
+
 
 	woodMaterial.Create(ResourceManager::GetPipeline("Basic"),{"wood.jpg"});
-	woodMaterial.SetTint(1, 0, 0, 0.2);
 	wallMaterial.Create(ResourceManager::GetPipeline("Basic") ,{"wall.jpg"});
-
 
 	for (int i = 0; i < MESH_COUNT; i++)
 	{
-		meshes[i].SetMesh(ResourceManager::GetMesh("Quad"));
-		meshes[i].SetMaterial(&woodMaterial);
-		meshes[i].uboModel.model = glm::translate(meshes[i].uboModel.model, glm::vec3(i, 0, -5));
-		AddMeshRenderer(&meshes[i],true);
+		meshes[i].SetMesh(ResourceManager::GetMesh("Sphere"));
+		meshes[i].SetMaterial(&wallMaterial);
 
+		meshes[i].uboModel.model = glm::translate(meshes[i].uboModel.model, glm::vec3(i *50, 0, -55));
+		AddMeshRenderer(&meshes[i],1);
 	}
+
 
 	m_staticBatch.PrepareStaticBuffers(); //Call after adding all static objects
 }
@@ -117,7 +117,6 @@ void Vk::Destroy()
 	for (size_t i = 0; i < VkContext::Instance().GetSwapChainImagesCount(); i++)
 	{
 		m_VPUniformBuffers[i].Destroy();
-
 	}
 
 	vkDestroyRenderPass(VkContext::Instance().GetLogicalDevice(), m_renderPass, nullptr);
@@ -304,14 +303,13 @@ void  Vk::CreateFramebuffers()
 			{ VkContext::Instance().GetSwapChainImageViewAt(i) , m_depthBufferImage.m_imageView });
 		
 	}
+
 }
-
-
-
-
 
 void Vk::RenderCmds(uint32_t imageIndex)
 {
+	Timer::Instance().StartTimer("T1");
+
 	VkCommandBufferBeginInfo bufferBeginInfo = {};
 	bufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -333,11 +331,7 @@ void Vk::RenderCmds(uint32_t imageIndex)
 	renderPassBeginInfo.framebuffer = m_swapChainFramebuffers[imageIndex].GetVkFrameBuffer();
 
 	//Start recording
-	VkResult result = vkBeginCommandBuffer( VkContext::Instance().GetCommandBuferAt(imageIndex), &bufferBeginInfo);
-	if (result)
-	{
-		throw std::runtime_error("Failed to start recording command buffer");
-	}
+	vkBeginCommandBuffer( VkContext::Instance().GetCommandBuferAt(imageIndex), &bufferBeginInfo);
 
 	vkCmdBeginRenderPass(VkContext::Instance().GetCommandBuferAt(imageIndex), &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE); //All render commands are primary
 
@@ -362,7 +356,6 @@ void Vk::RenderCmds(uint32_t imageIndex)
 					vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipIt->first->m_pipelineLayout,
 						VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &mr->uboModel.model);
 
-
 					vkCmdDrawIndexed(VkContext::Instance().GetCommandBuferAt(imageIndex), mr->m_mesh->GetIndexCount(), 1, 0, 0, 0);
 				}
 		
@@ -374,22 +367,19 @@ void Vk::RenderCmds(uint32_t imageIndex)
 	//TODO do not re record this every time, record cmd once
 	m_staticBatch.RenderBatches(imageIndex);
 
-
 	vkCmdEndRenderPass(VkContext::Instance().GetCommandBuferAt(imageIndex));
 
 	//End recording
-	result = vkEndCommandBuffer(VkContext::Instance().GetCommandBuferAt(imageIndex));
-	if (result)
-	{
-		throw std::runtime_error("Failed to end recording command buffer");
-	}
+	vkEndCommandBuffer(VkContext::Instance().GetCommandBuferAt(imageIndex));
+	double time = Timer::Instance().StopTimer("T1");
+	//Logger::LogInfo("Time between draw: ", time);
+
 }
 
 
 
 void Vk::Draw()
 {
-
 	uint32_t imageIndex;
 
 	VkContext::Instance().WaitForFenceAndAcquireImage(imageIndex);
