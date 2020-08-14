@@ -104,7 +104,7 @@ void StaticBatch::RenderBatches(int imageIndex)
 
 	for (auto pipeline = m_batches.begin(); pipeline != m_batches.end(); pipeline++)
 	{
-		vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipeline->first->m_pipelineLayout,
+		vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipeline->first->GetPipelineLayout(),
 			VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &identity);
 
 		pipeline->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);

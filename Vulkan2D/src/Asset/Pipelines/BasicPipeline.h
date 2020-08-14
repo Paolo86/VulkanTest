@@ -52,17 +52,18 @@ public:
 
 		VkPipelineColorBlendStateCreateInfo colorBlending = VkUtils::PipelineUtils::GetPipelineColorBlendingState(&colorBlendAttachment);
 
+		//This pipeline uses a push constant
 		PushConstant pc;
 		pc.Create<UboModel>(VK_SHADER_STAGE_VERTEX_BIT);
 
-		//Layout
+		//Layout binding
 		VkDescriptorSetLayoutBinding vpLayoutBinding = VkUtils::PipelineUtils::GetDescriptorLayoutBinding(0,
 			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 			1,
 			VK_SHADER_STAGE_VERTEX_BIT);
 
-		DescriptorSetLayout uboLayout;
-		uboLayout.AddBinding({ vpLayoutBinding }).Create(VkContext::Instance().GetLogicalDevice());
+		//Create layouts so they can be referenced (eg. the material needs the sampler layout to create the sampler descriptor set)
+	   //Order is important for the layout, add them in the same order as in the shader
 
 		// Texture set
 		VkDescriptorSetLayoutBinding imagesLayoutBinding = VkUtils::PipelineUtils::GetDescriptorLayoutBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
@@ -71,14 +72,14 @@ public:
 		VkDescriptorSetLayoutBinding materialPropertiesBinding = VkUtils::PipelineUtils::GetDescriptorLayoutBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
 			, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
 
-		DescriptorSetLayout samplerLayout;
-		samplerLayout.AddBinding({ imagesLayoutBinding, materialPropertiesBinding }).Create(VkContext::Instance().GetLogicalDevice());
+		CreateLayout("ViewProjection", { vpLayoutBinding });
+		CreateLayout("Sampler", { imagesLayoutBinding, materialPropertiesBinding });
 
 
-		allLayouts.push_back(uboLayout);
-		allLayouts.push_back(samplerLayout);
-
-		std::vector<VkDescriptorSetLayout> vkLayouts = { uboLayout.m_descriptorLayout, samplerLayout.m_descriptorLayout };
+		//Add all to a vector so we can set it in the pipeline layout
+		std::vector<VkDescriptorSetLayout> vkLayouts;
+		for (auto it = allLayouts.begin(); it != allLayouts.end(); it++)
+			vkLayouts.push_back(it->second.m_descriptorLayout);
 
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = VkUtils::PipelineUtils::GetPipelineLayoutInfo(vkLayouts, &pc.m_vkPushConstant);
 
@@ -110,10 +111,11 @@ public:
 		vkDestroyShaderModule(VkContext::Instance().GetLogicalDevice(), vertShaderModule, nullptr);
 
 		m_pipelineDescriptorSet.resize(VkContext::Instance().GetSwapChainImagesCount());
+
 		//Create 3 descriptor sets for ubo
 		for (size_t i = 0; i < VkContext::Instance().GetSwapChainImagesCount(); i++)
 		{
-			m_pipelineDescriptorSet[i].CreateDescriptorSet(VkContext::Instance().GetLogicalDevice(), { uboLayout }, Vk::Instance().m_descriptorPool);
+			m_pipelineDescriptorSet[i].CreateDescriptorSet(VkContext::Instance().GetLogicalDevice(), { GetLayoutByName("ViewProjection") }, Vk::Instance().m_descriptorPool);
 			std::vector<UniformBuffer<_ViewProjection>> bufs = { Vk::Instance().m_VPUniformBuffers[i] };
 			m_pipelineDescriptorSet[i].AssociateUniformBuffers<_ViewProjection>(VkContext::Instance().GetLogicalDevice(), bufs, 0, 0);
 
@@ -135,9 +137,9 @@ public:
 	virtual void Destroy(VkDevice device) override
 	{
 		vkDestroyPipeline(device, m_graphicsPipeline, nullptr);
-		for (DescriptorSetLayout layout : allLayouts)
+		for (auto it = allLayouts.begin(); it != allLayouts.end(); it++)
 		{
-			vkDestroyDescriptorSetLayout(VkContext::Instance().GetLogicalDevice(), layout.m_descriptorLayout, nullptr); //Destroy before pipeline
+			vkDestroyDescriptorSetLayout(VkContext::Instance().GetLogicalDevice(), it->second.m_descriptorLayout, nullptr); //Destroy before pipeline
 		}
 
 	}

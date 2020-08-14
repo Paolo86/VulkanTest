@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.hpp>
 #include <string>
 #include "DescriptorSet.h"
+#include <unordered_map>
 
 class GraphicsPipeline
 {
@@ -27,12 +28,15 @@ public:
 	virtual void Destroy(VkDevice device) = 0;
 	virtual void Bind(VkCommandBuffer cmdBuffer, int imageIndex) = 0;
 
+	VkPipelineLayout& GetPipelineLayout() { return m_pipelineLayout; }
+	DescriptorSetLayout& GetLayoutByName(std::string name) { return allLayouts[name]; }
 
-	DescriptorSetLayout& GetSamplerLayout() { return allLayouts[1]; }
 
+protected:
+	void CreateLayout(std::string name, std::vector< VkDescriptorSetLayoutBinding> bindings);
 	VkPipeline m_graphicsPipeline;
 	VkPipelineLayout m_pipelineLayout;
-	std::vector<DescriptorSetLayout> allLayouts;
+	std::unordered_map<std::string, DescriptorSetLayout> allLayouts;
 
 
 

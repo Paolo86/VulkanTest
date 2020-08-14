@@ -64,10 +64,8 @@ void Material::SetUVScale(float r, float g)
 void Material::Bind(VkCommandBuffer cmdBuffer)
 {
 	//Logger::LogInfo("\tBind material ",m_name);
-
-
 	vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-		m_pipeline->m_pipelineLayout, 1,
+		m_pipeline->GetPipelineLayout(), 1,
 		1,
 		&m_samplerDescriptorSets.m_descriptorSet, 0, nullptr);
 }
@@ -76,9 +74,8 @@ void Material::Bind(VkCommandBuffer cmdBuffer)
 void Material::CreateSamplerDescriptorSet()
 {
 	
-	m_samplerDescriptorSets.CreateDescriptorSet(VkContext::Instance().GetLogicalDevice(), { m_pipeline->GetSamplerLayout() }, Vk::Instance().m_samplerDescriptorPool);
+	m_samplerDescriptorSets.CreateDescriptorSet(VkContext::Instance().GetLogicalDevice(), { m_pipeline->GetLayoutByName("Sampler") }, Vk::Instance().m_samplerDescriptorPool);
 	m_samplerDescriptorSets.AssociateTextureSamplerCombo(VkContext::Instance().GetLogicalDevice(), m_textures, 0, Vk::Instance().m_textureSampler.m_sampler);
-
 
 	m_samplerDescriptorSets.AssociateUniformBuffers<MaterialProps>(VkContext::Instance().GetLogicalDevice(), { propertiesBuffer }, 0, 1);
 

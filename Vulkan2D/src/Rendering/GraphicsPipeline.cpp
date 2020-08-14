@@ -1,6 +1,7 @@
 #include "GraphicsPipeline.h"
 #include "../Utils/FileUtils.h"
 #include "VkUtils.h"
+#include "..\Rendering\VkContext.h"
 
 void GraphicsPipeline::Create(
 	VkDevice& device,
@@ -39,3 +40,9 @@ void GraphicsPipeline::Create(
 	}
 }
 
+void GraphicsPipeline::CreateLayout(std::string name, std::vector< VkDescriptorSetLayoutBinding> bindings)
+{
+	DescriptorSetLayout layout;
+	layout.AddBinding(bindings).Create(VkContext::Instance().GetLogicalDevice());
+	allLayouts[name] = layout;
+}

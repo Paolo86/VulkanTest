@@ -353,7 +353,7 @@ void Vk::RenderCmds(uint32_t imageIndex)
 				matName->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex));
 				for (auto mr : matName->second)
 				{
-					vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipIt->first->m_pipelineLayout,
+					vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipIt->first->GetPipelineLayout(),
 						VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &mr->uboModel.model);
 
 					vkCmdDrawIndexed(VkContext::Instance().GetCommandBuferAt(imageIndex), mr->m_mesh->GetIndexCount(), 1, 0, 0, 0);
