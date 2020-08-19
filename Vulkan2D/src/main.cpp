@@ -11,13 +11,12 @@ float mouseSensitivity = 0.3;
 glm::vec3 camPos;
 glm::vec3 camDir;
 glm::vec3 camSide;
-float yaw = 0;
+float yaw = -90;
 float pitch = 0;
 
 void UpdateCamera()
 {
-	yaw -= Input::GetDeltaMousePosX() * mouseSensitivity;
-	pitch += Input::GetDeltaMousePosY() * mouseSensitivity;
+
 
 	camDir.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 	camDir.y = sin(glm::radians(pitch));
@@ -28,6 +27,8 @@ void UpdateCamera()
 	if (Input::GetMouseDown(GLFW_MOUSE_BUTTON_2))
 	{
 		Input::SetCursorMode("hidden");
+		yaw -= Input::GetDeltaMousePosX() * mouseSensitivity;
+		pitch += Input::GetDeltaMousePosY() * mouseSensitivity;
 	}
 	else
 		Input::SetCursorMode("normal");
@@ -61,7 +62,11 @@ int main() {
 	Input::SetCursorMode("normal");
 	Vk::Instance().Init();
 
+	float timer = 0;
+	int fps = 0;
+
 	while (!glfwWindowShouldClose(Window::Instance().GetWindow())) {
+		Timer::Instance().StartTimer("FPS");
 		glfwPollEvents();
 
 		UpdateCamera();
@@ -70,6 +75,15 @@ int main() {
 
 		Vk::Instance().Draw();
 		Input::Update();
+		double t = Timer::Instance().StopTimer("FPS");
+		timer += t;
+		fps++;
+		if (timer >= 1.0)
+		{
+			Logger::LogInfo("FPS: ", fps);
+			timer = 0;
+			fps = 0;
+		}
 
 	}
 	

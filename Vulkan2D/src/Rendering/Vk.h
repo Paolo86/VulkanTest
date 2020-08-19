@@ -37,6 +37,7 @@ private:
 		void CreateDescriptorPool();
 
 		std::map<GraphicsPipeline*, std::map<Mesh*, std::map<Material*,std::set<MeshRenderer*>>>> m_dynamicObjrenderMap;
+		std::set<GraphicsPipeline*> m_allPipelineUsed;
 		
 		StaticBatch m_staticBatch;
 
@@ -57,7 +58,6 @@ private:
 		void CreateFramebuffers();
 		void RenderCmds(uint32_t currentImage);
 		void CreateUniformBuffers();
-
 
 
 };

@@ -40,9 +40,12 @@ void GraphicsPipeline::Create(
 	}
 }
 
-void GraphicsPipeline::CreateLayout(std::string name, std::vector< VkDescriptorSetLayoutBinding> bindings)
+void GraphicsPipeline::CreateLayout(std::string name, std::vector< VkDescriptorSetLayoutBinding> bindings, uint32_t setN)
 {
 	DescriptorSetLayout layout;
+	layout.setNumber = setN;
 	layout.AddBinding(bindings).Create(VkContext::Instance().GetLogicalDevice());
 	allLayouts[name] = layout;
+
+	vkLayouts.push_back(layout.m_descriptorLayout);
 }

@@ -64,20 +64,29 @@ void Material::SetUVScale(float r, float g)
 void Material::Bind(VkCommandBuffer cmdBuffer)
 {
 	//Logger::LogInfo("\tBind material ",m_name);
-	vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-		m_pipeline->GetPipelineLayout(), 1,
-		1,
-		&m_samplerDescriptorSets.m_descriptorSet, 0, nullptr);
+
+	m_samplerDescriptorSets.Bind(cmdBuffer, m_pipeline->GetPipelineLayout());
 }
 
 
 void Material::CreateSamplerDescriptorSet()
 {
+	// Texture set
+	VkDescriptorSetLayoutBinding imagesLayoutBinding = VkUtils::PipelineUtils::GetDescriptorLayoutBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+		, 5, VK_SHADER_STAGE_FRAGMENT_BIT);
+
+	VkDescriptorSetLayoutBinding materialPropertiesBinding = VkUtils::PipelineUtils::GetDescriptorLayoutBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+		, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
+
+	DescriptorSetLayout layout;
+	layout.setNumber = 2;
+	layout.AddBinding({imagesLayoutBinding, materialPropertiesBinding}).Create(VkContext::Instance().GetLogicalDevice());
 	
-	m_samplerDescriptorSets.CreateDescriptorSet(VkContext::Instance().GetLogicalDevice(), { m_pipeline->GetLayoutByName("Sampler") }, Vk::Instance().m_samplerDescriptorPool);
+	m_samplerDescriptorSets.CreateDescriptorSet(VkContext::Instance().GetLogicalDevice(), layout, Vk::Instance().m_samplerDescriptorPool);
 	m_samplerDescriptorSets.AssociateTextureSamplerCombo(VkContext::Instance().GetLogicalDevice(), m_textures, 0, Vk::Instance().m_textureSampler.m_sampler);
 
 	m_samplerDescriptorSets.AssociateUniformBuffers<MaterialProps>(VkContext::Instance().GetLogicalDevice(), { propertiesBuffer }, 0, 1);
+	layout.Destroy(VkContext::Instance().GetLogicalDevice());
 
 }
 

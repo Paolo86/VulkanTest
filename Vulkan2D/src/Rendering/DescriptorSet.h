@@ -28,7 +28,13 @@ struct DescriptorSetLayout
 		if (vkCreateDescriptorSetLayout(device, &layoutCreateInfo, nullptr, &m_descriptorLayout) != VK_SUCCESS)
 			throw std::runtime_error("Failed to create descriptor set layout");
 	}
+
+	void Destroy(VkDevice device)
+	{
+		vkDestroyDescriptorSetLayout(device, m_descriptorLayout, nullptr);
+	}
 	VkDescriptorSetLayout m_descriptorLayout;
+	uint32_t setNumber;
 
 private:
 	std::vector< VkDescriptorSetLayoutBinding> m_bindings;
@@ -42,22 +48,22 @@ public:
 	{
 	};
 
-	void CreateDescriptorSet(VkDevice device, std::vector<DescriptorSetLayout> layout, VkDescriptorPool pool)
+	void CreateDescriptorSet(VkDevice device, DescriptorSetLayout layout, VkDescriptorPool pool)
 	{		
-		std::vector< VkDescriptorSetLayout> layouts;
-		for (DescriptorSetLayout l : layout)
-			layouts.push_back(l.m_descriptorLayout);
-
 		VkDescriptorSetAllocateInfo setAllocateInfo = {};
 		setAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		setAllocateInfo.descriptorPool = pool;
 		setAllocateInfo.descriptorSetCount = 1;
-		setAllocateInfo.pSetLayouts = layouts.data();
+		setAllocateInfo.pSetLayouts = &layout.m_descriptorLayout;
 		//Allocate descriptor sets
 		if (vkAllocateDescriptorSets(device, &setAllocateInfo, &m_descriptorSet) != VK_SUCCESS)
 		{
+			Logger::LogError("Failed to create descriptor sets");
 			throw std::runtime_error("Failed to create descriptor sets");
 		}
+
+		this->setNumber = layout.setNumber;
+
 	}
 
 	template <class T>
@@ -186,5 +192,15 @@ public:
 		vkUpdateDescriptorSets(device, setWrites.size(), setWrites.data(), 0, nullptr);
 	}
 
+	void Bind(VkCommandBuffer cmdBuffer, VkPipelineLayout layout)
+	{
+		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+			layout, setNumber,
+			1,
+			&m_descriptorSet, 0, nullptr);
+	}
+
 	VkDescriptorSet m_descriptorSet;
+	uint32_t setNumber;
+
 };

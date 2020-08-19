@@ -1,10 +1,10 @@
 #pragma once
-#include "..\Rendering\GraphicsPipeline.h"
-#include "..\Utils\FileUtils.h"
-#include "..\Rendering\Vertex.h"
-#include "..\Rendering\Vk.h"
-#include "..\Rendering\VkContext.h"
-#include "..\Rendering\CommonStructs.h"
+#include "..\..\Rendering\GraphicsPipeline.h"
+#include "..\..\Utils\FileUtils.h"
+#include "..\..\Rendering\Vertex.h"
+#include "..\..\Rendering\Vk.h"
+#include "..\..\Rendering\VkContext.h"
+#include "..\..\Rendering\CommonStructs.h"
 
 
 /*
@@ -16,15 +16,15 @@ Set 1 - TextureSamplers (count 5)
 Push constant for _ViewProjection
 
 */
-class BasicPipeline : public GraphicsPipeline
+class PBRPipeline : public GraphicsPipeline
 {
 public:
-	virtual ~BasicPipeline() {}
-	BasicPipeline()
+	virtual ~PBRPipeline() {}
+	PBRPipeline()
 	{
 		// Create basic pipeline
-		std::string vertexShaderName = "basic_vertex.spv";
-		std::string fragmentShaderName = "basic_fragment.spv";
+		std::string vertexShaderName = "pbr_vertex.spv";
+		std::string fragmentShaderName = "pbr_fragment.spv";
 		auto vertexShaderCode = FileUtils::ReadFile("Shaders/" + vertexShaderName);
 		auto fragmentShaderCode = FileUtils::ReadFile("Shaders/" + fragmentShaderName);
 		VkShaderModule vertShaderModule = VkUtils::PipelineUtils::CreateShadeModule(VkContext::Instance().GetLogicalDevice(), vertexShaderCode);
@@ -82,8 +82,8 @@ public:
 		//Order is important!
 		//Each layout needs to match the set number in the shader
 		CreateLayout("Lights", { lightBinding }, 0);							//Set 0
-		CreateLayout("ViewProjection", { vpLayoutBinding },1);							//Set 1
-		CreateLayout("Sampler", { imagesLayoutBinding, materialPropertiesBinding },2);	//Set 2
+		CreateLayout("ViewProjection", { vpLayoutBinding }, 1);							//Set 1
+		CreateLayout("Sampler", { imagesLayoutBinding, materialPropertiesBinding }, 2);	//Set 2
 
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = VkUtils::PipelineUtils::GetPipelineLayoutInfo(vkLayouts, &pc.m_vkPushConstant);
 
@@ -131,7 +131,7 @@ public:
 		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 		m_pipelineDescriptorSet[imageIndex].Bind(cmdBuffer, m_pipelineLayout);
 
-		
+
 	}
 
 	virtual void Destroy(VkDevice device) override

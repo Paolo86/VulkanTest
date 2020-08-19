@@ -6,15 +6,11 @@ layout(location = 1) in vec3 color;
 layout(location = 2) in vec2 tex;
 
 
-layout(set = 0, binding = 0) uniform UboViewProjection {
+layout(set = 1, binding = 0) uniform UboViewProjection {
  mat4 projection;
  mat4 view;	
 } uboViewProjection;
 
-layout(set = 0, binding = 1) uniform DUboViewProjection {
- mat4 projection;
- mat4 view;	
-} dynamicUBO;
 
 layout(push_constant) uniform PushModel {
 

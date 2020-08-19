@@ -7,7 +7,7 @@
 #include "VkContext.h"
 #include "..\Core\Timer.h"
 
-#define BATCH_MAX_VERTICES 10000000
+#define BATCH_MAX_VERTICES 200000
 
 class MeshRenderer;
 class GraphicsPipeline;
@@ -97,6 +97,7 @@ public:
 	void PrepareStaticBuffers();
 	void AddMeshRenderer(MeshRenderer* mr);
 	void RenderBatches(int imageIndex);
+	void RenderBatches(int imageIndex, GraphicsPipeline* pipeline);
 	void DestroyBuffers();
 
 	std::map<GraphicsPipeline*, std::map<Material*, std::vector<SingleBatch>>>			m_batches; 

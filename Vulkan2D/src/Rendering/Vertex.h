@@ -3,6 +3,8 @@
 #include <array>
 #include <vulkan/vulkan.hpp>
 
+
+
 class Vertex
 {
 public:
@@ -10,6 +12,10 @@ public:
 	glm::vec3 color;
 	glm::vec2 uvs;
 	glm::vec3 normal;
+
+	bool operator==(const Vertex& other) const {
+		return pos == other.pos && color == other.color && uvs == other.uvs && normal == other.normal;
+	}
 
 	static void GetVertexAttributeDescription(
 		VkVertexInputBindingDescription* bindigDescription,

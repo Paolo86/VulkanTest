@@ -11,6 +11,7 @@
 #include "VkUtils.h"
 #include "../Asset/ResourceManager.h"
 #include "..\Core\Timer.h"
+#include "..\Lighting\LightManager.h"
 
 #define MESH_COUNT 10
 std::unique_ptr<Vk> Vk::m_instance;
@@ -78,8 +79,8 @@ void Vk::Init()
 	auto mesh = ResourceManager::LoadModel("Models\\geosphere.obj","Sphere");
 
 
-	woodMaterial.Create(ResourceManager::GetPipeline("Basic"),{"wood.jpg"});
-	wallMaterial.Create(ResourceManager::GetPipeline("Basic") ,{"wall.jpg"});
+	woodMaterial.Create(ResourceManager::GetPipeline("PBR"),{"wood.jpg"});
+	wallMaterial.Create(ResourceManager::GetPipeline("PBR") ,{"wall.jpg", "wood.jpg"});
 
 	for (int i = 0; i < MESH_COUNT; i++)
 	{
@@ -90,7 +91,7 @@ void Vk::Init()
 		AddMeshRenderer(&meshes[i],1);
 	}
 
-
+	LightManager::Instance().Init();
 	m_staticBatch.PrepareStaticBuffers(); //Call after adding all static objects
 }
 
@@ -140,6 +141,7 @@ void Vk::CreateUniformBuffers()
 void Vk::UpdateView(glm::vec3 pos, glm::vec3 dir)
 {
 	ViewProjection.view = glm::lookAt(pos, dir, glm::vec3(0, 1, 0));
+	ViewProjection.camPosition = pos;
 	for (size_t i = 0; i < VkContext::Instance().GetSwapChainImagesCount(); i++)
 	{
 		m_VPUniformBuffers[i].Update(VkContext::Instance().GetLogicalDevice(), &ViewProjection);
@@ -162,7 +164,7 @@ void Vk::CreateDescriptorPool()
 
 	VkDescriptorPoolCreateInfo poolCreateInfo = {};
 	poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolCreateInfo.maxSets = static_cast<uint32_t>(VkContext::Instance().GetSwapChainImagesCount());
+	poolCreateInfo.maxSets = static_cast<uint32_t>(VkContext::Instance().GetSwapChainImagesCount() * 5);
 	poolCreateInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 	poolCreateInfo.pPoolSizes = poolSizes.data();
 
@@ -308,7 +310,6 @@ void  Vk::CreateFramebuffers()
 
 void Vk::RenderCmds(uint32_t imageIndex)
 {
-	Timer::Instance().StartTimer("T1");
 
 	VkCommandBufferBeginInfo bufferBeginInfo = {};
 	bufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -338,13 +339,15 @@ void Vk::RenderCmds(uint32_t imageIndex)
 	VkDeviceSize offsets[] = { 0 };
 
 	//Logger::LogInfo("StartRendering");
-
-	for (auto pipIt = m_dynamicObjrenderMap.begin(); pipIt != m_dynamicObjrenderMap.end(); pipIt++)
+	for (auto pipIt = m_allPipelineUsed.begin(); pipIt != m_allPipelineUsed.end(); pipIt++)
 	{
-		//Bind pipeline
-		pipIt->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
 
-		for (auto meshIt = pipIt->second.begin(); meshIt != pipIt->second.end(); meshIt++)
+		//Bind pipeline
+		LightManager::Instance().BindDescriptorSet(VkContext::Instance().GetCommandBuferAt(imageIndex), (*pipIt)->GetPipelineLayout());
+		(*pipIt)->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
+
+		//Go through the map of dynamic object
+		for (auto meshIt = m_dynamicObjrenderMap[(*pipIt)].begin(); meshIt != m_dynamicObjrenderMap[(*pipIt)].end(); meshIt++)
 		{
 			//Bind mesh buffers
 			meshIt->first->BindBuffers(VkContext::Instance().GetCommandBuferAt(imageIndex));
@@ -353,27 +356,21 @@ void Vk::RenderCmds(uint32_t imageIndex)
 				matName->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex));
 				for (auto mr : matName->second)
 				{
-					vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipIt->first->GetPipelineLayout(),
+					vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), (*pipIt)->GetPipelineLayout(),
 						VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &mr->uboModel.model);
 
 					vkCmdDrawIndexed(VkContext::Instance().GetCommandBuferAt(imageIndex), mr->m_mesh->GetIndexCount(), 1, 0, 0, 0);
-				}
-		
+				}		
 			}
 		}
-
 	}
 
-	//TODO do not re record this every time, record cmd once
+	//Render all batches using this pipeline, no need to bind it again
 	m_staticBatch.RenderBatches(imageIndex);
-
 	vkCmdEndRenderPass(VkContext::Instance().GetCommandBuferAt(imageIndex));
 
 	//End recording
 	vkEndCommandBuffer(VkContext::Instance().GetCommandBuferAt(imageIndex));
-	double time = Timer::Instance().StopTimer("T1");
-	//Logger::LogInfo("Time between draw: ", time);
-
 }
 
 
@@ -398,6 +395,8 @@ void Vk::AddMeshRenderer(MeshRenderer* meshRenderer, bool isStatic)
 	{
 		m_staticBatch.AddMeshRenderer(meshRenderer);
 	}
+
+	m_allPipelineUsed.insert(meshRenderer->m_material->m_pipeline);
 }
 
 

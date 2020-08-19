@@ -4,7 +4,7 @@
 #include "..\Core\Components\MeshRenderer.h"
 #include "VkContext.h"
 #include "..\Utils\Logger.h"
-
+#include "..\Lighting\LightManager.h"
 void StaticBatch::AddMeshRenderer(MeshRenderer* meshRenderer)
 {
 	std::vector<Vertex> vertices;
@@ -97,11 +97,36 @@ void StaticBatch::DestroyBuffers()
 	}
 }
 
-void StaticBatch::RenderBatches(int imageIndex)
+void StaticBatch::RenderBatches(int imageIndex, GraphicsPipeline* pipeline)
 {
 	UboModel identity;
 	identity.model = glm::mat4(1);
 
+	vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipeline->GetPipelineLayout(),
+		VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &identity);
+	
+	for (auto material = m_batches[pipeline].begin(); material != m_batches[pipeline].end(); material++)
+	{
+		material->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex));
+
+		//For each batch using this pipeline and material....
+		for (int i = 0; i < m_batches[pipeline][material->first].size(); i++)
+		{
+
+			VkDeviceSize offset = 0;
+			vkCmdBindVertexBuffers(VkContext::Instance().GetCommandBuferAt(imageIndex), 0, 1, &material->second[i].vertexBuffer.buffer, &offset);
+			vkCmdBindIndexBuffer(VkContext::Instance().GetCommandBuferAt(imageIndex), material->second[i].indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+			vkCmdDrawIndexed(VkContext::Instance().GetCommandBuferAt(imageIndex),	material->second[i].indexCount, 1, 0, 0, 0);
+
+		}
+	}
+}
+
+
+void StaticBatch::RenderBatches(int imageIndex)
+{
+	UboModel identity;
+	identity.model = glm::mat4(1);
 	for (auto pipeline = m_batches.begin(); pipeline != m_batches.end(); pipeline++)
 	{
 		vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipeline->first->GetPipelineLayout(),
@@ -148,3 +173,4 @@ void StaticBatch::PrepareStaticBuffers()
 		}
 	}
 }
+

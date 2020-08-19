@@ -140,6 +140,9 @@
     </ClCompile>
     <ClCompile Include="src\Core\Input.cpp" />
     <ClCompile Include="src\Core\Timer.cpp" />
+    <ClCompile Include="src\Lighting\DirectionalLight.cpp" />
+    <ClCompile Include="src\Lighting\Light.cpp" />
+    <ClCompile Include="src\Lighting\LightManager.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Rendering\GraphicsPipeline.cpp" />
     <ClCompile Include="src\Rendering\Material.cpp" />
@@ -155,11 +158,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Asset\Pipelines\BasicPipeline.h" />
+    <ClInclude Include="src\Asset\Pipelines\PBRPipeline.h" />
     <ClInclude Include="src\Asset\ResourceManager.h" />
     <ClInclude Include="src\Asset\TinyOBJLoader.h" />
     <ClInclude Include="src\Core\Components\MeshRenderer.h" />
     <ClInclude Include="src\Core\Input.h" />
     <ClInclude Include="src\Core\Timer.h" />
+    <ClInclude Include="src\Lighting\DirectionalLight.h" />
+    <ClInclude Include="src\Lighting\Light.h" />
+    <ClInclude Include="src\Lighting\LightManager.h" />
     <ClInclude Include="src\Rendering\CommonStructs.h" />
     <ClInclude Include="src\Rendering\DescriptorSet.h" />
     <ClInclude Include="src\Rendering\DynamicUniformBuffer.h" />

@@ -33,10 +33,12 @@ public:
 
 
 protected:
-	void CreateLayout(std::string name, std::vector< VkDescriptorSetLayoutBinding> bindings);
+	void CreateLayout(std::string name, std::vector< VkDescriptorSetLayoutBinding> bindings, uint32_t setN);
 	VkPipeline m_graphicsPipeline;
 	VkPipelineLayout m_pipelineLayout;
 	std::unordered_map<std::string, DescriptorSetLayout> allLayouts;
+
+	std::vector<VkDescriptorSetLayout> vkLayouts;	//Cache all layouts 
 
 
 

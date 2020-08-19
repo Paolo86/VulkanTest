@@ -2,7 +2,17 @@
 #include "..\Rendering\VkUtils.h"
 #include "..\Rendering\VkContext.h"
 #include "Pipelines\BasicPipeline.h"
+#include "Pipelines\PBRPipeline.h"
 #include "TinyOBJLoader.h"
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+namespace std {
+	template<> struct hash<Vertex> {
+		size_t operator()(Vertex const& vertex) const {
+			return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.uvs) << 1);
+		}
+	};
+}
 
 
 std::map<std::string, std::unique_ptr<GraphicsPipeline>> ResourceManager::allPipelines;
@@ -78,6 +88,7 @@ Texture2D ResourceManager::CreateDepthBufferImage()
 void ResourceManager::CreatePipelines()
 {
 	allPipelines["Basic"] = std::unique_ptr<BasicPipeline>(new BasicPipeline());
+	allPipelines["PBR"] = std::unique_ptr<PBRPipeline>(new PBRPipeline());
 }
 
 void ResourceManager::CreateMeshes()
@@ -86,21 +97,25 @@ void ResourceManager::CreateMeshes()
 	v1.pos = glm::vec3(-0.5, -0.5, 0.0);
 	v1.color = glm::vec3(1.0, 0.0, 0.0);
 	v1.uvs = glm::vec2(0, 0);
+	v1.normal = glm::vec3(0, 0, 1);
 
 	Vertex v2;
 	v2.pos = glm::vec3(0.5, -0.5, 0.0);
 	v2.color = glm::vec3(0.0, 1.0, 0.0);
 	v2.uvs = glm::vec2(1, 0);
+	v2.normal = glm::vec3(0, 0, 1);
 
 	Vertex v3;
 	v3.pos = glm::vec3(0.5, 0.5, 0.0);
 	v3.color = glm::vec3(0.0, 0.0, 1.0);
 	v3.uvs = glm::vec2(1, 1);
+	v3.normal = glm::vec3(0, 0, 1);
 
 	Vertex v4;
 	v4.pos = glm::vec3(-0.5, 0.5, 0.0);
 	v4.color = glm::vec3(0.0, 0.0, 1.0);
 	v4.uvs = glm::vec2(0, 1);
+	v4.normal = glm::vec3(0, 0, 1);
 
 	std::vector<Vertex> vertices1 = { v1,v2,v3, v4 };
 	std::vector<uint32_t> indices1 = { 0,1,2,2,3,0 };
@@ -133,11 +148,12 @@ MeshData ResourceManager::LoadModel(std::string path, std::string meshName)
 	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str())) {
 		throw std::runtime_error(warn + err);
 	}
-
+	std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 	MeshData data;
 	for (const auto& shape : shapes) {
 		for (const auto& index : shape.mesh.indices) {
 			Vertex vertex{};
+
 			vertex.pos = {
 			attrib.vertices[3 * index.vertex_index + 0],
 			attrib.vertices[3 * index.vertex_index + 1],
@@ -149,9 +165,20 @@ MeshData ResourceManager::LoadModel(std::string path, std::string meshName)
 				1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
 			};
 
+			vertex.normal = {
+			attrib.vertices[3 * index.normal_index + 0],
+			attrib.vertices[3 * index.normal_index + 1],
+			attrib.vertices[3 * index.normal_index + 2]
+			};
+			
+
 			vertex.color = { 1.0f, 1.0f, 1.0f };
-			data.vertices.push_back(vertex);
-			data.indices.push_back(data.indices.size());
+			if (uniqueVertices.count(vertex) == 0) {
+				uniqueVertices[vertex] = static_cast<uint32_t>(data.vertices.size());
+				data.vertices.push_back(vertex);
+			}
+
+			data.indices.push_back(uniqueVertices[vertex]);
 		}
 	}
 

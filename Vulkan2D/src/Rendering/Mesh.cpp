@@ -57,7 +57,7 @@ void Mesh::BindBuffers(VkCommandBuffer cmdBuffer)
 {
 	VkDeviceSize offsets[] = { 0 };
 
-	Logger::LogInfo("\tBind Mesh buffers");
+	//Logger::LogInfo("\tBind Mesh buffers");
 	vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &m_VertexBuffer.buffer, offsets);
 	vkCmdBindIndexBuffer(cmdBuffer, m_IndexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 }
