@@ -3,7 +3,7 @@
 void Vertex::GetVertexAttributeDescription(
 	VkVertexInputBindingDescription* bindigDescription,
 	VkPipelineVertexInputStateCreateInfo* vertexInputInfo,
-	std::array<VkVertexInputAttributeDescription, 4>& attributeDescription,
+	std::array<VkVertexInputAttributeDescription, 6>& attributeDescription,
 	uint32_t binding)
 {
 	// Vertex input
@@ -33,6 +33,16 @@ void Vertex::GetVertexAttributeDescription(
 	attributeDescription[3].location = 3;
 	attributeDescription[3].format = VK_FORMAT_R32G32B32_SFLOAT;
 	attributeDescription[3].offset = offsetof(Vertex, normal);
+
+	attributeDescription[4].binding = 0;
+	attributeDescription[4].location = 4;
+	attributeDescription[4].format = VK_FORMAT_R32G32B32_SFLOAT;
+	attributeDescription[4].offset = offsetof(Vertex, tangent);
+
+	attributeDescription[5].binding = 0;
+	attributeDescription[5].location = 5;
+	attributeDescription[5].format = VK_FORMAT_R32G32B32_SFLOAT;
+	attributeDescription[5].offset = offsetof(Vertex, binormal);
 
 	vertexInputInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertexInputInfo->vertexBindingDescriptionCount = 1;

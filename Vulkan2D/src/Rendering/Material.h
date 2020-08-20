@@ -26,6 +26,7 @@ public:
 
 
 	void SetTint(float r, float g, float b, float a = 1.0);
+	void SetPBRProps(float metallic, float rooughness, float ao);
 	void SetUVScale(float r, float g);
 	GraphicsPipeline* GetPipelineUsed() { return m_pipeline; }
 

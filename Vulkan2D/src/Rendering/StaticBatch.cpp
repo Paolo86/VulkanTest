@@ -12,6 +12,9 @@ void StaticBatch::AddMeshRenderer(MeshRenderer* meshRenderer)
 	{
 		Vertex vertex = meshRenderer->m_mesh->GetVertices()[v];
 		vertex.pos = meshRenderer->uboModel.model * glm::vec4(vertex.pos, 1.0);
+		vertex.normal = meshRenderer->uboModel.model * glm::vec4(vertex.normal, 0.0);
+		vertex.tangent = meshRenderer->uboModel.model * glm::vec4(vertex.tangent, 0.0);
+		vertex.binormal = meshRenderer->uboModel.model * glm::vec4(vertex.binormal, 0.0);
 		vertices.push_back(vertex);
 	}
 

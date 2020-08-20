@@ -13,7 +13,8 @@
 #include "..\Core\Timer.h"
 #include "..\Lighting\LightManager.h"
 
-#define MESH_COUNT 10
+#define MESH_COUNT 1000
+#define USE_BATCHING 1
 std::unique_ptr<Vk> Vk::m_instance;
 
 Material woodMaterial("Wood");
@@ -80,7 +81,12 @@ void Vk::Init()
 
 
 	woodMaterial.Create(ResourceManager::GetPipeline("PBR"),{"wood.jpg"});
-	wallMaterial.Create(ResourceManager::GetPipeline("PBR") ,{"wall.jpg", "wood.jpg"});
+	wallMaterial.Create(ResourceManager::GetPipeline("PBR") ,{
+		"Iron\\iron_albedo.jpg",
+		"Iron\\iron_normal.jpg",
+		"Iron\\iron_metallic.jpg",
+		"Iron\\iron_roughness.jpg"});
+	wallMaterial.SetPBRProps(0.0, 0.0, 0.0);
 
 	for (int i = 0; i < MESH_COUNT; i++)
 	{
@@ -88,7 +94,7 @@ void Vk::Init()
 		meshes[i].SetMaterial(&wallMaterial);
 
 		meshes[i].uboModel.model = glm::translate(meshes[i].uboModel.model, glm::vec3(i *50, 0, -55));
-		AddMeshRenderer(&meshes[i],1);
+		AddMeshRenderer(&meshes[i], USE_BATCHING);
 	}
 
 	LightManager::Instance().Init();
@@ -341,7 +347,6 @@ void Vk::RenderCmds(uint32_t imageIndex)
 	//Logger::LogInfo("StartRendering");
 	for (auto pipIt = m_allPipelineUsed.begin(); pipIt != m_allPipelineUsed.end(); pipIt++)
 	{
-
 		//Bind pipeline
 		LightManager::Instance().BindDescriptorSet(VkContext::Instance().GetCommandBuferAt(imageIndex), (*pipIt)->GetPipelineLayout());
 		(*pipIt)->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);

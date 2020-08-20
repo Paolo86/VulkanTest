@@ -49,12 +49,20 @@ void Material::SetTint(float r, float g, float b, float a)
 {
 	materialProperties.tint = glm::vec4(r,g,b,a);
 	propertiesBuffer.Update(VkContext::Instance().GetLogicalDevice(), &materialProperties);
-
 }
 
 void Material::SetUVScale(float r, float g)
 {
-	materialProperties.uvScale = glm::vec2(r, g);
+	materialProperties.uvScale.r = r;
+	materialProperties.uvScale.g = g;
+	propertiesBuffer.Update(VkContext::Instance().GetLogicalDevice(), &materialProperties);
+}
+
+void Material::SetPBRProps(float metallic, float rooughness, float ao)
+{
+	materialProperties.pbrProps.x = metallic;
+	materialProperties.pbrProps.y = rooughness;
+	materialProperties.pbrProps.z = ao;
 	propertiesBuffer.Update(VkContext::Instance().GetLogicalDevice(), &materialProperties);
 }
 

@@ -34,7 +34,7 @@ public:
 		VkPipelineShaderStageCreateInfo fragShaderStageInfo = VkUtils::PipelineUtils::GetPipelineFragmentShaderStage(fragShaderModule);
 		VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 		VkVertexInputBindingDescription bindigDescription = {};
-		std::array<VkVertexInputAttributeDescription, 4> attributeDescription;
+		std::array<VkVertexInputAttributeDescription, 6> attributeDescription;
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 
 		Vertex::GetVertexAttributeDescription(&bindigDescription, &vertexInputInfo, attributeDescription);

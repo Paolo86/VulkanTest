@@ -38,5 +38,6 @@ typedef struct {
 
 typedef struct {
 	glm::vec4 tint;
-	glm::vec2 uvScale;
+	glm::vec4 uvScale;
+	glm::vec4 pbrProps;
 } MaterialProps;

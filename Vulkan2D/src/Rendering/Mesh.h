@@ -27,6 +27,8 @@ public:
 	std::vector<Vertex>& GetVertices() { return m_vertices; }
 	std::vector<uint32_t>& GetIndices() { return m_indices; }
 
+	void CalculateNormals();
+
 	void DestroyVertexBuffer();
 private:
 	int m_vertexCount;

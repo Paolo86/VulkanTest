@@ -12,6 +12,8 @@ public:
 	glm::vec3 color;
 	glm::vec2 uvs;
 	glm::vec3 normal;
+	glm::vec3 tangent;
+	glm::vec3 binormal;
 
 	bool operator==(const Vertex& other) const {
 		return pos == other.pos && color == other.color && uvs == other.uvs && normal == other.normal;
@@ -20,6 +22,6 @@ public:
 	static void GetVertexAttributeDescription(
 		VkVertexInputBindingDescription* bindigDescription,
 		VkPipelineVertexInputStateCreateInfo* vertexInputInfo,
-		std::array<VkVertexInputAttributeDescription, 4>& attributeDescription,
+		std::array<VkVertexInputAttributeDescription, 6>& attributeDescription,
 		uint32_t binding = 0);
 };
