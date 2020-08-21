@@ -40,7 +40,7 @@ void LightManager::Init()
 	VkDescriptorSetLayoutBinding lightBinding = VkUtils::PipelineUtils::GetDescriptorLayoutBinding(0,
 		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 		1,
-		VK_SHADER_STAGE_FRAGMENT_BIT);
+		VK_SHADER_STAGE_VERTEX_BIT);
 
 	DescriptorSetLayout layout;
 	layout.setNumber = 0;

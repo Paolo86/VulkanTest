@@ -7,7 +7,14 @@ layout(location = 1) in vec2 fragTex;
 layout(location = 2) in vec3 vertexNormal;
 layout(location = 3) in vec3 fragPosition;
 layout(location = 4) in vec3 viewPos;
-layout(location = 5) in mat3 TBNout;
+layout(location = 5) in DirectionalLightsOut
+{
+	vec4 diffuseColor[4];
+	vec4 specularColor[4];
+	vec4 direction[4];
+	vec4 intensity[4];
+	vec4 misc;
+} dirLightsOut;
 
 // Set 2, Material
 // 0 - Albedo
@@ -24,15 +31,7 @@ layout(set=2, binding=1) uniform MatProperties
 	vec3 pbrProps;
 } matProps;
 
-layout(set=0, binding=0) uniform DirectionalLights
-{
 
-	vec4 diffuseColor[4];
-	vec4 specularColor[4];
-	vec4 direction[4];
-	vec4 intensity[4];
-	vec4 misc;
-} dirLights;
 
 layout(location = 0) out vec4 outColor;
 
@@ -63,9 +62,9 @@ void main() {
 	
 	for(int i=0; i< 1; i++)
 	{
-		vec3 L = normalize(-dirLights.direction[i].rgb);
+		vec3 L = normalize(-dirLightsOut.direction[i].rgb);
 		vec3 H = normalize(V + L);
-		vec3 radiance     = dirLights.diffuseColor[i].rgb *  dirLights.intensity[i].r;
+		vec3 radiance     = dirLightsOut.diffuseColor[i].rgb *  dirLightsOut.intensity[i].r;
 		
 		float NDF = DistributionGGX(N, H, roughness);
 		float G   = GeometrySmith(N, V, L, roughness);      

@@ -14,6 +14,7 @@ public:
 	glm::vec3 normal;
 	glm::vec3 tangent;
 	glm::vec3 binormal;
+	glm::mat3 TBN;
 
 	bool operator==(const Vertex& other) const {
 		return pos == other.pos && color == other.color && uvs == other.uvs && normal == other.normal;

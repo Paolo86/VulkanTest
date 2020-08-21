@@ -22,12 +22,31 @@ layout(push_constant) uniform PushModel {
 	mat4 model;
 } pushModel;
 
+layout(set=0, binding=0) uniform DirectionalLights
+{
+
+	vec4 diffuseColor[4];
+	vec4 specularColor[4];
+	vec4 direction[4];
+	vec4 intensity[4];
+	vec4 misc;
+} dirLights;
+
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 fragTex;
 layout(location = 2) out vec3 vertexNormal;
 layout(location = 3) out vec3 fragPosition;
 layout(location = 4) out vec3 viewPos;
-layout(location = 5) out mat3 TBNout;
+layout(location = 5) out DirectionalLightsOut
+{
+	vec4 diffuseColor[4];
+	vec4 specularColor[4];
+	vec4 direction[4];
+	vec4 intensity[4];
+	vec4 misc;
+} dirLightsOut;
+
+
 
 void main() {
 
@@ -36,14 +55,23 @@ void main() {
 	vec3 N = normalize(vec3(pushModel.model * vec4(normalize(normal),    0.0)));
 	mat3 TBN = mat3(T, B, N);
 
-	vec4 fragPos = pushModel.model * vec4(position, 1.0);
-	fragPosition = fragPos.xyz;
-    gl_Position = uboViewProjection.projection * uboViewProjection.view * fragPos;
-	
+	vec3 fragPos = TBN * (pushModel.model * vec4(position,1.0)).xyz;
+	fragPosition = fragPos;
+    gl_Position = uboViewProjection.projection * uboViewProjection.view * pushModel.model * vec4(position, 1.0);
+
 	fragColor = normalize(normal);
 	fragTex = tex;
-	viewPos = uboViewProjection.camPosition.xyz;
-	vertexNormal = vec3(pushModel.model * vec4(normal,0.0));
-	TBNout = TBN;
+	viewPos = TBN * vec3(uboViewProjection.camPosition);
+	vertexNormal = TBN * vec3(pushModel.model * vec4(normal,0.0));
+	
+	for(int i=0; i< dirLights.misc[1]; i++)
+	{
+		dirLightsOut.diffuseColor[i] = dirLights.diffuseColor[i];
+		dirLightsOut.specularColor[i] = dirLights.specularColor[i];
+		dirLightsOut.direction[i] = vec4(TBN * (dirLights.direction[i].xyz),0.0);
+		dirLightsOut.intensity[i] = dirLights.intensity[i];
+		dirLightsOut.misc = dirLights.misc;
+	}
+
 
 }

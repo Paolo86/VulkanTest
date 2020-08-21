@@ -95,6 +95,7 @@ void Mesh::CalculateNormals()
 			m_vertices[m_indices[i]].binormal = r * ((v1v3 * deltaUV1.x) - (v1v2 * deltaUV2.x));
 			m_vertices[m_indices[i + 1]].binormal = r * ((v1v3 * deltaUV1.x) - (v1v2 * deltaUV2.x));
 			m_vertices[m_indices[i + 2]].binormal = r * ((v1v3 * deltaUV1.x) - (v1v2 * deltaUV2.x));
+
 		}
 	}
 }
