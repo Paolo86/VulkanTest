@@ -21,13 +21,13 @@ void LightManager::BindDescriptorSet(VkCommandBuffer cmdBuffer, VkPipelineLayout
 void LightManager::Init()
 {
 	m_directionalLights.diffuse[0] = glm::vec4(1.0, 1.0, 1.0, 1.0);
-	m_directionalLights.direction[0] = glm::vec4(1.0, 0.0, 0.0, 0.0);
+	m_directionalLights.direction[0] = glm::vec4(0.0, -1.0, 0.0, 0.0);
 	m_directionalLights.specular[0] = glm::vec4(1.0, 1.0, 1.0, 1.0);
-	m_directionalLights.intensity[0] = glm::vec4(1);
+	m_directionalLights.intensity[0] = glm::vec4(1.0);
 
 	m_directionalLights.diffuse[1] = glm::vec4(1.0,0.0,0.0,0.0);
 	m_directionalLights.specular[1] = glm::vec4(1.0, 0.2, 0.2, 0.0);
-	m_directionalLights.direction[1] = glm::vec4(-1.0,0.0,0.0,0.0);
+	m_directionalLights.direction[1] = glm::vec4(0.0,1.0,0.0,0.0);
 	m_directionalLights.intensity[1] = glm::vec4(1.0);
 
 	//Misc: 0 - intensity (need to change per light), 1 - count of lights

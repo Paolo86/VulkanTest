@@ -82,11 +82,12 @@ void Vk::Init()
 
 	woodMaterial.Create(ResourceManager::GetPipeline("PBR"),{"wood.jpg"});
 	wallMaterial.Create(ResourceManager::GetPipeline("PBR") ,{
-		"Iron\\iron_albedo.jpg",
-		"Iron\\iron_normal.jpg",
-		"Iron\\iron_metallic.jpg",
-		"Iron\\iron_roughness.jpg"});
-	wallMaterial.SetPBRProps(0.0, 0.0, 0.0);
+		"Stucco\\grainy_stucco_albedo.png",
+		"Stucco\\grainy_stucco_Normal-ogl.png",
+		"Stucco\\grainy_stucco_Metallic.psd",
+		"Stucco\\grainy_stucco_Height.png",
+		"Stucco\\grainy_stucco_ao.png"});
+	wallMaterial.SetPBRProps(0.0, 0.0, 1);
 
 	for (int i = 0; i < MESH_COUNT; i++)
 	{
