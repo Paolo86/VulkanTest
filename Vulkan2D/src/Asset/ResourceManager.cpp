@@ -3,6 +3,7 @@
 #include "..\Rendering\VkContext.h"
 #include "Pipelines\BasicPipeline.h"
 #include "Pipelines\PBRPipeline.h"
+#include "Pipelines\Phong.h"
 #include "TinyOBJLoader.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
@@ -89,6 +90,7 @@ void ResourceManager::CreatePipelines()
 {
 	allPipelines["Basic"] = std::unique_ptr<BasicPipeline>(new BasicPipeline());
 	allPipelines["PBR"] = std::unique_ptr<PBRPipeline>(new PBRPipeline());
+	allPipelines["Phong"] = std::unique_ptr<PhongPipeline>(new PhongPipeline());
 }
 
 void ResourceManager::CreateMeshes()

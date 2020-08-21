@@ -51,6 +51,14 @@ void UpdateCamera()
 		camPos += camSide * camSpeed;
 	}
 
+	if (Input::GetKeyDown(GLFW_KEY_PAGE_UP))
+		camSpeed += 0.0001;
+	if (Input::GetKeyDown(GLFW_KEY_PAGE_DOWN))
+	{
+		camSpeed -= 0.0001;
+		camSpeed = camSpeed <= 0 ? 0 : camSpeed;
+	}
+
 
 }
 

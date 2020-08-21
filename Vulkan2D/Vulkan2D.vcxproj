@@ -159,6 +159,7 @@
   <ItemGroup>
     <ClInclude Include="src\Asset\Pipelines\BasicPipeline.h" />
     <ClInclude Include="src\Asset\Pipelines\PBRPipeline.h" />
+    <ClInclude Include="src\Asset\Pipelines\Phong.h" />
     <ClInclude Include="src\Asset\ResourceManager.h" />
     <ClInclude Include="src\Asset\TinyOBJLoader.h" />
     <ClInclude Include="src\Core\Components\MeshRenderer.h" />

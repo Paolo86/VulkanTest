@@ -164,5 +164,8 @@
     <ClInclude Include="src\Lighting\LightManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Asset\Pipelines\Phong.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

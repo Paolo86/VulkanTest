@@ -13,15 +13,14 @@
 #include "..\Core\Timer.h"
 #include "..\Lighting\LightManager.h"
 
-#define MESH_COUNT 1000
-#define USE_BATCHING 1
+#define MESH_COUNT 100
+#define USE_BATCHING 0
 std::unique_ptr<Vk> Vk::m_instance;
 
 Material woodMaterial("Wood");
 Material wallMaterial("Wall");
 
 MeshRenderer meshes[MESH_COUNT];
-Material mats[50];
 
  namespace
 {
@@ -78,10 +77,10 @@ void Vk::Init()
 	CreateUniformBuffers();
 	ResourceManager::CreatePipelines();
 	ResourceManager::CreateMeshes();
-	auto mesh = ResourceManager::LoadModel("Models\\sphere.obj","Sphere");
+	auto mesh = ResourceManager::LoadModel("Models\\nanosuit.obj","Sphere");
 
 
-	woodMaterial.Create(ResourceManager::GetPipeline("PBR"),{"wood.jpg"});
+	woodMaterial.Create(ResourceManager::GetPipeline("Phong"),{"wood.jpg"});
 	wallMaterial.Create(ResourceManager::GetPipeline("PBR") ,{
 		"Iron\\iron_albedo.jpg",
 		"Iron\\iron_normal.jpg",
@@ -90,22 +89,13 @@ void Vk::Init()
 		});
 	wallMaterial.SetPBRProps(0.0, 0.0, 0);
 
-	int i = 0;
-	for (int y = 0; y < 7; y++)
+	for (int i = 0; i < MESH_COUNT; i++)
 	{
-		for (int x = 0; x < 7; x++)
-		{
+		meshes[i].SetMesh(ResourceManager::GetMesh("Sphere"));
+		meshes[i].SetMaterial(&woodMaterial);
 
-			/*mats[i].m_name = ss.str();
-			mats[i].Create(ResourceManager::GetPipeline("PBR"), { "Iron\\iron_albedo.jpg", "Iron\\iron_normal.jpg"});
-			mats[i].SetPBRProps(y / 6.0f, x / 6.0f, 0.0);*/
-			meshes[i].SetMesh(ResourceManager::GetMesh("Sphere"));
-			meshes[i].SetMaterial(&wallMaterial);
-
-			meshes[i].uboModel.model = glm::translate(meshes[i].uboModel.model, glm::vec3(x * 50, y * 50, -55));
-			AddMeshRenderer(&meshes[i], 1);
-			i++;
-		}
+		meshes[i].uboModel.model = glm::translate(meshes[i].uboModel.model, glm::vec3(i * 10,0, -55));
+		AddMeshRenderer(&meshes[i], USE_BATCHING);
 
 	}
 

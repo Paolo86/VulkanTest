@@ -27,7 +27,7 @@ void LightManager::Init()
 
 	m_directionalLights.diffuse[1] = glm::vec4(1.0,0.0,0.0,0.0);
 	m_directionalLights.specular[1] = glm::vec4(1.0, 0.2, 0.2, 0.0);
-	m_directionalLights.direction[1] = glm::vec4(0.0,1.0,0.0,0.0);
+	m_directionalLights.direction[1] = glm::vec4(0.0,0.0,1.0,0.0);
 	m_directionalLights.intensity[1] = glm::vec4(1.0);
 
 	//Misc: 0 - intensity (need to change per light), 1 - count of lights

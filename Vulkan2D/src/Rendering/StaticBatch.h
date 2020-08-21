@@ -7,7 +7,7 @@
 #include "VkContext.h"
 #include "..\Core\Timer.h"
 
-#define BATCH_MAX_VERTICES 200000
+#define BATCH_MAX_VERTICES 1000000
 
 class MeshRenderer;
 class GraphicsPipeline;
