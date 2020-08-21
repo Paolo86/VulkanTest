@@ -53,7 +53,7 @@ void main() {
 	vec3 T = normalize(vec3(pushModel.model * vec4(normalize(tangent),   0.0)));
 	vec3 B = normalize(vec3(pushModel.model * vec4(normalize(binormal), 0.0)));
 	vec3 N = normalize(vec3(pushModel.model * vec4(normalize(normal),    0.0)));
-	mat3 TBN = mat3(T, B, N);
+	mat3 TBN = transpose(mat3(T, B, N));
 
 	vec3 fragPos = TBN * (pushModel.model * vec4(position,1.0)).xyz;
 	fragPosition = fragPos;

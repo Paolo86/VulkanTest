@@ -83,32 +83,27 @@ void Vk::Init()
 
 	woodMaterial.Create(ResourceManager::GetPipeline("PBR"),{"wood.jpg"});
 	wallMaterial.Create(ResourceManager::GetPipeline("PBR") ,{
-		"Stucco\\grainy_stucco_albedo.png",
-		"Stucco\\grainy_stucco_Normal-ogl.png",
-		"Stucco\\grainy_stucco_Metallic.psd",
-		"Stucco\\grainy_stucco_Height.png",
-		"Stucco\\grainy_stucco_ao.png"});
-	wallMaterial.SetPBRProps(0.0, 0.0, 1);
+		"Iron\\iron_albedo.jpg",
+		"Iron\\iron_normal.jpg",
+		"Iron\\iron_metallic.jpg",
+		"Iron\\iron_roughness.jpg"
+		});
+	wallMaterial.SetPBRProps(0.0, 0.0, 0);
 
 	int i = 0;
 	for (int y = 0; y < 7; y++)
 	{
 		for (int x = 0; x < 7; x++)
 		{
-			std::stringstream ss;
-			ss << "Test ";
-			ss << i;
 
-			mats[i].m_name = ss.str();
-			mats[i].Create(ResourceManager::GetPipeline("PBR"), { "white.png"});
-			mats[i].SetTint(1, 0, 0);
-			mats[i].SetPBRProps(y / 6.0f, x / 6.0f, 1.0);
-			//mats[i].SetPBRProps(1.0 , 1.0, 1.0);
+			/*mats[i].m_name = ss.str();
+			mats[i].Create(ResourceManager::GetPipeline("PBR"), { "Iron\\iron_albedo.jpg", "Iron\\iron_normal.jpg"});
+			mats[i].SetPBRProps(y / 6.0f, x / 6.0f, 0.0);*/
 			meshes[i].SetMesh(ResourceManager::GetMesh("Sphere"));
-			meshes[i].SetMaterial(&mats[i]);
+			meshes[i].SetMaterial(&wallMaterial);
 
 			meshes[i].uboModel.model = glm::translate(meshes[i].uboModel.model, glm::vec3(x * 50, y * 50, -55));
-			AddMeshRenderer(&meshes[i], 0);
+			AddMeshRenderer(&meshes[i], 1);
 			i++;
 		}
 
