@@ -28,7 +28,7 @@ struct _ViewProjection {
 
 	glm::mat4 projection;
 	glm::mat4 view;
-	glm::vec3 camPosition;
+	glm::vec4 camPosition;
 
 };
 

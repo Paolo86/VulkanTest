@@ -21,6 +21,7 @@ Material woodMaterial("Wood");
 Material wallMaterial("Wall");
 
 MeshRenderer meshes[MESH_COUNT];
+Material mats[50];
 
  namespace
 {
@@ -77,7 +78,7 @@ void Vk::Init()
 	CreateUniformBuffers();
 	ResourceManager::CreatePipelines();
 	ResourceManager::CreateMeshes();
-	auto mesh = ResourceManager::LoadModel("Models\\geosphere.obj","Sphere");
+	auto mesh = ResourceManager::LoadModel("Models\\sphere.obj","Sphere");
 
 
 	woodMaterial.Create(ResourceManager::GetPipeline("PBR"),{"wood.jpg"});
@@ -89,13 +90,28 @@ void Vk::Init()
 		"Stucco\\grainy_stucco_ao.png"});
 	wallMaterial.SetPBRProps(0.0, 0.0, 1);
 
-	for (int i = 0; i < MESH_COUNT; i++)
+	int i = 0;
+	for (int y = 0; y < 7; y++)
 	{
-		meshes[i].SetMesh(ResourceManager::GetMesh("Sphere"));
-		meshes[i].SetMaterial(&wallMaterial);
+		for (int x = 0; x < 7; x++)
+		{
+			std::stringstream ss;
+			ss << "Test ";
+			ss << i;
 
-		meshes[i].uboModel.model = glm::translate(meshes[i].uboModel.model, glm::vec3(i *50, 0, -55));
-		AddMeshRenderer(&meshes[i], USE_BATCHING);
+			mats[i].m_name = ss.str();
+			mats[i].Create(ResourceManager::GetPipeline("PBR"), { "white.png"});
+			mats[i].SetTint(1, 0, 0);
+			mats[i].SetPBRProps(y / 6.0f, x / 6.0f, 1.0);
+			//mats[i].SetPBRProps(1.0 , 1.0, 1.0);
+			meshes[i].SetMesh(ResourceManager::GetMesh("Sphere"));
+			meshes[i].SetMaterial(&mats[i]);
+
+			meshes[i].uboModel.model = glm::translate(meshes[i].uboModel.model, glm::vec3(x * 50, y * 50, -55));
+			AddMeshRenderer(&meshes[i], 0);
+			i++;
+		}
+
 	}
 
 	LightManager::Instance().Init();
@@ -148,7 +164,7 @@ void Vk::CreateUniformBuffers()
 void Vk::UpdateView(glm::vec3 pos, glm::vec3 dir)
 {
 	ViewProjection.view = glm::lookAt(pos, dir, glm::vec3(0, 1, 0));
-	ViewProjection.camPosition = pos;
+	ViewProjection.camPosition = glm::vec4(pos,1.0);
 	for (size_t i = 0; i < VkContext::Instance().GetSwapChainImagesCount(); i++)
 	{
 		m_VPUniformBuffers[i].Update(VkContext::Instance().GetLogicalDevice(), &ViewProjection);

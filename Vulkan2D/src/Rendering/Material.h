@@ -18,6 +18,7 @@ class Material
 public:
 	friend class Vk;
 	Material(std::string name) : m_name(name) {}
+	Material() {}
 	~Material();
 	void Create(GraphicsPipeline* pipeline, std::vector<std::string> textureNames);
 	void Destroy();
@@ -33,6 +34,7 @@ public:
 	std::string m_name;
 private:
 	void CreateSamplerDescriptorSet();
+	void CreateMaterialPropsDescriptorSet();
 	GraphicsPipeline* m_pipeline;
 	UniformBuffer<MaterialProps> propertiesBuffer;
 	MaterialProps materialProperties;

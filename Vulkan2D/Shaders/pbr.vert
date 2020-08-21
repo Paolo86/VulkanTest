@@ -12,7 +12,7 @@ layout(location = 5) in vec3 binormal;
 layout(set = 1, binding = 0) uniform UboViewProjection {
  mat4 projection;
  mat4 view;	
- vec3 camPosition;
+ vec4 camPosition;
 } uboViewProjection;
 
 
@@ -42,7 +42,7 @@ void main() {
 	
 	fragColor = normalize(normal);
 	fragTex = tex;
-	viewPos = uboViewProjection.camPosition;
+	viewPos = uboViewProjection.camPosition.xyz;
 	vertexNormal = vec3(pushModel.model * vec4(normal,0.0));
 	TBNout = TBN;
 

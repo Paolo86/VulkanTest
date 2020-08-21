@@ -46,11 +46,11 @@ vec3 getNormalFromNormalMap();
 void main() {
 	
 	vec3 albedo     = pow(texture(textureSampler[0], fragTex).rgb, vec3(2.2));
-	float metallic  = texture(textureSampler[2], fragTex).r + matProps.pbrProps.r;
-    float roughness = texture(textureSampler[3], fragTex).r + matProps.pbrProps.g;
-    float ao        = texture(textureSampler[4], fragTex).r + matProps.pbrProps.b;
+	float metallic  =  matProps.pbrProps.r;
+    float roughness =  matProps.pbrProps.g;
+    float ao        =  matProps.pbrProps.b;
 
-	vec3 normal     = getNormalFromNormalMap();
+	vec3 normal     = vertexNormal;
 	
 	vec3 N = normalize(normal);
     vec3 V = normalize(viewPos - fragPosition);
@@ -61,7 +61,7 @@ void main() {
 	// reflectance equation
     vec3 Lo = vec3(0.0);
 	
-	for(int i=0; i< dirLights.misc.g; i++)
+	for(int i=0; i< 1; i++)
 	{
 		vec3 L = normalize(-dirLights.direction[i].rgb);
 		vec3 H = normalize(V + L);
@@ -89,7 +89,7 @@ void main() {
     //color = color / (color + vec3(1.0));
     //color = pow(color, vec3(1.0/2.2));
 
-	outColor = vec4(color, 1.0);
+	outColor = vec4(color, 1.0) * matProps.tint;
 
 
 }
@@ -99,7 +99,7 @@ vec3 getNormalFromNormalMap()
 {
 	vec3 normal = texture(textureSampler[1], fragTex).rgb;
 	normal = normal * 2.0 - 1.0;   
-	normal = normalize(TBNout * normal); 
+	normal = normalize (normal); 
 	return normal;
 }
 

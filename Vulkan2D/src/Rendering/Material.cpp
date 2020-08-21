@@ -13,6 +13,7 @@ void Material::Create(GraphicsPipeline* pipeline, std::vector<std::string> textu
 	propertiesBuffer.Create(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY, 1);
 	SetTint(1, 1, 1);
 	SetUVScale(2,2);
+	if(textureNames.size() > 0)
 	AddTextures(textureNames);
 }
 
@@ -24,7 +25,7 @@ void Material::AddTextures(std::vector<std::string> fileNames)
 		Texture2D t = ResourceManager::CreateSampleTextureFromFile(name);
 		m_textures.push_back(t);
 	}
-
+	if(fileNames.size() > 0)
 	CreateSamplerDescriptorSet();
 }
 
@@ -72,8 +73,14 @@ void Material::SetPBRProps(float metallic, float rooughness, float ao)
 void Material::Bind(VkCommandBuffer cmdBuffer)
 {
 	//Logger::LogInfo("\tBind material ",m_name);
-
+	if(m_textures.size() > 0)
 	m_samplerDescriptorSets.Bind(cmdBuffer, m_pipeline->GetPipelineLayout());
+}
+
+
+void Material::CreateMaterialPropsDescriptorSet()
+{
+
 }
 
 
