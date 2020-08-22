@@ -15,7 +15,7 @@
 #include "..\Core\Components\InstanceRenderer.h"
 #include "UBOBatch.h"
 
-#define MESH_COUNT 100
+#define MESH_COUNT 1
 #define USE_BATCHING 1
 std::unique_ptr<Vk> Vk::m_instance;
 

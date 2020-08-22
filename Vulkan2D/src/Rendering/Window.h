@@ -7,7 +7,7 @@ class Window
 {
 public:
 	static Window& Instance();
-	void Create(int width = 800, int height = 600, const char* title = "Vulkan 2D");
+	void Create(int width = 1200, int height = 800, const char* title = "Vulkan 2D");
 	void Destroy();
 	void Update();
 	int GetWidth();
