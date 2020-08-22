@@ -130,7 +130,7 @@ void StaticBatch::RenderBatches(int imageIndex)
 {
 	UboModel identity;
 	identity.model = glm::mat4(1);
-	Logger::LogInfo("Start render batch");
+	//Logger::LogInfo("Start render batch");
 	for (auto pipeline = m_batches.begin(); pipeline != m_batches.end(); pipeline++)
 	{
 		vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipeline->first->GetPipelineLayout(),

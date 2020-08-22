@@ -41,3 +41,10 @@ typedef struct {
 	glm::vec4 uvScale;
 	glm::vec4 pbrProps;
 } MaterialProps;
+
+struct InstanceTransform
+{
+	glm::vec3 position;
+	glm::vec3 rotation;
+	glm::vec3 scale;
+};

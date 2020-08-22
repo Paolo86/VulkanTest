@@ -4,7 +4,6 @@
 #include <vulkan/vulkan.hpp>
 
 
-
 class Vertex
 {
 public:
@@ -21,8 +20,7 @@ public:
 	}
 
 	static void GetVertexAttributeDescription(
-		VkVertexInputBindingDescription* bindigDescription,
+		std::vector<VkVertexInputBindingDescription>& bindigDescription,
 		VkPipelineVertexInputStateCreateInfo* vertexInputInfo,
-		std::array<VkVertexInputAttributeDescription, 6>& attributeDescription,
-		uint32_t binding = 0);
+		std::vector< VkVertexInputAttributeDescription>& attributeDescription, bool setUpinstanceing = 0);
 };

@@ -1,17 +1,37 @@
 #include "Vertex.h"
+#include "CommonStructs.h"
 
 void Vertex::GetVertexAttributeDescription(
-	VkVertexInputBindingDescription* bindigDescription,
+	std::vector<VkVertexInputBindingDescription>& bindigDescription,
 	VkPipelineVertexInputStateCreateInfo* vertexInputInfo,
-	std::array<VkVertexInputAttributeDescription, 6>& attributeDescription,
-	uint32_t binding)
+	std::vector< VkVertexInputAttributeDescription>& attributeDescription,
+	bool setUpInstancing)
 {
+
+	if (setUpInstancing)
+	{
+		bindigDescription.resize(2);
+		attributeDescription.resize(9);
+	}
+	else
+	{
+		bindigDescription.resize(1);
+		attributeDescription.resize(6);
+	}
+
 	// Vertex input
 	//Data for single vertex (including position, color, normals and so on)
-	bindigDescription->binding = 0;
-	bindigDescription->stride = sizeof(Vertex);
-	bindigDescription->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;		// Move onto next vertex
-																	// VK_VERTEX_INPUT_RATE_INSTANCE: move to vertex of next instance
+	bindigDescription[0].binding = 0;
+	bindigDescription[0].stride = sizeof(Vertex);
+	bindigDescription[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	if (setUpInstancing)
+	{
+		bindigDescription[1].binding = 1;
+		bindigDescription[1].stride = sizeof(InstanceTransform);
+		bindigDescription[1].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+	}
+																	
 	// Data within the vertex
 	
 	attributeDescription[0].binding = 0;
@@ -44,9 +64,27 @@ void Vertex::GetVertexAttributeDescription(
 	attributeDescription[5].format = VK_FORMAT_R32G32B32_SFLOAT;
 	attributeDescription[5].offset = offsetof(Vertex, binormal);
 
+	if (setUpInstancing)
+	{
+ 		attributeDescription[6].binding = 1;
+		attributeDescription[6].location = 6;
+		attributeDescription[6].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescription[6].offset = offsetof(InstanceTransform, position);
+
+		attributeDescription[7].binding = 1;
+		attributeDescription[7].location = 7;
+		attributeDescription[7].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescription[7].offset = offsetof(InstanceTransform, rotation);
+
+		attributeDescription[8].binding = 1;
+		attributeDescription[8].location = 8;
+		attributeDescription[8].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescription[8].offset = offsetof(InstanceTransform, scale);
+	}
+
 	vertexInputInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo->vertexBindingDescriptionCount = 1;
-	vertexInputInfo->pVertexBindingDescriptions = bindigDescription; // Optional
+	vertexInputInfo->vertexBindingDescriptionCount = bindigDescription.size();
+	vertexInputInfo->pVertexBindingDescriptions = bindigDescription.data(); // Optional
 	vertexInputInfo->vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescription.size());
 	vertexInputInfo->pVertexAttributeDescriptions = attributeDescription.data(); // Optional
 }

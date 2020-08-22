@@ -33,11 +33,15 @@ public:
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo = VkUtils::PipelineUtils::GetPipelineVertexShaderStage(vertShaderModule);
 		VkPipelineShaderStageCreateInfo fragShaderStageInfo = VkUtils::PipelineUtils::GetPipelineFragmentShaderStage(fragShaderModule);
 		VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
-		VkVertexInputBindingDescription bindigDescription = {};
-		std::array<VkVertexInputAttributeDescription, 6> attributeDescription;
+
+		//Vertex info
+		std::vector<VkVertexInputBindingDescription> bindigDescriptions;
+
+		std::vector<VkVertexInputAttributeDescription> attributeDescription;
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 
-		Vertex::GetVertexAttributeDescription(&bindigDescription, &vertexInputInfo, attributeDescription);
+		Vertex::GetVertexAttributeDescription(bindigDescriptions, &vertexInputInfo, attributeDescription,true);
+
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly = VkUtils::PipelineUtils::GetPipelineInputAssemblyState();
 		VkViewport viewport = VkUtils::PipelineUtils::GetViewport(VkContext::Instance().GetSwapChainExtent().width, VkContext::Instance().GetSwapChainExtent().height);
 		VkRect2D scissor = VkUtils::PipelineUtils::GetScissor(VkContext::Instance().GetSwapChainExtent().width, VkContext::Instance().GetSwapChainExtent().height);

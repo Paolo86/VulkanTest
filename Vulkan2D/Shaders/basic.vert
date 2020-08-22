@@ -4,6 +4,13 @@
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 color;
 layout(location = 2) in vec2 tex;
+layout(location = 3) in vec3 normal;
+layout(location = 4) in vec3 tangent;
+layout(location = 5) in vec3 binormal;
+
+layout(location = 6) in vec3 instancePosition;
+layout(location = 7) in vec3 instanceRotation;
+layout(location = 8) in vec3 instanceScale;
 
 
 layout(set = 1, binding = 0) uniform UboViewProjection {
@@ -22,7 +29,7 @@ layout(location = 1) out vec2 fragTex;
 
 void main() {
 
-    gl_Position = uboViewProjection.projection * uboViewProjection.view * pushModel.model * vec4(position, 1.0);
+    gl_Position = uboViewProjection.projection * uboViewProjection.view  * vec4(position + instancePosition, 1.0);
 	fragColor = color;
 	fragTex = tex;
 

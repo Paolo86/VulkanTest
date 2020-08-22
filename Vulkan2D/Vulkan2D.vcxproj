@@ -138,6 +138,7 @@
     <ClCompile Include="src\Asset\TinyOBJLoader.cc">
       <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
+    <ClCompile Include="src\Core\Components\InstanceRenderer.cpp" />
     <ClCompile Include="src\Core\Input.cpp" />
     <ClCompile Include="src\Core\Timer.cpp" />
     <ClCompile Include="src\Lighting\DirectionalLight.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="src\Asset\Pipelines\Phong.h" />
     <ClInclude Include="src\Asset\ResourceManager.h" />
     <ClInclude Include="src\Asset\TinyOBJLoader.h" />
+    <ClInclude Include="src\Core\Components\InstanceRenderer.h" />
     <ClInclude Include="src\Core\Components\MeshRenderer.h" />
     <ClInclude Include="src\Core\Input.h" />
     <ClInclude Include="src\Core\Timer.h" />

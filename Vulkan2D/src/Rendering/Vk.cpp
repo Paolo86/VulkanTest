@@ -12,15 +12,17 @@
 #include "../Asset/ResourceManager.h"
 #include "..\Core\Timer.h"
 #include "..\Lighting\LightManager.h"
+#include "..\Core\Components\InstanceRenderer.h"
 
-#define MESH_COUNT 1000
-#define USE_BATCHING 1
+#define MESH_COUNT 2000
+#define USE_BATCHING 0
 std::unique_ptr<Vk> Vk::m_instance;
 
 Material woodMaterial("Wood");
 Material wallMaterial("Wall");
 
 MeshRenderer meshes[MESH_COUNT];
+InstanceRenderer instanceRenderer;
 
  namespace
 {
@@ -89,18 +91,36 @@ void Vk::Init()
 		});
 	wallMaterial.SetPBRProps(0.0, 0.0, 0);
 
-	for (int i = 0; i < MESH_COUNT; i++)
+	/*for (int i = 0; i < MESH_COUNT; i++)
 	{
 		meshes[i].SetMesh(ResourceManager::GetMesh("Sphere"));
-		meshes[i].SetMaterial(&wallMaterial);
+		meshes[i].SetMaterial(&woodMaterial);
 
 		meshes[i].uboModel.model = glm::translate(meshes[i].uboModel.model, glm::vec3(i * 10,0, -55));
 		AddMeshRenderer(&meshes[i], USE_BATCHING);
 
+	}*/
+
+	m_staticBatch.PrepareStaticBuffers(); //Call after adding all static objects
+
+
+	//Instance test
+	instanceRenderer.SetMaterial(&woodMaterial);
+	instanceRenderer.SetMesh(ResourceManager::GetMesh("Sphere"));
+
+	std::vector<InstanceTransform> transforms;
+	for (int i = 0; i < MESH_COUNT; i++)
+	{
+		InstanceTransform t;
+		t.position = glm::vec3(i * 10, 0, -50);
+		t.rotation = glm::vec3(0, 0, 0);
+		t.scale = glm::vec3(1, 1, 1);
+		transforms.push_back(t);
 	}
 
+
+	instanceRenderer.Create(transforms);
 	LightManager::Instance().Init();
-	m_staticBatch.PrepareStaticBuffers(); //Call after adding all static objects
 }
 
 void Vk::Destroy()
@@ -347,7 +367,7 @@ void Vk::RenderCmds(uint32_t imageIndex)
 	VkDeviceSize offsets[] = { 0 };
 
 	//Logger::LogInfo("StartRendering");
-	for (auto pipIt = m_allPipelineUsed.begin(); pipIt != m_allPipelineUsed.end(); pipIt++)
+	/*for (auto pipIt = m_allPipelineUsed.begin(); pipIt != m_allPipelineUsed.end(); pipIt++)
 	{
 		//Bind pipeline
 		LightManager::Instance().BindDescriptorSet(VkContext::Instance().GetCommandBuferAt(imageIndex), (*pipIt)->GetPipelineLayout());
@@ -370,10 +390,16 @@ void Vk::RenderCmds(uint32_t imageIndex)
 				}		
 			}
 		}
-	}
+	}*/
 
 	//Render all batches using this pipeline, no need to bind it again
-	m_staticBatch.RenderBatches(imageIndex);
+	//m_staticBatch.RenderBatches(imageIndex);
+
+	instanceRenderer.m_material->GetPipelineUsed()->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
+	instanceRenderer.m_material->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex));
+	instanceRenderer.BindBuffers(VkContext::Instance().GetCommandBuferAt(imageIndex));
+	instanceRenderer.Draw(imageIndex);
+
 	vkCmdEndRenderPass(VkContext::Instance().GetCommandBuferAt(imageIndex));
 
 	//End recording
