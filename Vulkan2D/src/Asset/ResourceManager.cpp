@@ -3,6 +3,7 @@
 #include "..\Rendering\VkContext.h"
 #include "Pipelines\BasicPipeline.h"
 #include "Pipelines\PBRPipeline.h"
+#include "Pipelines\PBR_Instanced.h"
 #include "Pipelines\Phong.h"
 #include "TinyOBJLoader.h"
 #define GLM_ENABLE_EXPERIMENTAL
@@ -90,6 +91,7 @@ void ResourceManager::CreatePipelines()
 {
 	allPipelines["Basic"] = std::unique_ptr<BasicPipeline>(new BasicPipeline());
 	allPipelines["PBR"] = std::unique_ptr<PBRPipeline>(new PBRPipeline());
+	allPipelines["PBRInstanced"] = std::unique_ptr<PBRInstancedPipeline>(new PBRInstancedPipeline());
 	allPipelines["Phong"] = std::unique_ptr<PhongPipeline>(new PhongPipeline());
 }
 

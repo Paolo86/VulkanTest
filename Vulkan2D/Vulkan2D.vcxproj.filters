@@ -173,5 +173,8 @@
     <ClInclude Include="src\Core\Components\InstanceRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Asset\Pipelines\PBR_Instanced.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

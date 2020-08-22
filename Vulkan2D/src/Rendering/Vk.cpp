@@ -14,8 +14,8 @@
 #include "..\Lighting\LightManager.h"
 #include "..\Core\Components\InstanceRenderer.h"
 
-#define MESH_COUNT 2000
-#define USE_BATCHING 0
+#define MESH_COUNT 1000
+#define USE_BATCHING 1
 std::unique_ptr<Vk> Vk::m_instance;
 
 Material woodMaterial("Wood");
@@ -81,9 +81,8 @@ void Vk::Init()
 	ResourceManager::CreateMeshes();
 	auto mesh = ResourceManager::LoadModel("Models\\nanosuit.obj","Sphere");
 
-
 	woodMaterial.Create(ResourceManager::GetPipeline("Basic"),{"wood.jpg"});
-	wallMaterial.Create(ResourceManager::GetPipeline("PBR") ,{
+	wallMaterial.Create(ResourceManager::GetPipeline("PBRInstanced") ,{
 		"Iron\\iron_albedo.jpg",
 		"Iron\\iron_normal.jpg",
 		"Iron\\iron_metallic.jpg",
@@ -105,7 +104,7 @@ void Vk::Init()
 
 
 	//Instance test
-	instanceRenderer.SetMaterial(&woodMaterial);
+	instanceRenderer.SetMaterial(&wallMaterial);
 	instanceRenderer.SetMesh(ResourceManager::GetMesh("Sphere"));
 
 	std::vector<InstanceTransform> transforms;
@@ -394,6 +393,7 @@ void Vk::RenderCmds(uint32_t imageIndex)
 
 	//Render all batches using this pipeline, no need to bind it again
 	//m_staticBatch.RenderBatches(imageIndex);
+	LightManager::Instance().BindDescriptorSet(VkContext::Instance().GetCommandBuferAt(imageIndex), instanceRenderer.m_material->GetPipelineUsed()->GetPipelineLayout());
 
 	instanceRenderer.m_material->GetPipelineUsed()->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
 	instanceRenderer.m_material->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex));

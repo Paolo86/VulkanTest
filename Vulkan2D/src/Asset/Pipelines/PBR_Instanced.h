@@ -16,15 +16,15 @@ Set 1 - TextureSamplers (count 5)
 Push constant for _ViewProjection
 
 */
-class PBRPipeline : public GraphicsPipeline
+class PBRInstancedPipeline : public GraphicsPipeline
 {
 public:
-	virtual ~PBRPipeline() {}
-	PBRPipeline()
+	virtual ~PBRInstancedPipeline() {}
+	PBRInstancedPipeline()
 	{
 		// Create basic pipeline
-		std::string vertexShaderName = "pbr_vertex.spv";
-		std::string fragmentShaderName = "pbr_fragment.spv";
+		std::string vertexShaderName = "pbr_instanced_vertex.spv";
+		std::string fragmentShaderName = "pbr_instanced_fragment.spv";
 		auto vertexShaderCode = FileUtils::ReadFile("Shaders/" + vertexShaderName);
 		auto fragmentShaderCode = FileUtils::ReadFile("Shaders/" + fragmentShaderName);
 		VkShaderModule vertShaderModule = VkUtils::PipelineUtils::CreateShadeModule(VkContext::Instance().GetLogicalDevice(), vertexShaderCode);
@@ -40,7 +40,7 @@ public:
 		std::vector<VkVertexInputAttributeDescription> attributeDescription;
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 
-		Vertex::GetVertexAttributeDescription(bindigDescriptions, &vertexInputInfo, attributeDescription,false);
+		Vertex::GetVertexAttributeDescription(bindigDescriptions, &vertexInputInfo, attributeDescription, true);
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly = VkUtils::PipelineUtils::GetPipelineInputAssemblyState();
 		VkViewport viewport = VkUtils::PipelineUtils::GetViewport(VkContext::Instance().GetSwapChainExtent().width, VkContext::Instance().GetSwapChainExtent().height);
