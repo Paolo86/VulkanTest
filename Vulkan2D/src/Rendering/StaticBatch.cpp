@@ -130,12 +130,13 @@ void StaticBatch::RenderBatches(int imageIndex)
 {
 	UboModel identity;
 	identity.model = glm::mat4(1);
+	Logger::LogInfo("Start render batch");
 	for (auto pipeline = m_batches.begin(); pipeline != m_batches.end(); pipeline++)
 	{
 		vkCmdPushConstants(VkContext::Instance().GetCommandBuferAt(imageIndex), pipeline->first->GetPipelineLayout(),
 			VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(UboModel), &identity);
 
-		pipeline->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
+		//pipeline->first->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
 
 		for (auto material = pipeline->second.begin(); material != pipeline->second.end(); material++)
 		{
@@ -144,7 +145,6 @@ void StaticBatch::RenderBatches(int imageIndex)
 			//For each batch using this pipeline and material....
 			for (int i = 0; i < m_batches[pipeline->first][material->first].size(); i++)
 			{
-
 				VkDeviceSize offset = 0;
 				vkCmdBindVertexBuffers(VkContext::Instance().GetCommandBuferAt(imageIndex), 0, 1, &material->second[i].vertexBuffer.buffer, &offset);
 				vkCmdBindIndexBuffer(VkContext::Instance().GetCommandBuferAt(imageIndex), material->second[i].indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);

@@ -73,17 +73,31 @@ int main() {
 	float timer = 0;
 	int fps = 0;
 
+	double prevTime = glfwGetTime();
+	double prevTimeFPS = glfwGetTime();
 	while (!glfwWindowShouldClose(Window::Instance().GetWindow())) {
-		Timer::Instance().StartTimer("FPS");
-		glfwPollEvents();
+		//Timer::Instance().StartTimer("FPS");
+		
+		double now = glfwGetTime();
+		if (now - prevTime >= 0.0)
+		{
+			prevTime = now;
+			glfwPollEvents();
+			UpdateCamera();
+			Vk::Instance().UpdateView(camPos, camPos + camDir);
+			Vk::Instance().Draw();
+			Input::Update();
+			fps++;
+		}
 
-		UpdateCamera();
-		Vk::Instance().UpdateView(camPos, camPos + camDir);
-
-
-		Vk::Instance().Draw();
-		Input::Update();
-		double t = Timer::Instance().StopTimer("FPS");
+		if (now - prevTimeFPS >= 1.0)
+		{
+			Logger::LogInfo("FPS: ", fps);
+			fps = 0;
+			prevTimeFPS = now;
+		}
+	
+		/*double t = Timer::Instance().StopTimer("FPS");
 		timer += t;
 		fps++;
 		if (timer >= 1.0)
@@ -91,7 +105,7 @@ int main() {
 			Logger::LogInfo("FPS: ", fps);
 			timer = 0;
 			fps = 0;
-		}
+		}*/
 
 	}
 	

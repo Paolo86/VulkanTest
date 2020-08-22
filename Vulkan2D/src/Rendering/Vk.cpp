@@ -13,8 +13,8 @@
 #include "..\Core\Timer.h"
 #include "..\Lighting\LightManager.h"
 
-#define MESH_COUNT 100
-#define USE_BATCHING 0
+#define MESH_COUNT 1000
+#define USE_BATCHING 1
 std::unique_ptr<Vk> Vk::m_instance;
 
 Material woodMaterial("Wood");
@@ -80,7 +80,7 @@ void Vk::Init()
 	auto mesh = ResourceManager::LoadModel("Models\\nanosuit.obj","Sphere");
 
 
-	woodMaterial.Create(ResourceManager::GetPipeline("Phong"),{"wood.jpg"});
+	woodMaterial.Create(ResourceManager::GetPipeline("Basic"),{"wood.jpg"});
 	wallMaterial.Create(ResourceManager::GetPipeline("PBR") ,{
 		"Iron\\iron_albedo.jpg",
 		"Iron\\iron_normal.jpg",
@@ -92,7 +92,7 @@ void Vk::Init()
 	for (int i = 0; i < MESH_COUNT; i++)
 	{
 		meshes[i].SetMesh(ResourceManager::GetMesh("Sphere"));
-		meshes[i].SetMaterial(&woodMaterial);
+		meshes[i].SetMaterial(&wallMaterial);
 
 		meshes[i].uboModel.model = glm::translate(meshes[i].uboModel.model, glm::vec3(i * 10,0, -55));
 		AddMeshRenderer(&meshes[i], USE_BATCHING);

@@ -12,7 +12,7 @@ void Material::Create(GraphicsPipeline* pipeline, std::vector<std::string> textu
 
 	propertiesBuffer.Create(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY, 1);
 	SetTint(1, 1, 1);
-	SetUVScale(2,2);
+	SetUVScale(1,1);
 	if(textureNames.size() > 0)
 	AddTextures(textureNames);
 }
