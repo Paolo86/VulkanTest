@@ -150,6 +150,7 @@
     <ClCompile Include="src\Rendering\Mesh.cpp" />
     <ClCompile Include="src\Rendering\StaticBatch.cpp" />
     <ClCompile Include="src\Rendering\Texture2D.cpp" />
+    <ClCompile Include="src\Rendering\UBOBatch.cpp" />
     <ClCompile Include="src\Rendering\Vertex.cpp" />
     <ClCompile Include="src\Rendering\Vk.cpp" />
     <ClCompile Include="src\Rendering\VkContext.cpp" />
@@ -182,6 +183,7 @@
     <ClInclude Include="src\Rendering\StaticBatch.h" />
     <ClInclude Include="src\Rendering\Texture2D.h" />
     <ClInclude Include="src\Rendering\TextureSampler.h" />
+    <ClInclude Include="src\Rendering\UBOBatch.h" />
     <ClInclude Include="src\Rendering\UniformBuffer.h" />
     <ClInclude Include="src\Rendering\Vertex.h" />
     <ClInclude Include="src\Rendering\Vk.h" />

@@ -13,8 +13,9 @@
 #include "..\Core\Timer.h"
 #include "..\Lighting\LightManager.h"
 #include "..\Core\Components\InstanceRenderer.h"
+#include "UBOBatch.h"
 
-#define MESH_COUNT 1000
+#define MESH_COUNT 100
 #define USE_BATCHING 1
 std::unique_ptr<Vk> Vk::m_instance;
 
@@ -23,11 +24,12 @@ Material wallMaterial("Wall");
 
 MeshRenderer meshes[MESH_COUNT];
 InstanceRenderer instanceRenderer;
+UBOBatch uboBatch;
 
  namespace
 {
 	const std::vector<const char*> supportedDeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-	const int MAX_FRAME_DRAWS = 2;
+	const int MAX_FRAME_DRAWS = 3;
 }
 
 
@@ -82,7 +84,7 @@ void Vk::Init()
 	auto mesh = ResourceManager::LoadModel("Models\\nanosuit.obj","Sphere");
 
 	woodMaterial.Create(ResourceManager::GetPipeline("Basic"),{"wood.jpg"});
-	wallMaterial.Create(ResourceManager::GetPipeline("PBRInstanced") ,{
+	wallMaterial.Create(ResourceManager::GetPipeline("PBR") ,{
 		"Iron\\iron_albedo.jpg",
 		"Iron\\iron_normal.jpg",
 		"Iron\\iron_metallic.jpg",
@@ -90,24 +92,24 @@ void Vk::Init()
 		});
 	wallMaterial.SetPBRProps(0.0, 0.0, 0);
 
-	/*for (int i = 0; i < MESH_COUNT; i++)
+	for (int i = 0; i < MESH_COUNT; i++)
 	{
 		meshes[i].SetMesh(ResourceManager::GetMesh("Sphere"));
-		meshes[i].SetMaterial(&woodMaterial);
+		meshes[i].SetMaterial(&wallMaterial);
 
 		meshes[i].uboModel.model = glm::translate(meshes[i].uboModel.model, glm::vec3(i * 10,0, -55));
 		AddMeshRenderer(&meshes[i], USE_BATCHING);
 
-	}*/
+	}
 
 	m_staticBatch.PrepareStaticBuffers(); //Call after adding all static objects
 
 
 	//Instance test
-	instanceRenderer.SetMaterial(&wallMaterial);
-	instanceRenderer.SetMesh(ResourceManager::GetMesh("Sphere"));
+	//uboBatch.SetMaterial(&wallMaterial);
+	//uboBatch.SetMesh(ResourceManager::GetMesh("Sphere"));
 
-	std::vector<InstanceTransform> transforms;
+	/*std::vector<InstanceTransform> transforms;
 	for (int i = 0; i < MESH_COUNT; i++)
 	{
 		InstanceTransform t;
@@ -117,8 +119,9 @@ void Vk::Init()
 		transforms.push_back(t);
 	}
 
+	uboBatch.Create(transforms);*/
 
-	instanceRenderer.Create(transforms);
+	//instanceRenderer.Create(transforms);
 	LightManager::Instance().Init();
 }
 
@@ -191,7 +194,7 @@ void Vk::CreateDescriptorPool()
 
 	VkDescriptorPoolCreateInfo poolCreateInfo = {};
 	poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolCreateInfo.maxSets = static_cast<uint32_t>(VkContext::Instance().GetSwapChainImagesCount() * 5);
+	poolCreateInfo.maxSets = static_cast<uint32_t>(VkContext::Instance().GetSwapChainImagesCount() * 10);
 	poolCreateInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 	poolCreateInfo.pPoolSizes = poolSizes.data();
 
@@ -366,7 +369,7 @@ void Vk::RenderCmds(uint32_t imageIndex)
 	VkDeviceSize offsets[] = { 0 };
 
 	//Logger::LogInfo("StartRendering");
-	/*for (auto pipIt = m_allPipelineUsed.begin(); pipIt != m_allPipelineUsed.end(); pipIt++)
+	for (auto pipIt = m_allPipelineUsed.begin(); pipIt != m_allPipelineUsed.end(); pipIt++)
 	{
 		//Bind pipeline
 		LightManager::Instance().BindDescriptorSet(VkContext::Instance().GetCommandBuferAt(imageIndex), (*pipIt)->GetPipelineLayout());
@@ -389,16 +392,21 @@ void Vk::RenderCmds(uint32_t imageIndex)
 				}		
 			}
 		}
-	}*/
+	}
 
 	//Render all batches using this pipeline, no need to bind it again
-	//m_staticBatch.RenderBatches(imageIndex);
-	LightManager::Instance().BindDescriptorSet(VkContext::Instance().GetCommandBuferAt(imageIndex), instanceRenderer.m_material->GetPipelineUsed()->GetPipelineLayout());
+	m_staticBatch.RenderBatches(imageIndex);
+	/*LightManager::Instance().BindDescriptorSet(VkContext::Instance().GetCommandBuferAt(imageIndex), uboBatch.m_material->GetPipelineUsed()->GetPipelineLayout());
 
-	instanceRenderer.m_material->GetPipelineUsed()->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
+	uboBatch.m_material->GetPipelineUsed()->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
+	uboBatch.m_material->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex));
+	uboBatch.BindBuffers(VkContext::Instance().GetCommandBuferAt(imageIndex));
+	uboBatch.Draw(imageIndex);*/
+
+	/*instanceRenderer.m_material->GetPipelineUsed()->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex), imageIndex);
 	instanceRenderer.m_material->Bind(VkContext::Instance().GetCommandBuferAt(imageIndex));
 	instanceRenderer.BindBuffers(VkContext::Instance().GetCommandBuferAt(imageIndex));
-	instanceRenderer.Draw(imageIndex);
+	instanceRenderer.Draw(imageIndex);*/
 
 	vkCmdEndRenderPass(VkContext::Instance().GetCommandBuferAt(imageIndex));
 

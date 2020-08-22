@@ -29,7 +29,7 @@ layout(location = 1) out vec2 fragTex;
 
 void main() {
 
-    gl_Position = uboViewProjection.projection * uboViewProjection.view  * pushModel.model * vec4(instancePosition, 1.0);
+    gl_Position = uboViewProjection.projection * uboViewProjection.view  * pushModel.model * vec4(position, 1.0);
 	fragColor = color;
 	fragTex = tex;
 

@@ -32,6 +32,13 @@ layout(set=0, binding=0) uniform DirectionalLights
 	vec4 misc;
 } dirLights;
 
+layout(set = 3, binding = 0) uniform UBOModels {
+ mat4 modelMat[2000];
+
+} uboModel;
+
+
+//Outputs
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 fragTex;
 layout(location = 2) out vec3 vertexNormal;
@@ -62,7 +69,7 @@ void main() {
 	fragColor = normalize(normal);
 	fragTex = tex;
 	viewPos = TBN * vec3(uboViewProjection.camPosition);
-	vertexNormal = TBN * vec3(pushModel.model * vec4(normal,0.0));
+	vertexNormal = TBN * vec3(pushModel.model* vec4(normal,0.0));
 	
 	for(int i=0; i< dirLights.misc[1]; i++)
 	{

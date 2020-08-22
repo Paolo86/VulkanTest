@@ -83,11 +83,16 @@ public:
 		VkDescriptorSetLayoutBinding materialPropertiesBinding = VkUtils::PipelineUtils::GetDescriptorLayoutBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
 			, 1, VK_SHADER_STAGE_FRAGMENT_BIT);
 
+
+		/*VkDescriptorSetLayoutBinding modelMatricesBinding = VkUtils::PipelineUtils::GetDescriptorLayoutBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+			, 1, VK_SHADER_STAGE_VERTEX_BIT);*/
+
 		//Order is important!
 		//Each layout needs to match the set number in the shader
 		CreateLayout("Lights", { lightBinding }, 0);							//Set 0
 		CreateLayout("ViewProjection", { vpLayoutBinding }, 1);							//Set 1
 		CreateLayout("Sampler", { imagesLayoutBinding, materialPropertiesBinding }, 2);	//Set 2
+		//CreateLayout("UBOModels", { modelMatricesBinding },3);	//Set 3
 
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = VkUtils::PipelineUtils::GetPipelineLayoutInfo(vkLayouts, &pc.m_vkPushConstant);
 

@@ -75,6 +75,9 @@
     <ClCompile Include="src\Core\Components\InstanceRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Rendering\UBOBatch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\Logger.h">
@@ -174,6 +177,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Asset\Pipelines\PBR_Instanced.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Rendering\UBOBatch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
